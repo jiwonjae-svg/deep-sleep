@@ -1,0 +1,313 @@
+import React, { useEffect, useState } from 'react';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
+import { useAudio } from '@/hooks/useAudio';
+import { useAlarmStore } from '@/stores/useAlarmStore';
+import { useTimerStore } from '@/stores/useTimerStore';
+import { usePresetStore } from '@/stores/usePresetStore';
+import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
+import { Slider } from '@/components/ui/Slider';
+import { MascotImage } from '@/components/common/MascotImage';
+import { AIRecommendButton } from '@/components/ai/AIRecommendButton';
+import { colors, typography, spacing, layout } from '@/theme';
+import { formatRemainingTime, msUntilAlarm, getCurrentTimeString } from '@/utils/formatTime';
+import { getSoundById } from '@/data/sounds';
+import { TIMER_PRESETS } from '@/utils/constants';
+
+export default function HomeScreen() {
+  const router = useRouter();
+  const {
+    activeSounds,
+    isPlaying,
+    masterVolume,
+    activePresetId,
+    soundCount,
+    play,
+    stop,
+    setVolume,
+    startTimer,
+  } = useAudio();
+
+  const alarms = useAlarmStore((s) => s.alarms);
+  const timer = useTimerStore();
+  const presets = usePresetStore();
+  const isPremium = useSubscriptionStore((s) => s.isPremium);
+
+  // Clock
+  const [clock, setClock] = useState(getCurrentTimeString());
+  useEffect(() => {
+    const id = setInterval(() => setClock(getCurrentTimeString()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Timer remaining
+  const [timerText, setTimerText] = useState('');
+  useEffect(() => {
+    if (!timer.isActive) {
+      setTimerText('');
+      return;
+    }
+    const id = setInterval(() => {
+      const remaining = timer.endTime - Date.now();
+      if (remaining <= 0) {
+        setTimerText('');
+      } else {
+        setTimerText(formatRemainingTime(remaining));
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [timer.isActive, timer.endTime]);
+
+  // Next alarm
+  const nextAlarm = alarms
+    .filter((a) => a.enabled)
+    .reduce<{ alarm: typeof alarms[0]; ms: number } | null>((best, a) => {
+      const ms = msUntilAlarm(a.time.hour, a.time.minute);
+      if (!best || ms < best.ms) return { alarm: a, ms };
+      return best;
+    }, null);
+
+  // Pulse animation for play button
+  const scale = useSharedValue(1);
+  useEffect(() => {
+    if (isPlaying) {
+      scale.value = withRepeat(
+        withTiming(1.05, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+        -1,
+        true,
+      );
+    } else {
+      scale.value = withTiming(1, { duration: 200 });
+    }
+  }, [isPlaying]);
+
+  const playBtnAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  // Current preset name
+  const currentPreset =
+    activePresetId != null
+      ? [...presets.defaultPresets, ...presets.customPresets].find((p) => p.id === activePresetId)
+      : null;
+
+  const handlePlayToggle = async () => {
+    if (isPlaying) {
+      await stop();
+    } else {
+      await play();
+      router.push('/playing');
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.logo}>🐻 Deep Sleep</Text>
+        {nextAlarm && (
+          <Text style={styles.nextAlarm}>
+            ⏰ {formatRemainingTime(nextAlarm.ms)}
+          </Text>
+        )}
+      </View>
+
+      <View style={styles.content}>
+        {/* Clock */}
+        <Text style={styles.clock}>{clock}</Text>
+
+        {/* Mascot */}
+        <MascotImage pose={isPlaying ? 'sleeping' : 'yawning'} size={180} />
+
+        {/* Current preset card */}
+        {currentPreset && (
+          <Pressable style={styles.presetCard} onPress={() => router.push('/presets')}>
+            <Text style={styles.presetName}>{currentPreset.name}</Text>
+            <View style={styles.presetIcons}>
+              {currentPreset.sounds.slice(0, 5).map((s) => (
+                <Text key={s.soundId} style={styles.presetEmoji}>
+                  {getSoundById(s.soundId)?.iconEmoji ?? '🔊'}
+                </Text>
+              ))}
+              <Text style={styles.presetMeta}> · {currentPreset.sounds.length} 소리</Text>
+            </View>
+          </Pressable>
+        )}
+
+        {soundCount === 0 && !currentPreset && (
+          <Pressable style={styles.presetCard} onPress={() => router.push('/mixer')}>
+            <Text style={styles.presetName}>소리를 선택해주세요</Text>
+            <Text style={styles.presetMeta}>믹서에서 소리를 추가하세요</Text>
+          </Pressable>
+        )}
+
+        {/* Timer */}
+        {timer.isActive && timerText ? (
+          <Pressable onPress={() => timer.cancelTimer()}>
+            <Text style={styles.timerText}>타이머: {timerText}</Text>
+          </Pressable>
+        ) : !timer.isActive ? (
+          <View style={styles.timerRow}>
+            {TIMER_PRESETS.map((min) => (
+              <Pressable
+                key={min}
+                style={styles.timerChip}
+                onPress={() => startTimer(min)}
+              >
+                <Text style={styles.timerChipText}>{min}분</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+
+        {/* Play button */}
+        <Animated.View style={playBtnAnimStyle}>
+          <Pressable onPress={handlePlayToggle} disabled={soundCount === 0}>
+            <LinearGradient
+              colors={soundCount > 0 ? [colors.accent1, colors.accent2] : [colors.textMuted, colors.textMuted]}
+              style={styles.playBtn}
+            >
+              <Text style={styles.playIcon}>{isPlaying ? '■' : '▶'}</Text>
+            </LinearGradient>
+          </Pressable>
+        </Animated.View>
+
+        {/* Master volume */}
+        <View style={styles.volumeRow}>
+          <Text style={styles.volumeIcon}>🔈</Text>
+          <View style={{ flex: 1 }}>
+            <Slider value={masterVolume} onValueChange={setVolume} activeColor={colors.accent2} />
+          </View>
+          <Text style={styles.volumeIcon}>🔊</Text>
+        </View>
+
+        {/* AI Recommend */}
+        <AIRecommendButton
+          isPremium={isPremium}
+          onPress={() => {
+            if (isPremium) {
+              // TODO: open AI input sheet
+            } else {
+              router.push('/subscription');
+            }
+          }}
+        />
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.bgPrimary,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: layout.screenPaddingH,
+    height: layout.headerHeight,
+  },
+  logo: {
+    ...typography.h3,
+    color: colors.textPrimary,
+  },
+  nextAlarm: {
+    ...typography.caption,
+    color: colors.accent2,
+  },
+  content: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: layout.screenPaddingH,
+    gap: spacing.lg,
+  },
+  clock: {
+    fontFamily: 'monospace',
+    fontSize: 40,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    letterSpacing: 2,
+  },
+  presetCard: {
+    backgroundColor: colors.glassLight,
+    borderRadius: layout.borderRadiusMd,
+    padding: layout.cardPadding,
+    width: '100%',
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+  },
+  presetName: {
+    ...typography.h3,
+    color: colors.textPrimary,
+  },
+  presetIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  presetEmoji: {
+    fontSize: 16,
+    marginRight: 2,
+  },
+  presetMeta: {
+    ...typography.caption,
+    color: colors.textMuted,
+  },
+  timerRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  timerChip: {
+    backgroundColor: colors.glassLight,
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+  },
+  timerChipText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  timerText: {
+    ...typography.bodyMedium,
+    color: colors.accent2,
+  },
+  playBtn: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.accent1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  playIcon: {
+    color: colors.white,
+    fontSize: 28,
+    marginLeft: 4,
+  },
+  volumeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    gap: spacing.md,
+  },
+  volumeIcon: {
+    fontSize: 18,
+  },
+});

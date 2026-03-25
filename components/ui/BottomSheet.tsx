@@ -1,0 +1,114 @@
+import React, { useCallback, useEffect } from 'react';
+import { View, Pressable, StyleSheet, Dimensions, useWindowDimensions } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  runOnJS,
+} from 'react-native-reanimated';
+import { colors, layout } from '@/theme';
+
+interface BottomSheetProps {
+  visible: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  maxHeightPct?: number; // 0–1, default 0.6
+}
+
+export function BottomSheet({
+  visible,
+  onClose,
+  children,
+  maxHeightPct = 0.6,
+}: BottomSheetProps) {
+  const { height: screenHeight } = useWindowDimensions();
+  const maxHeight = screenHeight * maxHeightPct;
+  const translateY = useSharedValue(maxHeight);
+  const overlayOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (visible) {
+      translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
+      overlayOpacity.value = withTiming(1, { duration: 250 });
+    } else {
+      translateY.value = withTiming(maxHeight, { duration: 250 });
+      overlayOpacity.value = withTiming(0, { duration: 250 });
+    }
+  }, [visible, maxHeight]);
+
+  const handleClose = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
+  const pan = Gesture.Pan()
+    .onUpdate((e) => {
+      if (e.translationY > 0) {
+        translateY.value = e.translationY;
+      }
+    })
+    .onEnd((e) => {
+      if (e.translationY > maxHeight * 0.3 || e.velocityY > 500) {
+        translateY.value = withTiming(maxHeight, { duration: 250 });
+        overlayOpacity.value = withTiming(0, { duration: 250 });
+        runOnJS(handleClose)();
+      } else {
+        translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
+      }
+    });
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  const overlayStyle = useAnimatedStyle(() => ({
+    opacity: overlayOpacity.value,
+  }));
+
+  if (!visible) return null;
+
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+      {/* Overlay */}
+      <Animated.View style={[styles.overlay, overlayStyle]}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
+      </Animated.View>
+
+      {/* Sheet */}
+      <GestureDetector gesture={pan}>
+        <Animated.View style={[styles.sheet, { maxHeight }, sheetStyle]}>
+          <View style={styles.handleBar} />
+          {children}
+        </Animated.View>
+      </GestureDetector>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.overlay,
+  },
+  sheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.bgSecondary,
+    borderTopLeftRadius: layout.borderRadiusLg,
+    borderTopRightRadius: layout.borderRadiusLg,
+    paddingHorizontal: layout.screenPaddingH,
+    paddingBottom: 32,
+  },
+  handleBar: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.glassHeavy,
+    alignSelf: 'center',
+    marginTop: 12,
+    marginBottom: 20,
+  },
+});
