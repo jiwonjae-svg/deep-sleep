@@ -15,6 +15,7 @@
     "@expo/vector-icons": "^14.0.0",
     "@react-native-async-storage/async-storage": "1.23.1",
     "expo": "~52.0.0",
+    "expo-asset": "~11.0.5",
     "expo-av": "~15.0.0",
     "expo-brightness": "~13.0.0",
     "expo-constants": "~17.0.0",
