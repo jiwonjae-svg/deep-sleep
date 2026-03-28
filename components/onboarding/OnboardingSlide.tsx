@@ -1,20 +1,27 @@
 import React from 'react';
-import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
-import { MascotImage } from '@/components/common/MascotImage';
+import { View, Text, Image, StyleSheet, useWindowDimensions } from 'react-native';
 import { colors, typography, spacing } from '@/theme';
 
+const ONBOARDING_IMAGES = [
+  require('@/assets/images/onboarding/onboarding-1.png'),
+  require('@/assets/images/onboarding/onboarding-2.png'),
+  require('@/assets/images/onboarding/onboarding-3.png'),
+  require('@/assets/images/onboarding/onboarding-4.png'),
+];
+
 interface OnboardingSlideProps {
+  slideIndex: number;
   title: string;
   description: string;
-  mascotPose: string;
 }
 
-export function OnboardingSlide({ title, description, mascotPose }: OnboardingSlideProps) {
+export function OnboardingSlide({ slideIndex, title, description }: OnboardingSlideProps) {
   const { width } = useWindowDimensions();
+  const source = ONBOARDING_IMAGES[slideIndex] ?? ONBOARDING_IMAGES[0];
 
   return (
     <View style={[styles.container, { width }]}>
-      <MascotImage pose={mascotPose} size={250} />
+      <Image source={source} style={styles.image} resizeMode="contain" />
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
     </View>
@@ -28,6 +35,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: spacing.xl,
     gap: spacing.lg,
+  },
+  image: {
+    width: 250,
+    height: 250,
   },
   title: {
     ...typography.h1,

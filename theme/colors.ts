@@ -1,8 +1,8 @@
 export const colors = {
-  // Primary backgrounds
-  bgPrimary: '#0A0E2A',
-  bgSecondary: '#151A3A',
-  bgTertiary: '#1E2450',
+  // Primary backgrounds — 기존보다 어둡고 채도 낮춤
+  bgPrimary: '#06080E',
+  bgSecondary: '#0D0F1B',
+  bgTertiary: '#141728',
 
   // Glassmorphism
   glassLight: 'rgba(255,255,255,0.06)',

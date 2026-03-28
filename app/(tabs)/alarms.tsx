@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, FlatList, StyleSheet } from 'react-native';
+import { View, Text, Pressable, FlatList, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,7 +23,11 @@ export default function AlarmsScreen() {
 
       {alarms.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyEmoji}>⏰</Text>
+          <Image
+            source={require('@/assets/images/empty/empty-alarms.png')}
+            style={styles.emptyImage}
+            resizeMode="contain"
+          />
           <Text style={styles.emptyText}>설정된 알람이 없습니다</Text>
           <Text style={styles.emptyHint}>우상단 + 버튼으로 알람을 추가해주세요</Text>
         </View>
@@ -80,8 +84,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.sm,
   },
-  emptyEmoji: {
-    fontSize: 48,
+  emptyImage: {
+    width: 200,
+    height: 200,
+    marginBottom: spacing.sm,
   },
   emptyText: {
     ...typography.h3,

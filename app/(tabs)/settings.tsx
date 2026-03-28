@@ -1,38 +1,51 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Toggle } from '@/components/ui/Toggle';
+import { OptionModal, OptionItem } from '@/components/ui/OptionModal';
+import { TermsModal } from '@/components/settings/TermsModal';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
 import * as BillingService from '@/services/BillingService';
 import { colors, typography, spacing, layout } from '@/theme';
-import { AppLanguage, AudioQuality, VolumeChangeSpeed } from '@/types';
+import { AppLanguage, AudioQuality, VolumeChangeSpeed, ThemeMode } from '@/types';
 
+const QUALITY_OPTIONS: OptionItem<AudioQuality>[] = [
+  { value: 'low', label: '낮음' },
+  { value: 'medium', label: '보통' },
+  { value: 'high', label: '높음' },
+];
 const QUALITY_LABELS: Record<AudioQuality, string> = { low: '낮음', medium: '보통', high: '높음' };
+
+const SPEED_OPTIONS: OptionItem<VolumeChangeSpeed>[] = [
+  { value: 'slow', label: '느림' },
+  { value: 'medium', label: '보통' },
+  { value: 'fast', label: '빠름' },
+];
 const SPEED_LABELS: Record<VolumeChangeSpeed, string> = { slow: '느림', medium: '보통', fast: '빠름' };
+
+const LANG_OPTIONS: OptionItem<AppLanguage>[] = [
+  { value: 'ko', label: '한국어' },
+  { value: 'en', label: 'English' },
+];
 const LANG_LABELS: Record<AppLanguage, string> = { ko: '한국어', en: 'English' };
+
+const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
+  { value: 'dark', label: '다크 모드' },
+  { value: 'light', label: '라이트 모드' },
+  { value: 'system', label: '시스템 설정' },
+];
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { settings, updateSettings } = useSettingsStore();
   const isPremium = useSubscriptionStore((s) => s.isPremium);
 
-  const cycleQuality = () => {
-    const order: AudioQuality[] = ['low', 'medium', 'high'];
-    const idx = order.indexOf(settings.audioQuality);
-    updateSettings({ audioQuality: order[(idx + 1) % 3] });
-  };
-
-  const cycleSpeed = () => {
-    const order: VolumeChangeSpeed[] = ['slow', 'medium', 'fast'];
-    const idx = order.indexOf(settings.volumeChangeSpeed);
-    updateSettings({ volumeChangeSpeed: order[(idx + 1) % 3] });
-  };
-
-  const cycleLang = () => {
-    updateSettings({ language: settings.language === 'ko' ? 'en' : 'ko' });
-  };
+  const [qualityModalVisible, setQualityModalVisible] = useState(false);
+  const [speedModalVisible, setSpeedModalVisible] = useState(false);
+  const [langModalVisible, setLangModalVisible] = useState(false);
+  const [termsModalVisible, setTermsModalVisible] = useState(false);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -44,13 +57,36 @@ export default function SettingsScreen() {
         {/* General */}
         <Text style={styles.sectionTitle}>일반</Text>
         <View style={styles.group}>
-          <SettingRow
-            icon="🌙"
-            label="다크 모드"
-            right={<Toggle value={settings.darkMode} onValueChange={(v) => updateSettings({ darkMode: v })} />}
-          />
+          {/* 테마 모드 — 라디오 버튼 */}
+          <View style={styles.themeRow}>
+            <Text style={styles.rowIcon}>🎨</Text>
+            <View style={styles.themeContent}>
+              <Text style={styles.rowLabel}>테마</Text>
+              <View style={styles.radioGroup}>
+                {THEME_OPTIONS.map((opt) => (
+                  <Pressable
+                    key={opt.value}
+                    style={styles.radioOption}
+                    onPress={() => updateSettings({ themeMode: opt.value })}
+                  >
+                    <View style={[styles.radioCircle, settings.themeMode === opt.value && styles.radioCircleSelected]}>
+                      {settings.themeMode === opt.value && <View style={styles.radioDot} />}
+                    </View>
+                    <Text style={[styles.radioLabel, settings.themeMode === opt.value && styles.radioLabelSelected]}>
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          </View>
           <Divider />
-          <SettingRow icon="🌐" label="언어" rightText={LANG_LABELS[settings.language]} onPress={cycleLang} />
+          <SettingRow
+            icon="🌐"
+            label="언어"
+            rightText={LANG_LABELS[settings.language]}
+            onPress={() => setLangModalVisible(true)}
+          />
           <Divider />
           <SettingRow
             icon="📱"
@@ -82,14 +118,14 @@ export default function SettingsScreen() {
             icon="🎵"
             label="오디오 품질"
             rightText={QUALITY_LABELS[settings.audioQuality]}
-            onPress={cycleQuality}
+            onPress={() => setQualityModalVisible(true)}
           />
           <Divider />
           <SettingRow
             icon="〰️"
             label="음량 변화 속도"
             rightText={SPEED_LABELS[settings.volumeChangeSpeed]}
-            onPress={cycleSpeed}
+            onPress={() => setSpeedModalVisible(true)}
           />
         </View>
 
@@ -117,13 +153,43 @@ export default function SettingsScreen() {
         <View style={styles.group}>
           <SettingRow icon="📄" label="개인정보 처리방침" onPress={() => {}} />
           <Divider />
-          <SettingRow icon="📋" label="이용약관" onPress={() => {}} />
+          <SettingRow icon="📋" label="이용약관" onPress={() => setTermsModalVisible(true)} />
           <Divider />
           <SettingRow icon="📧" label="문의하기" onPress={() => Linking.openURL('mailto:support@deepsleep.app')} />
           <Divider />
           <SettingRow icon="ℹ️" label="앱 버전" rightText="v1.0.0" />
         </View>
       </ScrollView>
+
+      {/* Modals */}
+      <OptionModal
+        visible={qualityModalVisible}
+        title="오디오 품질"
+        options={QUALITY_OPTIONS}
+        selected={settings.audioQuality}
+        onSelect={(v) => updateSettings({ audioQuality: v })}
+        onClose={() => setQualityModalVisible(false)}
+      />
+      <OptionModal
+        visible={speedModalVisible}
+        title="음량 변화 속도"
+        options={SPEED_OPTIONS}
+        selected={settings.volumeChangeSpeed}
+        onSelect={(v) => updateSettings({ volumeChangeSpeed: v })}
+        onClose={() => setSpeedModalVisible(false)}
+      />
+      <OptionModal
+        visible={langModalVisible}
+        title="언어"
+        options={LANG_OPTIONS}
+        selected={settings.language}
+        onSelect={(v) => updateSettings({ language: v })}
+        onClose={() => setLangModalVisible(false)}
+      />
+      <TermsModal
+        visible={termsModalVisible}
+        onClose={() => setTermsModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -189,7 +255,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 56,
+    minHeight: 56,
     paddingHorizontal: layout.cardPadding,
     gap: spacing.md,
   },
@@ -199,4 +265,55 @@ const styles = StyleSheet.create({
   rowValue: { ...typography.body, color: colors.textSecondary },
   chevron: { fontSize: 20, color: colors.textMuted },
   divider: { height: 1, backgroundColor: colors.glassBorder, marginLeft: 52 },
+  // Theme radio
+  themeRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: layout.cardPadding,
+    paddingVertical: spacing.md,
+    gap: spacing.md,
+  },
+  themeContent: {
+    flex: 1,
+    gap: spacing.sm,
+  },
+  radioGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  radioOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.xs,
+    paddingRight: spacing.md,
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.textMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioCircleSelected: {
+    borderColor: colors.accent1,
+  },
+  radioDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.accent1,
+  },
+  radioLabel: {
+    ...typography.body,
+    color: colors.textSecondary,
+    fontSize: 13,
+  },
+  radioLabelSelected: {
+    color: colors.accent1,
+    fontWeight: '600',
+  },
 });

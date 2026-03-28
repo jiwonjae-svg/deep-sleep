@@ -19,29 +19,24 @@ import { STORAGE_KEYS } from '@/utils/constants';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface Slide {
-  pose: 'greeting' | 'listening' | 'explaining' | 'sleeping';
   title: string;
   description: string;
 }
 
 const slides: Slide[] = [
   {
-    pose: 'greeting',
     title: 'Deep Sleep에 오신 것을 환영합니다',
     description: '100가지 자연의 소리로 완벽한 수면 환경을 만들어보세요.',
   },
   {
-    pose: 'listening',
     title: '나만의 사운드 믹스',
     description: '최대 10개의 소리를 동시에 조합하고 볼륨을 세밀하게 조절하세요.',
   },
   {
-    pose: 'explaining',
     title: '스마트 알람',
     description: '자연스러운 페이드인 알람과 수학 문제 해제로 상쾌한 아침을 시작하세요.',
   },
   {
-    pose: 'sleeping',
     title: '편안한 잠자리',
     description: '타이머 설정 후 수면 모드에서 방해 없이 숙면하세요.',
   },
@@ -95,10 +90,10 @@ export default function OnboardingScreen() {
         showsHorizontalScrollIndicator={false}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <View style={{ width: SCREEN_WIDTH }}>
             <OnboardingSlide
-              mascotPose={item.pose}
+              slideIndex={index}
               title={item.title}
               description={item.description}
             />

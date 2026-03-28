@@ -112,7 +112,10 @@
   "settings": {
     "title": "Settings",
     "general": "General",
-    "darkMode": "Dark Mode",
+    "theme": "Theme",
+    "themeDark": "Dark Mode",
+    "themeLight": "Light Mode",
+    "themeSystem": "System Default",
     "language": "Language",
     "autoSleepScreen": "Auto Sleep Screen",
     "autoDimBrightness": "Auto Dim Brightness",

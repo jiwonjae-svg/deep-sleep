@@ -11,14 +11,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   splash: {
     image: './assets/splash.png',
     resizeMode: 'contain',
-    backgroundColor: '#0A0E2A',
+    backgroundColor: '#06080E',
   },
   assetBundlePatterns: ['**/*'],
   android: {
     package: 'com.deepsleep.app',
     adaptiveIcon: {
-      foregroundImage: './assets/adaptive-icon.png',
-      backgroundColor: '#0A0E2A',
+      foregroundImage: './assets/adaptive-icon-foreground.png',
+      backgroundColor: '#06080E',
     },
     permissions: [
       'SCHEDULE_EXACT_ALARM',

@@ -1,0 +1,135 @@
+import React from 'react';
+import {
+  Modal,
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  FlatList,
+} from 'react-native';
+import { colors, typography, spacing, layout } from '@/theme';
+
+export interface OptionItem<T extends string = string> {
+  value: T;
+  label: string;
+}
+
+interface OptionModalProps<T extends string = string> {
+  visible: boolean;
+  title: string;
+  options: OptionItem<T>[];
+  selected: T;
+  onSelect: (value: T) => void;
+  onClose: () => void;
+}
+
+export function OptionModal<T extends string = string>({
+  visible,
+  title,
+  options,
+  selected,
+  onSelect,
+  onClose,
+}: OptionModalProps<T>) {
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <Pressable style={styles.backdrop} onPress={onClose}>
+        <View style={styles.sheet}>
+          <Text style={styles.title}>{title}</Text>
+          <FlatList
+            data={options}
+            keyExtractor={(item) => item.value}
+            renderItem={({ item }) => {
+              const isSelected = item.value === selected;
+              return (
+                <Pressable
+                  style={[styles.option, isSelected && styles.optionSelected]}
+                  onPress={() => {
+                    onSelect(item.value);
+                    onClose();
+                  }}
+                >
+                  <Text style={[styles.optionLabel, isSelected && styles.optionLabelSelected]}>
+                    {item.label}
+                  </Text>
+                  {isSelected && <Text style={styles.check}>✓</Text>}
+                </Pressable>
+              );
+            }}
+            ItemSeparatorComponent={() => <View style={styles.divider} />}
+          />
+          <Pressable style={styles.cancelBtn} onPress={onClose}>
+            <Text style={styles.cancelText}>취소</Text>
+          </Pressable>
+        </View>
+      </Pressable>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: colors.bgSecondary,
+    borderTopLeftRadius: layout.borderRadiusLg,
+    borderTopRightRadius: layout.borderRadiusLg,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing['2xl'],
+    paddingHorizontal: layout.cardPadding,
+    gap: spacing.md,
+  },
+  title: {
+    ...typography.h3,
+    color: colors.textPrimary,
+    textAlign: 'center',
+    paddingBottom: spacing.sm,
+  },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.base,
+    paddingHorizontal: spacing.md,
+    borderRadius: layout.borderRadiusSm,
+  },
+  optionSelected: {
+    backgroundColor: colors.glassLight,
+  },
+  optionLabel: {
+    ...typography.body,
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  optionLabelSelected: {
+    color: colors.accent1,
+    fontWeight: '600',
+  },
+  check: {
+    color: colors.accent1,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.glassBorder,
+  },
+  cancelBtn: {
+    marginTop: spacing.sm,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  cancelText: {
+    ...typography.body,
+    color: colors.textMuted,
+  },
+});

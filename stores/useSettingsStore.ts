@@ -5,7 +5,7 @@ import { AppSettings } from '@/types';
 const STORAGE_KEY = '@settings';
 
 const DEFAULT_SETTINGS: AppSettings = {
-  darkMode: true,
+  themeMode: 'dark',
   language: 'ko',
   autoSleepScreen: true,
   autoDimBrightness: true,

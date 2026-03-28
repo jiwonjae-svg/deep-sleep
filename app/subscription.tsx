@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -52,7 +52,12 @@ export default function SubscriptionScreen() {
       </Pressable>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <MascotImage pose="crown" size={160} />
+        <Image
+          source={require('@/assets/images/promo/premium-banner.png')}
+          style={styles.banner}
+          resizeMode="contain"
+        />
+        <MascotImage pose="crown" size={140} />
 
         <Text style={styles.title}>Deep Sleep Premium</Text>
         <Text style={styles.subtitle}>광고 없이 100가지 소리를 마음껏 즐기세요</Text>
@@ -117,6 +122,11 @@ const styles = StyleSheet.create({
     padding: layout.screenPaddingH,
     paddingTop: spacing['2xl'],
     gap: spacing.lg,
+  },
+  banner: {
+    width: '100%',
+    height: 100,
+    marginBottom: spacing.sm,
   },
   title: {
     ...typography.display,

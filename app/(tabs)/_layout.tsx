@@ -1,6 +1,7 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, typography } from '@/theme';
 import { layout } from '@/theme/spacing';
 import { AdBanner } from '@/components/common/AdBanner';
@@ -28,12 +29,18 @@ const TAB_CONFIG: { name: string; title: string; iconFocused: IconName; iconDefa
   ];
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={styles.container}>
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarStyle: styles.tabBar,
+          tabBarStyle: {
+            ...styles.tabBar,
+            height: layout.tabBarHeight + insets.bottom,
+            paddingBottom: 8 + insets.bottom,
+          },
           tabBarActiveTintColor: colors.accent1,
           tabBarInactiveTintColor: colors.textMuted,
           tabBarLabelStyle: styles.tabLabel,
@@ -70,8 +77,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgSecondary,
     borderTopWidth: 1,
     borderTopColor: colors.glassBorder,
-    height: layout.tabBarHeight,
-    paddingBottom: 8,
     paddingTop: 4,
   },
   tabLabel: {

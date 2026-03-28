@@ -1,43 +1,44 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { Image, StyleSheet } from 'react-native';
+
+export type MascotPose =
+  | 'standby'
+  | 'sleeping'
+  | 'yawning'
+  | 'waving'
+  | 'mixing'
+  | 'alarm'
+  | 'stretching'
+  | 'crown'
+  | 'reading'
+  | 'happy';
 
 interface MascotImageProps {
-  pose?: string;
+  pose?: MascotPose;
   size?: number;
 }
 
-/**
- * 마스코트 이미지 컴포넌트.
- * TODO: 실제 이미지 에셋으로 교체
- * 현재는 이모지 placeholder를 사용.
- */
-export function MascotImage({ pose = 'standby', size = 200 }: MascotImageProps) {
-  const emoji = POSE_EMOJIS[pose] ?? '🐻';
-
-  return (
-    <View style={[styles.container, { width: size, height: size }]}>
-      <Text style={[styles.emoji, { fontSize: size * 0.5 }]}>{emoji}</Text>
-    </View>
-  );
-}
-
-const POSE_EMOJIS: Record<string, string> = {
-  standby: '🐻',
-  sleeping: '😴',
-  yawning: '🥱',
-  waving: '👋',
-  mixing: '🎧',
-  alarm: '⏰',
-  stretching: '🙆',
-  crown: '👑',
-  reading: '📖',
-  happy: '😊',
+const POSE_IMAGES: Record<MascotPose, number> = {
+  standby:    require('@/assets/images/mascot/mascot-standby.png'),
+  sleeping:   require('@/assets/images/mascot/mascot-sleeping.png'),
+  yawning:    require('@/assets/images/mascot/mascot-yawning.png'),
+  waving:     require('@/assets/images/mascot/mascot-waving.png'),
+  mixing:     require('@/assets/images/mascot/mascot-mixing.png'),
+  alarm:      require('@/assets/images/mascot/mascot-alarm.png'),
+  stretching: require('@/assets/images/mascot/mascot-stretching.png'),
+  crown:      require('@/assets/images/mascot/mascot-crown.png'),
+  reading:    require('@/assets/images/mascot/mascot-reading.png'),
+  happy:      require('@/assets/images/mascot/mascot-happy.png'),
 };
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emoji: {},
-});
+export function MascotImage({ pose = 'standby', size = 200 }: MascotImageProps) {
+  const source = POSE_IMAGES[pose] ?? POSE_IMAGES.standby;
+
+  return (
+    <Image
+      source={source}
+      style={{ width: size, height: size }}
+      resizeMode="contain"
+    />
+  );
+}

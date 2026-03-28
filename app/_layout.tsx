@@ -2,7 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, LogBox } from 'react-native';
+
+// Expo Go에서 push notification 자동 등록 시도 시 발생하는 알려진 제한 경고 억제
+// (Dev Build 또는 스토어 빌드에서는 발생하지 않음)
+LogBox.ignoreLogs([
+  'expo-notifications: Android Push notifications',
+  '`expo-notifications` functionality is not fully supported in Expo Go',
+]);
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import '@/i18n'; // i18n 초기화
 import { usePresetStore } from '@/stores/usePresetStore';

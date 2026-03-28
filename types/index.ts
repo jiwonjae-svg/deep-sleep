@@ -82,9 +82,10 @@ export interface MathProblem {
 export type AudioQuality = 'low' | 'medium' | 'high';
 export type VolumeChangeSpeed = 'slow' | 'medium' | 'fast';
 export type AppLanguage = 'ko' | 'en';
+export type ThemeMode = 'dark' | 'light' | 'system';
 
 export interface AppSettings {
-  darkMode: boolean;
+  themeMode: ThemeMode;
   language: AppLanguage;
   autoSleepScreen: boolean;
   autoDimBrightness: boolean;
