@@ -120,9 +120,3 @@ export default function MixerScreen() {
     </SafeAreaView>
   );
 }
-        <Text style={styles.title}>사운드 믹서</Text>
-        <Text style={styles.count}>{soundCount}/10 활성</Text>
-      </View>
-    </SafeAreaView>
-  );
-}

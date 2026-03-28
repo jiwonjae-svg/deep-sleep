@@ -53,7 +53,9 @@ export function AIResultPreview({
         secondaryActions: { flexDirection: 'row', gap: spacing.md },
       }),
     [themeColors],
-  );\n\n  return (
+  );
+
+  return (
     <View style={styles.container}>
       <Text style={styles.name}>{result.preset_name}</Text>
       <Text style={styles.desc}>{result.description}</Text>

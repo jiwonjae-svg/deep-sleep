@@ -81,10 +81,3 @@ const styles = StyleSheet.create({
     borderRadius: 1,
   },
 });
-  indicator: {
-    height: 2,
-    borderRadius: 1,
-    width: '100%',
-    marginTop: 4,
-  },
-});
