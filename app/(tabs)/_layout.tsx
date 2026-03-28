@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, typography } from '@/theme';
+import { useThemeColors, typography } from '@/theme';
 import { layout } from '@/theme/spacing';
 import { AdBanner } from '@/components/common/AdBanner';
 import { View, StyleSheet } from 'react-native';
@@ -30,6 +30,22 @@ const TAB_CONFIG: { name: string; title: string; iconFocused: IconName; iconDefa
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const themeColors = useThemeColors();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: themeColors.bgPrimary },
+        tabBar: {
+          backgroundColor: themeColors.bgSecondary,
+          borderTopWidth: 1,
+          borderTopColor: themeColors.glassBorder,
+          paddingTop: 4,
+        },
+        tabLabel: { fontSize: 11, fontWeight: '600' },
+      }),
+    [themeColors],
+  );
 
   return (
     <View style={styles.container}>
@@ -41,8 +57,8 @@ export default function TabLayout() {
             height: layout.tabBarHeight + insets.bottom,
             paddingBottom: 8 + insets.bottom,
           },
-          tabBarActiveTintColor: colors.accent1,
-          tabBarInactiveTintColor: colors.textMuted,
+          tabBarActiveTintColor: themeColors.accent1,
+          tabBarInactiveTintColor: themeColors.textMuted,
           tabBarLabelStyle: styles.tabLabel,
         }}
       >
@@ -67,20 +83,3 @@ export default function TabLayout() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bgPrimary,
-  },
-  tabBar: {
-    backgroundColor: colors.bgSecondary,
-    borderTopWidth: 1,
-    borderTopColor: colors.glassBorder,
-    paddingTop: 4,
-  },
-  tabLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-});

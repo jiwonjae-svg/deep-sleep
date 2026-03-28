@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import { DaySelector } from '@/components/alarm/DaySelector';
 import { Toggle } from '@/components/ui/Toggle';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Button } from '@/components/ui/Button';
-import { colors, typography, spacing, layout } from '@/theme';
+import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { Alarm, MathDifficulty } from '@/types';
 
 const FADE_LABELS = ['꺼짐', '1분', '3분', '5분'];
@@ -35,6 +35,7 @@ export default function AlarmEditScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const { addAlarm, updateAlarm, deleteAlarm } = useAlarm();
   const alarms = useAlarmStore((s) => s.alarms);
+  const themeColors = useThemeColors();
 
   const existingAlarm = params.id ? alarms.find((a) => a.id === params.id) : undefined;
   const isNew = !existingAlarm;
@@ -55,6 +56,22 @@ export default function AlarmEditScreen() {
   const [mathDismiss, setMathDismiss] = useState(existingAlarm?.mathDismiss ?? false);
   const [mathIdx, setMathIdx] = useState(
     MATH_VALUES.indexOf((existingAlarm?.mathDifficulty as MathDifficulty) ?? 'easy'),
+  );
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: themeColors.bgPrimary },
+        header: { paddingHorizontal: layout.screenPaddingH, height: layout.headerHeight, justifyContent: 'center' },
+        title: { ...typography.h1, color: themeColors.textPrimary },
+        content: { paddingHorizontal: layout.screenPaddingH, gap: spacing.md, paddingBottom: spacing['4xl'] },
+        sectionTitle: { ...typography.bodyMedium, color: themeColors.textSecondary, marginTop: spacing.sm },
+        hint: { ...typography.caption, color: themeColors.textMuted },
+        input: { backgroundColor: themeColors.bgSecondary, borderRadius: layout.borderRadiusSm, borderWidth: 1, borderColor: themeColors.glassBorder, padding: layout.cardPadding, ...typography.body, color: themeColors.textPrimary },
+        toggleRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm },
+        buttonGroup: { gap: spacing.md, marginTop: spacing.xl },
+      }),
+    [themeColors],
   );
 
   const handleSave = async () => {
@@ -121,7 +138,7 @@ export default function AlarmEditScreen() {
             value={label}
             onChangeText={setLabel}
             placeholder="알람 이름"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={themeColors.textMuted}
             maxLength={30}
           />
 
@@ -175,44 +192,4 @@ export default function AlarmEditScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bgPrimary },
-  header: {
-    paddingHorizontal: layout.screenPaddingH,
-    height: layout.headerHeight,
-    justifyContent: 'center',
-  },
-  title: { ...typography.h1, color: colors.textPrimary },
-  content: {
-    paddingHorizontal: layout.screenPaddingH,
-    gap: spacing.md,
-    paddingBottom: spacing['4xl'],
-  },
-  sectionTitle: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-    marginTop: spacing.sm,
-  },
-  hint: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-  input: {
-    backgroundColor: colors.bgSecondary,
-    borderRadius: layout.borderRadiusSm,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-    padding: layout.cardPadding,
-    ...typography.body,
-    color: colors.textPrimary,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.sm,
-  },
-  buttonGroup: {
-    gap: spacing.md,
-    marginTop: spacing.xl,
-  },
-});
+

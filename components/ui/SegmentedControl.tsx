@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { colors, typography, layout } from '@/theme';
+import { useThemeColors, typography, layout } from '@/theme';
 
 interface SegmentedControlProps {
   options: string[];
@@ -15,6 +15,27 @@ export function SegmentedControl({
   onSelect,
   disabled = false,
 }: SegmentedControlProps) {
+  const themeColors = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flexDirection: 'row',
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: themeColors.glassMedium,
+          overflow: 'hidden',
+        },
+        segment: { flex: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 20 },
+        segmentActive: { backgroundColor: themeColors.accent1 },
+        segmentDisabled: { opacity: 0.4 },
+        label: { ...typography.buttonSmall, color: themeColors.textSecondary },
+        labelActive: { color: '#ffffff' },
+        labelDisabled: { color: themeColors.textMuted },
+      }),
+    [themeColors],
+  );
+
   return (
     <View style={styles.container}>
       {options.map((label, i) => {
@@ -44,35 +65,3 @@ export function SegmentedControl({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.glassMedium,
-    overflow: 'hidden',
-  },
-  segment: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 20,
-  },
-  segmentActive: {
-    backgroundColor: colors.accent1,
-  },
-  segmentDisabled: {
-    opacity: 0.4,
-  },
-  label: {
-    ...typography.buttonSmall,
-    color: colors.textSecondary,
-  },
-  labelActive: {
-    color: colors.white,
-  },
-  labelDisabled: {
-    color: colors.textMuted,
-  },
-});

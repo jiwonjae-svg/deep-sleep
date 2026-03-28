@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { AIPresetResult } from '@/types';
 import { getSoundById } from '@/data/sounds';
 import { Button } from '@/components/ui/Button';
-import { colors, typography, spacing, layout } from '@/theme';
+import { useThemeColors, typography, spacing, layout } from '@/theme';
 
 interface AIResultPreviewProps {
   result: AIPresetResult;
@@ -20,7 +20,40 @@ export function AIResultPreview({
   onSaveAsPreset,
   onCancel,
 }: AIResultPreviewProps) {
-  return (
+  const themeColors = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { gap: spacing.base },
+        name: { ...typography.h2, color: themeColors.textPrimary },
+        desc: { ...typography.body, color: themeColors.textSecondary },
+        soundList: { maxHeight: 250 },
+        soundRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.md,
+          paddingVertical: spacing.sm,
+          borderBottomWidth: 1,
+          borderBottomColor: themeColors.glassBorder,
+        },
+        emoji: { fontSize: 24 },
+        soundInfo: { flex: 1, gap: 4 },
+        soundName: { ...typography.bodyMedium, color: themeColors.textPrimary },
+        barBg: {
+          height: 4,
+          borderRadius: 2,
+          backgroundColor: themeColors.glassMedium,
+          position: 'relative',
+          overflow: 'hidden',
+        },
+        barMin: { position: 'absolute', height: 4, backgroundColor: 'transparent' },
+        barRange: { position: 'absolute', height: 4, backgroundColor: themeColors.accent1, borderRadius: 2 },
+        soundMeta: { ...typography.caption, color: themeColors.textMuted },
+        actions: { gap: spacing.md },
+        secondaryActions: { flexDirection: 'row', gap: spacing.md },
+      }),
+    [themeColors],
+  );\n\n  return (
     <View style={styles.container}>
       <Text style={styles.name}>{result.preset_name}</Text>
       <Text style={styles.desc}>{result.description}</Text>
@@ -68,63 +101,3 @@ export function AIResultPreview({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    gap: spacing.base,
-  },
-  name: {
-    ...typography.h2,
-    color: colors.textPrimary,
-  },
-  desc: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  soundList: {
-    maxHeight: 250,
-  },
-  soundRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.glassBorder,
-  },
-  emoji: { fontSize: 24 },
-  soundInfo: { flex: 1, gap: 4 },
-  soundName: {
-    ...typography.bodyMedium,
-    color: colors.textPrimary,
-  },
-  barBg: {
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.glassMedium,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  barMin: {
-    position: 'absolute',
-    height: 4,
-    backgroundColor: 'transparent',
-  },
-  barRange: {
-    position: 'absolute',
-    height: 4,
-    backgroundColor: colors.accent1,
-    borderRadius: 2,
-  },
-  soundMeta: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-  actions: {
-    gap: spacing.md,
-  },
-  secondaryActions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-});

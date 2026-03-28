@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { getSoundById } from '@/data/sounds';
-import { colors, typography, spacing, layout } from '@/theme';
+import { useThemeColors } from '@/theme';
+import { typography, spacing, layout } from '@/theme';
 
 interface ActiveSoundsBarProps {
   onSoundPress: (soundId: string) => void;
@@ -10,22 +11,77 @@ interface ActiveSoundsBarProps {
 }
 
 export function ActiveSoundsBar({ onSoundPress, onPlayPress }: ActiveSoundsBarProps) {
+  const themeColors = useThemeColors();
   const activeSounds = useAudioStore((s) => s.activeSounds);
   const isPlaying = useAudioStore((s) => s.isPlaying);
   const soundIds = Array.from(activeSounds.keys());
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: themeColors.bgSecondary,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: themeColors.glassBorder,
+          paddingVertical: spacing.sm,
+          paddingHorizontal: layout.screenPaddingH,
+          gap: spacing.md,
+        },
+        scroll: { flex: 1 },
+        chipRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.xs,
+        },
+        chip: {
+          backgroundColor: themeColors.accent1,
+          borderRadius: layout.borderRadiusSm,
+          paddingVertical: spacing.xs,
+          paddingHorizontal: spacing.sm,
+        },
+        chipText: {
+          ...typography.caption,
+          color: themeColors.white,
+          fontWeight: '600',
+        },
+        playBtn: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: themeColors.accent1,
+          borderRadius: layout.borderRadiusSm,
+          paddingVertical: spacing.sm,
+          paddingHorizontal: spacing.base,
+          gap: spacing.xs,
+        },
+        playIcon: {
+          fontSize: 12,
+          color: themeColors.white,
+        },
+        playLabel: {
+          ...typography.buttonSmall,
+          color: themeColors.white,
+        },
+      }),
+    [themeColors],
+  );
 
   if (soundIds.length === 0) return null;
 
   return (
     <View style={styles.container}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scroll}>
-        <View style={styles.iconRow}>
-          <Text style={styles.label}>활성: </Text>
+        <View style={styles.chipRow}>
           {soundIds.map((id) => {
             const meta = getSoundById(id);
             return (
-              <Pressable key={id} onPress={() => onSoundPress(id)} style={styles.iconBtn}>
-                <Text style={styles.icon}>{meta?.iconEmoji ?? '🔊'}</Text>
+              <Pressable key={id} onPress={() => onSoundPress(id)}>
+                <View style={styles.chip}>
+                  <Text style={styles.chipText} numberOfLines={1}>
+                    {meta?.name ?? id}
+                  </Text>
+                </View>
               </Pressable>
             );
           })}
@@ -38,54 +94,3 @@ export function ActiveSoundsBar({ onSoundPress, onPlayPress }: ActiveSoundsBarPr
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgSecondary,
-    borderTopWidth: 1,
-    borderTopColor: colors.glassBorder,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: layout.screenPaddingH,
-    gap: spacing.md,
-  },
-  scroll: {
-    flex: 1,
-  },
-  iconRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  label: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  iconBtn: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  icon: {
-    fontSize: 20,
-  },
-  playBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.accent1,
-    borderRadius: layout.borderRadiusSm,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.base,
-    gap: spacing.xs,
-  },
-  playIcon: {
-    color: colors.white,
-    fontSize: 12,
-  },
-  playLabel: {
-    ...typography.buttonSmall,
-    color: colors.white,
-  },
-});

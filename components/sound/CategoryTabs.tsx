@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView, Pressable, Text, StyleSheet, View } from 'react-native';
 import { categories } from '@/data/categories';
+import { getSoundsByCategory } from '@/data/sounds';
 import { SoundCategory } from '@/types';
-import { colors, typography, spacing } from '@/theme';
+import { useThemeColors } from '@/theme';
+import { typography, spacing } from '@/theme';
 
 interface CategoryTabsProps {
   selectedCategory: SoundCategory;
@@ -10,25 +12,41 @@ interface CategoryTabsProps {
 }
 
 export function CategoryTabs({ selectedCategory, onSelect }: CategoryTabsProps) {
+  const themeColors = useThemeColors();
+
+  // 소리가 하나도 없는 카테고리는 탭에서 제거한다
+  const visibleCategories = useMemo(
+    () => categories.filter((cat) => getSoundsByCategory(cat.id).length > 0),
+    [],
+  );
+
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.container}
     >
-      {categories.map((cat) => {
+      {visibleCategories.map((cat) => {
         const isSelected = cat.id === selectedCategory;
         return (
           <Pressable
             key={cat.id}
             onPress={() => onSelect(cat.id)}
-            style={[styles.tab, isSelected && { borderBottomColor: colors.accent1 }]}
+            style={styles.tab}
           >
             <Text style={styles.emoji}>{cat.emoji}</Text>
-            <Text style={[styles.label, isSelected && styles.labelActive]} numberOfLines={1}>
+            <Text
+              style={[
+                styles.label,
+                { color: isSelected ? themeColors.textPrimary : themeColors.textSecondary },
+              ]}
+              numberOfLines={1}
+            >
               {cat.name}
             </Text>
-            {isSelected && <View style={[styles.indicator, { backgroundColor: colors.accent1 }]} />}
+            {isSelected && (
+              <View style={[styles.indicator, { backgroundColor: themeColors.accent1 }]} />
+            )}
           </Pressable>
         );
       })}
@@ -53,11 +71,16 @@ const styles = StyleSheet.create({
   },
   label: {
     ...typography.caption,
-    color: colors.textSecondary,
   },
-  labelActive: {
-    color: colors.textPrimary,
+  indicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    borderRadius: 1,
   },
+});
   indicator: {
     height: 2,
     borderRadius: 1,

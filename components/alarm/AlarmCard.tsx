@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Toggle } from '@/components/ui/Toggle';
 import { Alarm } from '@/types';
-import { colors, typography, spacing, layout } from '@/theme';
+import { useThemeColors, typography, spacing, layout } from '@/theme';
 
 interface AlarmCardProps {
   alarm: Alarm;
@@ -13,7 +13,30 @@ interface AlarmCardProps {
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
 
 export function AlarmCard({ alarm, onToggle, onPress }: AlarmCardProps) {
+  const themeColors = useThemeColors();
   const timeStr = `${String(alarm.time.hour).padStart(2, '0')}:${String(alarm.time.minute).padStart(2, '0')}`;
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        card: {
+          backgroundColor: themeColors.glassLight,
+          borderRadius: layout.borderRadiusMd,
+          padding: layout.cardPadding,
+          borderWidth: 1,
+          borderColor: themeColors.glassBorder,
+          gap: spacing.sm,
+        },
+        top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+        time: { ...typography.display, color: themeColors.textPrimary },
+        days: { flexDirection: 'row', gap: spacing.sm },
+        day: { ...typography.overline, color: themeColors.textMuted },
+        dayActive: { color: themeColors.accent2 },
+        disabled: { opacity: 0.4 },
+        label: { ...typography.caption, color: themeColors.textSecondary },
+      }),
+    [themeColors],
+  );
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
@@ -39,41 +62,3 @@ export function AlarmCard({ alarm, onToggle, onPress }: AlarmCardProps) {
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.glassLight,
-    borderRadius: layout.borderRadiusMd,
-    padding: layout.cardPadding,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-    gap: spacing.sm,
-  },
-  top: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  time: {
-    ...typography.display,
-    color: colors.textPrimary,
-  },
-  days: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  day: {
-    ...typography.overline,
-    color: colors.textMuted,
-  },
-  dayActive: {
-    color: colors.accent2,
-  },
-  disabled: {
-    opacity: 0.4,
-  },
-  label: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-});

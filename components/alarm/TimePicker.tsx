@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { colors, typography, spacing } from '@/theme';
+import { useThemeColors, typography, spacing } from '@/theme';
 
 interface TimePickerProps {
   hour: number;
@@ -10,6 +10,20 @@ interface TimePickerProps {
 }
 
 export function TimePicker({ hour, minute, onHourChange, onMinuteChange }: TimePickerProps) {
+  const themeColors = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.md },
+        column: { alignItems: 'center' },
+        arrow: { padding: spacing.sm },
+        arrowText: { fontSize: 24, color: themeColors.textSecondary },
+        value: { fontFamily: 'monospace', fontSize: 56, fontWeight: '700', color: themeColors.textPrimary, lineHeight: 68 },
+        colon: { fontSize: 48, fontWeight: '700', color: themeColors.textPrimary, marginTop: -4 },
+      }),
+    [themeColors],
+  );
+
   return (
     <View style={styles.container}>
       {/* Hour */}
@@ -38,35 +52,3 @@ export function TimePicker({ hour, minute, onHourChange, onMinuteChange }: TimeP
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.md,
-  },
-  column: {
-    alignItems: 'center',
-  },
-  arrow: {
-    padding: spacing.sm,
-  },
-  arrowText: {
-    fontSize: 24,
-    color: colors.textSecondary,
-  },
-  value: {
-    fontFamily: 'monospace',
-    fontSize: 56,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    lineHeight: 68,
-  },
-  colon: {
-    fontSize: 48,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginTop: -4,
-  },
-});

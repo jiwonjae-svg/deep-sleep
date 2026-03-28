@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
-import { colors, layout } from '@/theme';
+import { useThemeColors, layout } from '@/theme';
 
 interface CardProps {
   children: React.ReactNode;
@@ -10,6 +10,22 @@ interface CardProps {
 }
 
 export function Card({ children, active = false, accentColor, style }: CardProps) {
+  const themeColors = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        base: {
+          backgroundColor: themeColors.glassLight,
+          borderRadius: layout.borderRadiusMd,
+          padding: layout.cardPadding,
+          borderWidth: 1,
+          borderColor: themeColors.glassBorder,
+        },
+        active: { backgroundColor: themeColors.glassHeavy },
+      }),
+    [themeColors],
+  );
+
   return (
     <View
       style={[
@@ -23,16 +39,3 @@ export function Card({ children, active = false, accentColor, style }: CardProps
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    backgroundColor: colors.glassLight,
-    borderRadius: layout.borderRadiusMd,
-    padding: layout.cardPadding,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-  },
-  active: {
-    backgroundColor: colors.glassHeavy,
-  },
-});

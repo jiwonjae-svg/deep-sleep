@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,7 +8,7 @@ import { BenefitList } from '@/components/subscription/BenefitList';
 import { PlanCard } from '@/components/subscription/PlanCard';
 import { Button } from '@/components/ui/Button';
 import { useSubscription } from '@/hooks/useSubscription';
-import { colors, typography, spacing, layout } from '@/theme';
+import { useThemeColors, typography, spacing, layout } from '@/theme';
 
 interface PlanInfo {
   id: string;
@@ -28,9 +28,22 @@ export default function SubscriptionScreen() {
   const router = useRouter();
   const { isPremium, packages, purchasing: isPurchasing, purchase, restore } = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState('yearly');
-
-
-  // 이미 프리미엄이면 닫기
+  const themeColors = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: themeColors.bgPrimary },
+        closeBtn: { position: 'absolute', top: 56, right: layout.screenPaddingH, width: 44, height: 44, alignItems: 'center', justifyContent: 'center', zIndex: 10 },
+        content: { alignItems: 'center', padding: layout.screenPaddingH, paddingTop: spacing['2xl'], gap: spacing.lg },
+        banner: { width: '100%', height: 100, marginBottom: spacing.sm },
+        title: { ...typography.display, color: themeColors.textPrimary },
+        subtitle: { ...typography.body, color: themeColors.textSecondary, textAlign: 'center' },
+        plans: { width: '100%', gap: spacing.md },
+        restoreText: { ...typography.bodyMedium, color: themeColors.accent1, textDecorationLine: 'underline' },
+        legal: { ...typography.caption, color: themeColors.textMuted, textAlign: 'center', lineHeight: 18, paddingHorizontal: spacing.md, paddingBottom: spacing['2xl'] },
+      }),
+    [themeColors],
+  );
   useEffect(() => {
     if (isPremium) {
       router.back();
@@ -48,7 +61,7 @@ export default function SubscriptionScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Close button */}
       <Pressable style={styles.closeBtn} onPress={() => router.back()}>
-        <Ionicons name="close" size={28} color={colors.textSecondary} />
+        <Ionicons name="close" size={28} color={themeColors.textSecondary} />
       </Pressable>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -102,56 +115,4 @@ export default function SubscriptionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bgPrimary,
-  },
-  closeBtn: {
-    position: 'absolute',
-    top: 56,
-    right: layout.screenPaddingH,
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
-  content: {
-    alignItems: 'center',
-    padding: layout.screenPaddingH,
-    paddingTop: spacing['2xl'],
-    gap: spacing.lg,
-  },
-  banner: {
-    width: '100%',
-    height: 100,
-    marginBottom: spacing.sm,
-  },
-  title: {
-    ...typography.display,
-    color: colors.textPrimary,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  plans: {
-    width: '100%',
-    gap: spacing.md,
-  },
-  restoreText: {
-    ...typography.bodyMedium,
-    color: colors.accent1,
-    textDecorationLine: 'underline',
-  },
-  legal: {
-    ...typography.caption,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 18,
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing['2xl'],
-  },
-});
+

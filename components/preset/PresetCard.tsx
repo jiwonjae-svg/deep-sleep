@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Preset } from '@/types';
 import { getSoundById } from '@/data/sounds';
-import { colors, typography, spacing, layout } from '@/theme';
+import { useThemeColors } from '@/theme';
+import { typography, spacing, layout } from '@/theme';
 
 interface PresetCardProps {
   preset: Preset;
@@ -11,9 +12,55 @@ interface PresetCardProps {
 }
 
 export function PresetCard({ preset, onPress, onLongPress }: PresetCardProps) {
-  const soundEmojis = preset.sounds
-    .slice(0, 5)
-    .map((s) => getSoundById(s.soundId)?.iconEmoji ?? '🔊');
+  const themeColors = useThemeColors();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        card: {
+          backgroundColor: themeColors.glassLight,
+          borderRadius: layout.borderRadiusMd,
+          padding: layout.cardPadding,
+          // 테두리 없음
+          gap: spacing.sm,
+        },
+        name: {
+          ...typography.h3,
+          color: themeColors.textPrimary,
+        },
+        description: {
+          ...typography.body,
+          color: themeColors.textSecondary,
+        },
+        footer: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: spacing.xs,
+          marginTop: spacing.xs,
+        },
+        chip: {
+          backgroundColor: themeColors.accent1,
+          borderRadius: layout.borderRadiusSm,
+          paddingVertical: 3,
+          paddingHorizontal: spacing.sm,
+        },
+        chipText: {
+          ...typography.caption,
+          color: themeColors.white,
+          fontWeight: '600',
+          fontSize: 11,
+        },
+        meta: {
+          ...typography.caption,
+          color: themeColors.textMuted,
+        },
+      }),
+    [themeColors],
+  );
+
+  const soundNames = preset.sounds.slice(0, 4).map((s) => getSoundById(s.soundId)?.name ?? s.soundId);
+  const extra = preset.sounds.length - 4;
 
   return (
     <Pressable
@@ -22,57 +69,19 @@ export function PresetCard({ preset, onPress, onLongPress }: PresetCardProps) {
       onLongPress={onLongPress}
     >
       <Text style={styles.name}>{preset.name}</Text>
-      <Text style={styles.description} numberOfLines={1}>
-        {preset.description}
-      </Text>
-      <View style={styles.footer}>
-        <View style={styles.icons}>
-          {soundEmojis.map((emoji, i) => (
-            <Text key={i} style={styles.emoji}>
-              {emoji}
-            </Text>
-          ))}
-        </View>
-        <Text style={styles.meta}>
-          · {preset.sounds.length}개 소리 · {preset.isDefault ? '기본' : '커스텀'}
+      {!!preset.description && (
+        <Text style={styles.description} numberOfLines={1}>
+          {preset.description}
         </Text>
+      )}
+      <View style={styles.footer}>
+        {soundNames.map((name, i) => (
+          <View key={i} style={styles.chip}>
+            <Text style={styles.chipText}>{name}</Text>
+          </View>
+        ))}
+        {extra > 0 && <Text style={styles.meta}>+{extra}</Text>}
       </View>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.glassLight,
-    borderRadius: layout.borderRadiusMd,
-    padding: layout.cardPadding,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-    gap: spacing.sm,
-  },
-  name: {
-    ...typography.h3,
-    color: colors.textPrimary,
-  },
-  description: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.xs,
-  },
-  icons: {
-    flexDirection: 'row',
-    gap: 2,
-  },
-  emoji: {
-    fontSize: 16,
-  },
-  meta: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-});

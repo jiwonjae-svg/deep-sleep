@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, TextInput, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,7 +6,7 @@ import { useAudioStore } from '@/stores/useAudioStore';
 import { usePresetStore } from '@/stores/usePresetStore';
 import { Button } from '@/components/ui/Button';
 import { getSoundById } from '@/data/sounds';
-import { colors, typography, spacing, layout } from '@/theme';
+import { useThemeColors, typography, spacing, layout } from '@/theme';
 
 export default function PresetSaveScreen() {
   const router = useRouter();
@@ -14,6 +14,24 @@ export default function PresetSaveScreen() {
   const addPreset = usePresetStore((s) => s.addPreset);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const themeColors = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: themeColors.bgPrimary },
+        header: { paddingHorizontal: layout.screenPaddingH, height: layout.headerHeight, justifyContent: 'center' },
+        title: { ...typography.h1, color: themeColors.textPrimary },
+        content: { flex: 1, paddingHorizontal: layout.screenPaddingH, gap: spacing.md, paddingBottom: spacing['2xl'] },
+        preview: { backgroundColor: themeColors.glassLight, borderRadius: layout.borderRadiusMd, padding: layout.cardPadding, gap: spacing.sm, borderWidth: 1, borderColor: themeColors.glassBorder },
+        previewLabel: { ...typography.caption, color: themeColors.textMuted },
+        soundRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+        emoji: { fontSize: 24 },
+        inputLabel: { ...typography.bodyMedium, color: themeColors.textSecondary, marginTop: spacing.sm },
+        input: { backgroundColor: themeColors.bgSecondary, borderRadius: layout.borderRadiusSm, borderWidth: 1, borderColor: themeColors.glassBorder, padding: layout.cardPadding, ...typography.body, color: themeColors.textPrimary },
+        inputMultiline: { height: 80, textAlignVertical: 'top' },
+      }),
+    [themeColors],
+  );
 
   const soundsList = Array.from(activeSounds.values());
 
@@ -72,9 +90,7 @@ export default function PresetSaveScreen() {
             value={name}
             onChangeText={setName}
             placeholder="예: 비오는 숲속"
-            placeholderTextColor={colors.textMuted}
-            maxLength={30}
-            autoFocus
+            placeholderTextColor={themeColors.textMuted}
           />
 
           {/* Description input */}
@@ -84,7 +100,7 @@ export default function PresetSaveScreen() {
             value={description}
             onChangeText={setDescription}
             placeholder="이 프리셋에 대한 간단한 설명"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={themeColors.textMuted}
             maxLength={100}
             multiline
             numberOfLines={3}
@@ -111,47 +127,4 @@ export default function PresetSaveScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bgPrimary },
-  header: {
-    paddingHorizontal: layout.screenPaddingH,
-    height: layout.headerHeight,
-    justifyContent: 'center',
-  },
-  title: { ...typography.h1, color: colors.textPrimary },
-  content: {
-    flex: 1,
-    paddingHorizontal: layout.screenPaddingH,
-    gap: spacing.md,
-    paddingBottom: spacing['2xl'],
-  },
-  preview: {
-    backgroundColor: colors.glassLight,
-    borderRadius: layout.borderRadiusMd,
-    padding: layout.cardPadding,
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-  },
-  previewLabel: { ...typography.caption, color: colors.textMuted },
-  soundRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  emoji: { fontSize: 24 },
-  inputLabel: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-    marginTop: spacing.sm,
-  },
-  input: {
-    backgroundColor: colors.bgSecondary,
-    borderRadius: layout.borderRadiusSm,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-    padding: layout.cardPadding,
-    ...typography.body,
-    color: colors.textPrimary,
-  },
-  inputMultiline: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-});
+

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, {
@@ -10,7 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useAudio } from '@/hooks/useAudio';
 import { useTimerStore } from '@/stores/useTimerStore';
-import { colors, typography } from '@/theme';
+import { useThemeColors, typography } from '@/theme';
 import { formatRemainingTime, getCurrentTimeString } from '@/utils/formatTime';
 
 const SHOW_DURATION = 3000; // 3초 후 다시 어두워짐
@@ -19,9 +19,25 @@ export default function PlayingScreen() {
   const router = useRouter();
   const { isPlaying, stop, soundCount } = useAudio();
   const timer = useTimerStore();
+  const themeColors = useThemeColors();
 
   const [clock, setClock] = useState(getCurrentTimeString());
   const [timerText, setTimerText] = useState('');
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: '#000000' },
+        content: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+        clock: { fontFamily: 'monospace', fontSize: 60, fontWeight: '200', color: themeColors.white, letterSpacing: 4 },
+        timer: { fontFamily: 'monospace', fontSize: 18, color: themeColors.accent2 },
+        stopArea: { alignItems: 'center', paddingBottom: 60, gap: 8 },
+        stopBtn: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
+        stopIcon: { color: themeColors.white, fontSize: 20 },
+        stopHint: { fontSize: 12, color: 'rgba(255,255,255,0.15)' },
+      }),
+    [themeColors],
+  );
 
   // Opacity: 탭하면 0.6, 3초 후 0.1로
   const opacity = useSharedValue(0.1);
@@ -100,48 +116,4 @@ export default function PlayingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  clock: {
-    fontFamily: 'monospace',
-    fontSize: 60,
-    fontWeight: '200',
-    color: colors.white,
-    letterSpacing: 4,
-  },
-  timer: {
-    fontFamily: 'monospace',
-    fontSize: 18,
-    color: colors.accent2,
-  },
-  stopArea: {
-    alignItems: 'center',
-    paddingBottom: 60,
-    gap: 8,
-  },
-  stopBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stopIcon: {
-    color: colors.white,
-    fontSize: 20,
-  },
-  stopHint: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.15)',
-  },
-});
+

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { View, Pressable, StyleSheet, Dimensions, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
   runOnJS,
 } from 'react-native-reanimated';
-import { colors, layout } from '@/theme';
+import { useThemeColors, layout } from '@/theme';
 
 interface BottomSheetProps {
   visible: boolean;
@@ -27,6 +27,34 @@ export function BottomSheet({
   const maxHeight = screenHeight * maxHeightPct;
   const translateY = useSharedValue(maxHeight);
   const overlayOpacity = useSharedValue(0);
+  const themeColors = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: themeColors.overlay },
+        sheet: {
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: themeColors.bgSecondary,
+          borderTopLeftRadius: layout.borderRadiusLg,
+          borderTopRightRadius: layout.borderRadiusLg,
+          paddingHorizontal: layout.screenPaddingH,
+          paddingBottom: 32,
+        },
+        handleBar: {
+          width: 40,
+          height: 4,
+          borderRadius: 2,
+          backgroundColor: themeColors.glassHeavy,
+          alignSelf: 'center',
+          marginTop: 12,
+          marginBottom: 20,
+        },
+      }),
+    [themeColors],
+  );
 
   useEffect(() => {
     if (visible) {
@@ -85,30 +113,3 @@ export function BottomSheet({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.overlay,
-  },
-  sheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.bgSecondary,
-    borderTopLeftRadius: layout.borderRadiusLg,
-    borderTopRightRadius: layout.borderRadiusLg,
-    paddingHorizontal: layout.screenPaddingH,
-    paddingBottom: 32,
-  },
-  handleBar: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.glassHeavy,
-    alignSelf: 'center',
-    marginTop: 12,
-    marginBottom: 20,
-  },
-});

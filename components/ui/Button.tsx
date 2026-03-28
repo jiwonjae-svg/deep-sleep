@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Pressable,
   Text,
@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, typography, layout } from '@/theme';
+import { useThemeColors, typography, layout } from '@/theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 
@@ -34,6 +34,47 @@ export function Button({
   icon,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+  const themeColors = useThemeColors();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        base: { height: 52, borderRadius: 26, overflow: 'hidden' },
+        gradient: {
+          flex: 1,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingHorizontal: 32,
+          gap: 8,
+        },
+        primaryText: { ...typography.button, color: '#ffffff' },
+        secondary: {
+          height: 48,
+          borderRadius: 24,
+          backgroundColor: themeColors.glassMedium,
+          borderWidth: 1,
+          borderColor: themeColors.accent1,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingHorizontal: 24,
+          gap: 8,
+        },
+        secondaryText: { ...typography.button, color: themeColors.accent1 },
+        ghost: {
+          height: 48,
+          borderRadius: 24,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingHorizontal: 24,
+          gap: 8,
+        },
+        ghostText: { ...typography.button, color: themeColors.textSecondary },
+      }),
+    [themeColors],
+  );
 
   if (variant === 'primary') {
     return (
@@ -47,13 +88,13 @@ export function Button({
         ]}
       >
         <LinearGradient
-          colors={[colors.accent1, colors.accent2]}
+          colors={[themeColors.accent1, themeColors.accent2]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.gradient}
         >
           {loading ? (
-            <ActivityIndicator color={colors.white} size="small" />
+            <ActivityIndicator color="#ffffff" size="small" />
           ) : (
             <>
               {icon}
@@ -77,7 +118,7 @@ export function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'secondary' ? colors.accent1 : colors.textSecondary} size="small" />
+        <ActivityIndicator color={variant === 'secondary' ? themeColors.accent1 : themeColors.textSecondary} size="small" />
       ) : (
         <>
           {icon}
@@ -94,52 +135,3 @@ export function Button({
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    height: 52,
-    borderRadius: 26,
-    overflow: 'hidden',
-  },
-  gradient: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-    gap: 8,
-  },
-  primaryText: {
-    ...typography.button,
-    color: colors.white,
-  },
-  secondary: {
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.glassMedium,
-    borderWidth: 1,
-    borderColor: colors.accent1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    gap: 8,
-  },
-  secondaryText: {
-    ...typography.button,
-    color: colors.accent1,
-  },
-  ghost: {
-    height: 48,
-    borderRadius: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    gap: 8,
-  },
-  ghostText: {
-    ...typography.button,
-    color: colors.textSecondary,
-  },
-});

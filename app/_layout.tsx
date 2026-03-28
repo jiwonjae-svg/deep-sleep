@@ -14,7 +14,7 @@ import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAIStore } from '@/stores/useAIStore';
 import { initAudioMode } from '@/services/AudioService';
 import { configureNotifications } from '@/services/AlarmService';
-import { colors } from '@/theme';
+import { ThemeProvider, useThemeColors, useIsDarkTheme } from '@/theme';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { STORAGE_KEYS } from '@/utils/constants';
 import i18n from '@/i18n';
@@ -25,45 +25,41 @@ export default function RootLayout() {
 
   useEffect(() => {
     async function bootstrap() {
-      // 오디오 모드 초기화
       await initAudioMode();
-
-      // 알림 핸들러 설정
       configureNotifications();
-
-      // 스토어 데이터 로딩
       await Promise.all([
         usePresetStore.getState().loadPresets(),
         useAlarmStore.getState().loadAlarms(),
         useSettingsStore.getState().loadSettings(),
         useAIStore.getState().loadUsage(),
       ]);
-
-      // RevenueCat 초기화 (API 키 설정 후 활성화)
-      // const rcApiKey = Constants.expoConfig?.extra?.REVENUECAT_API_KEY;
-      // if (rcApiKey) await initBilling(rcApiKey);
-
-      // 언어 설정 동기화
       const lang = useSettingsStore.getState().settings.language;
       if (lang && lang !== i18n.language) {
         await i18n.changeLanguage(lang);
       }
-
       setReady(true);
     }
-
     bootstrap();
   }, []);
 
-  if (!ready) return <LoadingScreen />;
+  return (
+    <ThemeProvider>
+      {ready ? <ThemedApp /> : <LoadingScreen />}
+    </ThemeProvider>
+  );
+}
+
+function ThemedApp() {
+  const appColors = useThemeColors();
+  const isDark = useIsDarkTheme();
 
   return (
     <GestureHandlerRootView style={styles.root}>
-      <StatusBar style="light" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: colors.bgPrimary },
+          contentStyle: { backgroundColor: appColors.bgPrimary },
           animation: 'slide_from_right',
         }}
       >

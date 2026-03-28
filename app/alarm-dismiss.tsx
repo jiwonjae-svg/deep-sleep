@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Vibration } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
@@ -14,7 +14,7 @@ import { MathProblemView } from '@/components/alarm/MathProblem';
 import { MascotImage } from '@/components/common/MascotImage';
 import { Button } from '@/components/ui/Button';
 import { generateMathProblem } from '@/utils/mathProblem';
-import { colors, typography, spacing, layout } from '@/theme';
+import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { MathDifficulty } from '@/types';
 
 export default function AlarmDismissScreen() {
@@ -22,12 +22,27 @@ export default function AlarmDismissScreen() {
   const params = useLocalSearchParams<{ alarmId?: string }>();
   const { snooze } = useAlarm();
   const alarms = useAlarmStore((s) => s.alarms);
+  const themeColors = useThemeColors();
 
   const alarm = alarms.find((a) => a.id === params.alarmId) ?? alarms[0];
 
   const [mathMode, setMathMode] = useState(alarm?.mathDismiss ?? false);
   const [problem, setProblem] = useState(
     generateMathProblem((alarm?.mathDifficulty as MathDifficulty) ?? 'easy'),
+  );
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: themeColors.bgPrimary, alignItems: 'center', justifyContent: 'center', gap: spacing.xl, padding: layout.screenPaddingH },
+        time: { fontFamily: 'monospace', fontSize: 60, fontWeight: '700', color: themeColors.textPrimary, letterSpacing: 4 },
+        label: { ...typography.h3, color: themeColors.textSecondary },
+        mathArea: { width: '100%', alignItems: 'center' },
+        swipeArea: { width: '100%', height: 80, backgroundColor: themeColors.glassLight, borderRadius: layout.borderRadiusPill, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: themeColors.glassBorder },
+        swipeText: { ...typography.bodyMedium, color: themeColors.textSecondary },
+        snoozeArea: { width: '100%', alignItems: 'center', marginTop: spacing.lg },
+      }),
+    [themeColors],
   );
 
   // 진동
@@ -122,47 +137,4 @@ export default function AlarmDismissScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bgPrimary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xl,
-    padding: layout.screenPaddingH,
-  },
-  time: {
-    fontFamily: 'monospace',
-    fontSize: 60,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    letterSpacing: 4,
-  },
-  label: {
-    ...typography.h3,
-    color: colors.textSecondary,
-  },
-  mathArea: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  swipeArea: {
-    width: '100%',
-    height: 80,
-    backgroundColor: colors.glassLight,
-    borderRadius: layout.borderRadiusPill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-  },
-  swipeText: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-  },
-  snoozeArea: {
-    width: '100%',
-    alignItems: 'center',
-    marginTop: spacing.lg,
-  },
-});
+

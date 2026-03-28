@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,7 +8,7 @@ import { TermsModal } from '@/components/settings/TermsModal';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
 import * as BillingService from '@/services/BillingService';
-import { colors, typography, spacing, layout } from '@/theme';
+import { useThemeColors, AppColors, typography, spacing, layout } from '@/theme';
 import { AppLanguage, AudioQuality, VolumeChangeSpeed, ThemeMode } from '@/types';
 
 const QUALITY_OPTIONS: OptionItem<AudioQuality>[] = [
@@ -39,6 +39,7 @@ const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const themeColors = useThemeColors();
   const { settings, updateSettings } = useSettingsStore();
   const isPremium = useSubscriptionStore((s) => s.isPremium);
 
@@ -46,6 +47,8 @@ export default function SettingsScreen() {
   const [speedModalVisible, setSpeedModalVisible] = useState(false);
   const [langModalVisible, setLangModalVisible] = useState(false);
   const [termsModalVisible, setTermsModalVisible] = useState(false);
+
+  const styles = useMemo(() => makeStyles(themeColors), [themeColors]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -80,15 +83,17 @@ export default function SettingsScreen() {
               </View>
             </View>
           </View>
-          <Divider />
+          <Divider styles={styles} />
           <SettingRow
+            styles={styles}
             icon="🌐"
             label="언어"
             rightText={LANG_LABELS[settings.language]}
             onPress={() => setLangModalVisible(true)}
           />
-          <Divider />
+          <Divider styles={styles} />
           <SettingRow
+            styles={styles}
             icon="📱"
             label="자동 수면 화면"
             right={
@@ -98,8 +103,9 @@ export default function SettingsScreen() {
               />
             }
           />
-          <Divider />
+          <Divider styles={styles} />
           <SettingRow
+            styles={styles}
             icon="🔅"
             label="자동 밝기 감소"
             right={
@@ -115,13 +121,15 @@ export default function SettingsScreen() {
         <Text style={styles.sectionTitle}>오디오</Text>
         <View style={styles.group}>
           <SettingRow
+            styles={styles}
             icon="🎵"
             label="오디오 품질"
             rightText={QUALITY_LABELS[settings.audioQuality]}
             onPress={() => setQualityModalVisible(true)}
           />
-          <Divider />
+          <Divider styles={styles} />
           <SettingRow
+            styles={styles}
             icon="〰️"
             label="음량 변화 속도"
             rightText={SPEED_LABELS[settings.volumeChangeSpeed]}
@@ -133,13 +141,15 @@ export default function SettingsScreen() {
         <Text style={styles.sectionTitle}>계정</Text>
         <View style={styles.group}>
           <SettingRow
+            styles={styles}
             icon="👑"
             label="구독 상태"
             rightText={isPremium ? 'Premium' : '무료'}
             onPress={() => router.push('/subscription')}
           />
-          <Divider />
+          <Divider styles={styles} />
           <SettingRow
+            styles={styles}
             icon="🔄"
             label="구매 복원"
             onPress={async () => {
@@ -151,13 +161,13 @@ export default function SettingsScreen() {
         {/* Info */}
         <Text style={styles.sectionTitle}>정보</Text>
         <View style={styles.group}>
-          <SettingRow icon="📄" label="개인정보 처리방침" onPress={() => {}} />
-          <Divider />
-          <SettingRow icon="📋" label="이용약관" onPress={() => setTermsModalVisible(true)} />
-          <Divider />
-          <SettingRow icon="📧" label="문의하기" onPress={() => Linking.openURL('mailto:support@deepsleep.app')} />
-          <Divider />
-          <SettingRow icon="ℹ️" label="앱 버전" rightText="v1.0.0" />
+          <SettingRow styles={styles} icon="📄" label="개인정보 처리방침" onPress={() => {}} />
+          <Divider styles={styles} />
+          <SettingRow styles={styles} icon="📋" label="이용약관" onPress={() => setTermsModalVisible(true)} />
+          <Divider styles={styles} />
+          <SettingRow styles={styles} icon="📧" label="문의하기" onPress={() => Linking.openURL('mailto:support@deepsleep.app')} />
+          <Divider styles={styles} />
+          <SettingRow styles={styles} icon="ℹ️" label="앱 버전" rightText="v1.0.0" />
         </View>
       </ScrollView>
 
@@ -200,12 +210,14 @@ function SettingRow({
   right,
   rightText,
   onPress,
+  styles,
 }: {
   icon: string;
   label: string;
   right?: React.ReactNode;
   rightText?: string;
   onPress?: () => void;
+  styles: ReturnType<typeof makeStyles>;
 }) {
   return (
     <Pressable style={styles.row} onPress={onPress} disabled={!onPress && !right}>
@@ -221,99 +233,101 @@ function SettingRow({
   );
 }
 
-function Divider() {
+function Divider({ styles }: { styles: ReturnType<typeof makeStyles> }) {
   return <View style={styles.divider} />;
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bgPrimary },
-  header: {
-    paddingHorizontal: layout.screenPaddingH,
-    height: layout.headerHeight,
-    justifyContent: 'center',
-  },
-  title: { ...typography.h1, color: colors.textPrimary },
-  content: {
-    paddingHorizontal: layout.screenPaddingH,
-    paddingBottom: 100,
-    gap: spacing.sm,
-  },
-  sectionTitle: {
-    ...typography.overline,
-    color: colors.textMuted,
-    marginTop: spacing.lg,
-    marginBottom: spacing.sm,
-    textTransform: 'uppercase',
-  },
-  group: {
-    backgroundColor: colors.glassLight,
-    borderRadius: layout.borderRadiusMd,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-    overflow: 'hidden',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 56,
-    paddingHorizontal: layout.cardPadding,
-    gap: spacing.md,
-  },
-  rowIcon: { fontSize: 18 },
-  rowLabel: { ...typography.body, color: colors.textPrimary, flex: 1 },
-  rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  rowValue: { ...typography.body, color: colors.textSecondary },
-  chevron: { fontSize: 20, color: colors.textMuted },
-  divider: { height: 1, backgroundColor: colors.glassBorder, marginLeft: 52 },
-  // Theme radio
-  themeRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingHorizontal: layout.cardPadding,
-    paddingVertical: spacing.md,
-    gap: spacing.md,
-  },
-  themeContent: {
-    flex: 1,
-    gap: spacing.sm,
-  },
-  radioGroup: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  radioOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.xs,
-    paddingRight: spacing.md,
-  },
-  radioCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: colors.textMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioCircleSelected: {
-    borderColor: colors.accent1,
-  },
-  radioDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.accent1,
-  },
-  radioLabel: {
-    ...typography.body,
-    color: colors.textSecondary,
-    fontSize: 13,
-  },
-  radioLabelSelected: {
-    color: colors.accent1,
-    fontWeight: '600',
-  },
-});
+function makeStyles(c: AppColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.bgPrimary },
+    header: {
+      paddingHorizontal: layout.screenPaddingH,
+      height: layout.headerHeight,
+      justifyContent: 'center',
+    },
+    title: { ...typography.h1, color: c.textPrimary },
+    content: {
+      paddingHorizontal: layout.screenPaddingH,
+      paddingBottom: 100,
+      gap: spacing.sm,
+    },
+    sectionTitle: {
+      ...typography.overline,
+      color: c.textMuted,
+      marginTop: spacing.lg,
+      marginBottom: spacing.sm,
+      textTransform: 'uppercase',
+    },
+    group: {
+      backgroundColor: c.glassLight,
+      borderRadius: layout.borderRadiusMd,
+      borderWidth: 1,
+      borderColor: c.glassBorder,
+      overflow: 'hidden',
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      minHeight: 56,
+      paddingHorizontal: layout.cardPadding,
+      gap: spacing.md,
+    },
+    rowIcon: { fontSize: 18 },
+    rowLabel: { ...typography.body, color: c.textPrimary, flex: 1 },
+    rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+    rowValue: { ...typography.body, color: c.textSecondary },
+    chevron: { fontSize: 20, color: c.textMuted },
+    divider: { height: 1, backgroundColor: c.glassBorder, marginLeft: 52 },
+    // Theme radio
+    themeRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      paddingHorizontal: layout.cardPadding,
+      paddingVertical: spacing.md,
+      gap: spacing.md,
+    },
+    themeContent: {
+      flex: 1,
+      gap: spacing.sm,
+    },
+    radioGroup: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    radioOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingVertical: spacing.xs,
+      paddingRight: spacing.md,
+    },
+    radioCircle: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: c.textMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    radioCircleSelected: {
+      borderColor: c.accent1,
+    },
+    radioDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: c.accent1,
+    },
+    radioLabel: {
+      ...typography.body,
+      color: c.textSecondary,
+      fontSize: 13,
+    },
+    radioLabelSelected: {
+      color: c.accent1,
+      fontWeight: '600',
+    },
+  });
+}

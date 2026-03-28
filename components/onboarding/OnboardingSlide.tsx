@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Image, StyleSheet, useWindowDimensions } from 'react-native';
-import { colors, typography, spacing } from '@/theme';
+import { useThemeColors, typography, spacing } from '@/theme';
 
 const ONBOARDING_IMAGES = [
   require('@/assets/images/onboarding/onboarding-1.png'),
@@ -17,7 +17,18 @@ interface OnboardingSlideProps {
 
 export function OnboardingSlide({ slideIndex, title, description }: OnboardingSlideProps) {
   const { width } = useWindowDimensions();
+  const themeColors = useThemeColors();
   const source = ONBOARDING_IMAGES[slideIndex] ?? ONBOARDING_IMAGES[0];
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl, gap: spacing.lg },
+        image: { width: 250, height: 250 },
+        title: { ...typography.h1, color: themeColors.textPrimary, textAlign: 'center' },
+        description: { ...typography.body, color: themeColors.textSecondary, textAlign: 'center', lineHeight: 24 },
+      }),
+    [themeColors],
+  );
 
   return (
     <View style={[styles.container, { width }]}>
@@ -27,28 +38,3 @@ export function OnboardingSlide({ slideIndex, title, description }: OnboardingSl
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xl,
-    gap: spacing.lg,
-  },
-  image: {
-    width: 250,
-    height: 250,
-  },
-  title: {
-    ...typography.h1,
-    color: colors.textPrimary,
-    textAlign: 'center',
-  },
-  description: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-});

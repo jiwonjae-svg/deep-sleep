@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { colors, typography, spacing, layout } from '@/theme';
+import { useThemeColors, typography, spacing, layout } from '@/theme';
 
 interface PlanCardProps {
   title: string;
@@ -21,6 +21,31 @@ export function PlanCard({
   selected,
   onPress,
 }: PlanCardProps) {
+  const themeColors = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        card: {
+          flex: 1,
+          backgroundColor: themeColors.glassLight,
+          borderRadius: layout.borderRadiusMd,
+          padding: spacing.md,
+          alignItems: 'center',
+          borderWidth: 1,
+          borderColor: themeColors.glassBorder,
+          gap: spacing.xs,
+        },
+        cardSelected: { borderColor: themeColors.accent1, borderWidth: 2, backgroundColor: themeColors.glassMedium },
+        badge: { backgroundColor: themeColors.accent3, borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 2, marginBottom: spacing.xs },
+        badgeText: { ...typography.overline, color: '#000000' },
+        title: { ...typography.bodyMedium, color: themeColors.textPrimary },
+        price: { ...typography.h2, color: themeColors.textPrimary },
+        period: { ...typography.caption, color: themeColors.textSecondary },
+        subtext: { ...typography.caption, color: themeColors.accent2 },
+      }),
+    [themeColors],
+  );
+
   return (
     <Pressable
       onPress={onPress}
@@ -38,48 +63,3 @@ export function PlanCard({
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    flex: 1,
-    backgroundColor: colors.glassLight,
-    borderRadius: layout.borderRadiusMd,
-    padding: spacing.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-    gap: spacing.xs,
-  },
-  cardSelected: {
-    borderColor: colors.accent1,
-    borderWidth: 2,
-    backgroundColor: colors.glassMedium,
-  },
-  badge: {
-    backgroundColor: colors.accent3,
-    borderRadius: 8,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    marginBottom: spacing.xs,
-  },
-  badgeText: {
-    ...typography.overline,
-    color: colors.black,
-  },
-  title: {
-    ...typography.bodyMedium,
-    color: colors.textPrimary,
-  },
-  price: {
-    ...typography.h2,
-    color: colors.textPrimary,
-  },
-  period: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  subtext: {
-    ...typography.caption,
-    color: colors.accent2,
-  },
-});

@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
 import { useAudioStore } from '@/stores/useAudioStore';
-import { colors, spacing } from '@/theme';
+import { useThemeColors, spacing } from '@/theme';
 
 // react-native-google-mobile-ads requires a native build (not available in Expo Go)
 let BannerAd: any = null;
@@ -22,6 +22,18 @@ const AD_UNIT_ID = TestIds?.BANNER ?? 'ca-app-pub-xxxxxxxx/xxxxxxxx';
 export function AdBanner() {
   const isPremium = useSubscriptionStore((s) => s.isPremium);
   const isPlaying = useAudioStore((s) => s.isPlaying);
+  const themeColors = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          alignItems: 'center',
+          backgroundColor: themeColors.bgPrimary,
+          paddingVertical: spacing.xs,
+        },
+      }),
+    [themeColors],
+  );
 
   // Don't show ads for premium users, during playback, or in Expo Go
   if (!BannerAd || isPremium || isPlaying) return null;
@@ -36,11 +48,3 @@ export function AdBanner() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    backgroundColor: colors.bgPrimary,
-    paddingVertical: spacing.xs,
-  },
-});

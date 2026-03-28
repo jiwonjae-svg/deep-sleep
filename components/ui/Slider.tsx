@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { View, StyleSheet, LayoutChangeEvent, Text } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -6,7 +6,7 @@ import Animated, {
   useAnimatedStyle,
   runOnJS,
 } from 'react-native-reanimated';
-import { colors, typography } from '@/theme';
+import { useThemeColors, typography } from '@/theme';
 
 interface SliderProps {
   value: number; // 0–100
@@ -23,10 +23,36 @@ export function Slider({
   onValueChange,
   minimumValue = 0,
   maximumValue = 100,
-  trackColor = colors.glassMedium,
-  activeColor = colors.accent2,
+  trackColor,
+  activeColor,
   showLabel = false,
 }: SliderProps) {
+  const themeColors = useThemeColors();
+  const resolvedTrackColor = trackColor ?? themeColors.glassMedium;
+  const resolvedActiveColor = activeColor ?? themeColors.accent2;
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { height: 40, justifyContent: 'center' },
+        track: { height: 4, borderRadius: 2, position: 'absolute', left: 0, right: 0 },
+        activeTrack: { height: 4, borderRadius: 2, position: 'absolute', left: 0 },
+        handle: {
+          width: 24,
+          height: 24,
+          borderRadius: 12,
+          position: 'absolute',
+          top: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.3,
+          shadowRadius: 4,
+          elevation: 4,
+        },
+        label: { ...typography.caption, color: themeColors.textSecondary, textAlign: 'center', marginTop: 4 },
+      }),
+    [themeColors],
+  );
   const trackWidth = useSharedValue(0);
   const handleX = useSharedValue(0);
 
@@ -82,9 +108,9 @@ export function Slider({
     <View>
       <GestureDetector gesture={gesture}>
         <View style={styles.container} onLayout={onLayout}>
-          <View style={[styles.track, { backgroundColor: trackColor }]} />
-          <Animated.View style={[styles.activeTrack, { backgroundColor: activeColor }, activeStyle]} />
-          <Animated.View style={[styles.handle, { backgroundColor: activeColor }, handleStyle]} />
+          <View style={[styles.track, { backgroundColor: resolvedTrackColor }]} />
+          <Animated.View style={[styles.activeTrack, { backgroundColor: resolvedActiveColor }, activeStyle]} />
+          <Animated.View style={[styles.handle, { backgroundColor: resolvedActiveColor }, handleStyle]} />
         </View>
       </GestureDetector>
       {showLabel && (
@@ -93,41 +119,3 @@ export function Slider({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    height: 40,
-    justifyContent: 'center',
-  },
-  track: {
-    height: 4,
-    borderRadius: 2,
-    position: 'absolute',
-    left: 0,
-    right: 0,
-  },
-  activeTrack: {
-    height: 4,
-    borderRadius: 2,
-    position: 'absolute',
-    left: 0,
-  },
-  handle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    position: 'absolute',
-    top: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  label: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: 4,
-  },
-});

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,13 +18,14 @@ import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
 import { Slider } from '@/components/ui/Slider';
 import { MascotImage } from '@/components/common/MascotImage';
 import { AIRecommendButton } from '@/components/ai/AIRecommendButton';
-import { colors, typography, spacing, layout } from '@/theme';
+import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { formatRemainingTime, msUntilAlarm, getCurrentTimeString } from '@/utils/formatTime';
 import { getSoundById } from '@/data/sounds';
 import { TIMER_PRESETS } from '@/utils/constants';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const themeColors = useThemeColors();
   const {
     activeSounds,
     isPlaying,
@@ -100,6 +101,75 @@ export default function HomeScreen() {
       ? [...presets.defaultPresets, ...presets.customPresets].find((p) => p.id === activePresetId)
       : null;
 
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: themeColors.bgPrimary },
+        header: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingHorizontal: layout.screenPaddingH,
+          height: layout.headerHeight,
+        },
+        logo: { ...typography.h3, color: themeColors.textPrimary },
+        nextAlarm: { ...typography.caption, color: themeColors.accent2 },
+        content: {
+          flex: 1,
+          alignItems: 'center',
+          paddingHorizontal: layout.screenPaddingH,
+          gap: spacing.lg,
+        },
+        clock: {
+          fontFamily: 'monospace',
+          fontSize: 40,
+          fontWeight: '700',
+          color: themeColors.textPrimary,
+          letterSpacing: 2,
+        },
+        presetCard: {
+          backgroundColor: themeColors.glassLight,
+          borderRadius: layout.borderRadiusMd,
+          padding: layout.cardPadding,
+          width: '100%',
+          gap: spacing.sm,
+          borderWidth: 1,
+          borderColor: themeColors.glassBorder,
+        },
+        presetName: { ...typography.h3, color: themeColors.textPrimary },
+        presetIcons: { flexDirection: 'row', alignItems: 'center' },
+        presetEmoji: { fontSize: 16, marginRight: 2 },
+        presetMeta: { ...typography.caption, color: themeColors.textMuted },
+        timerRow: { flexDirection: 'row', gap: spacing.sm },
+        timerChip: {
+          backgroundColor: themeColors.glassLight,
+          borderRadius: 16,
+          paddingVertical: 6,
+          paddingHorizontal: spacing.md,
+          borderWidth: 1,
+          borderColor: themeColors.glassBorder,
+        },
+        timerChipText: { ...typography.caption, color: themeColors.textSecondary },
+        timerText: { ...typography.bodyMedium, color: themeColors.accent2 },
+        playBtn: {
+          width: 80,
+          height: 80,
+          borderRadius: 40,
+          alignItems: 'center',
+          justifyContent: 'center',
+          shadowColor: themeColors.accent1,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.4,
+          shadowRadius: 20,
+          elevation: 8,
+        },
+        playIcon: { color: '#ffffff', fontSize: 28, marginLeft: 4 },
+        volumeRow: { flexDirection: 'row', alignItems: 'center', width: '100%', gap: spacing.md },
+        volumeIcon: { fontSize: 18 },
+      }),
+    [themeColors],
+  );
+
   const handlePlayToggle = async () => {
     if (isPlaying) {
       await stop();
@@ -173,7 +243,7 @@ export default function HomeScreen() {
         <Animated.View style={playBtnAnimStyle}>
           <Pressable onPress={handlePlayToggle} disabled={soundCount === 0}>
             <LinearGradient
-              colors={soundCount > 0 ? [colors.accent1, colors.accent2] : [colors.textMuted, colors.textMuted]}
+              colors={soundCount > 0 ? [themeColors.accent1, themeColors.accent2] : [themeColors.textMuted, themeColors.textMuted]}
               style={styles.playBtn}
             >
               <Text style={styles.playIcon}>{isPlaying ? '■' : '▶'}</Text>
@@ -185,7 +255,7 @@ export default function HomeScreen() {
         <View style={styles.volumeRow}>
           <Text style={styles.volumeIcon}>🔈</Text>
           <View style={{ flex: 1 }}>
-            <Slider value={masterVolume} onValueChange={setVolume} activeColor={colors.accent2} />
+            <Slider value={masterVolume} onValueChange={setVolume} activeColor={themeColors.accent2} />
           </View>
           <Text style={styles.volumeIcon}>🔊</Text>
         </View>
@@ -206,108 +276,4 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bgPrimary,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: layout.screenPaddingH,
-    height: layout.headerHeight,
-  },
-  logo: {
-    ...typography.h3,
-    color: colors.textPrimary,
-  },
-  nextAlarm: {
-    ...typography.caption,
-    color: colors.accent2,
-  },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    paddingHorizontal: layout.screenPaddingH,
-    gap: spacing.lg,
-  },
-  clock: {
-    fontFamily: 'monospace',
-    fontSize: 40,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    letterSpacing: 2,
-  },
-  presetCard: {
-    backgroundColor: colors.glassLight,
-    borderRadius: layout.borderRadiusMd,
-    padding: layout.cardPadding,
-    width: '100%',
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-  },
-  presetName: {
-    ...typography.h3,
-    color: colors.textPrimary,
-  },
-  presetIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  presetEmoji: {
-    fontSize: 16,
-    marginRight: 2,
-  },
-  presetMeta: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-  timerRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  timerChip: {
-    backgroundColor: colors.glassLight,
-    borderRadius: 16,
-    paddingVertical: 6,
-    paddingHorizontal: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-  },
-  timerChipText: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  timerText: {
-    ...typography.bodyMedium,
-    color: colors.accent2,
-  },
-  playBtn: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.accent1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    elevation: 8,
-  },
-  playIcon: {
-    color: colors.white,
-    fontSize: 28,
-    marginLeft: 4,
-  },
-  volumeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    gap: spacing.md,
-  },
-  volumeIcon: {
-    fontSize: 18,
-  },
-});
+

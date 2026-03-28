@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,13 +7,44 @@ import { usePresetStore } from '@/stores/usePresetStore';
 import { useAudio } from '@/hooks/useAudio';
 import { PresetList } from '@/components/preset/PresetList';
 import { Preset } from '@/types';
-import { colors, typography, spacing, layout } from '@/theme';
+import { useThemeColors, typography, spacing, layout } from '@/theme';
 import * as AdService from '@/services/AdService';
 
 export default function PresetsScreen() {
   const router = useRouter();
+  const themeColors = useThemeColors();
   const { applyPreset, soundCount } = useAudio();
   const { defaultPresets, customPresets, deletePreset } = usePresetStore();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: themeColors.bgPrimary },
+        header: {
+          paddingHorizontal: layout.screenPaddingH,
+          height: layout.headerHeight,
+          justifyContent: 'center',
+        },
+        title: { ...typography.h1, color: themeColors.textPrimary },
+        fab: {
+          position: 'absolute',
+          bottom: 100,
+          right: layout.screenPaddingH,
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          backgroundColor: themeColors.accent1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          elevation: 6,
+          shadowColor: themeColors.accent1,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+        },
+      }),
+    [themeColors],
+  );
 
   const handlePresetPress = useCallback(
     async (preset: Preset) => {
@@ -59,41 +90,11 @@ export default function PresetsScreen() {
           style={styles.fab}
           onPress={() => router.push('/presets/save')}
         >
-          <Ionicons name="add" size={28} color={colors.white} />
+          <Ionicons name="add" size={28} color="#ffffff" />
         </Pressable>
       )}
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bgPrimary,
-  },
-  header: {
-    paddingHorizontal: layout.screenPaddingH,
-    height: layout.headerHeight,
-    justifyContent: 'center',
-  },
-  title: {
-    ...typography.h1,
-    color: colors.textPrimary,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 100,
-    right: layout.screenPaddingH,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.accent1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 6,
-    shadowColor: colors.accent1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-});
+

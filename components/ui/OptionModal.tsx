@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Modal,
   View,
@@ -7,7 +7,7 @@ import {
   StyleSheet,
   FlatList,
 } from 'react-native';
-import { colors, typography, spacing, layout } from '@/theme';
+import { useThemeColors, typography, spacing, layout } from '@/theme';
 
 export interface OptionItem<T extends string = string> {
   value: T;
@@ -31,6 +31,41 @@ export function OptionModal<T extends string = string>({
   onSelect,
   onClose,
 }: OptionModalProps<T>) {
+  const themeColors = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        backdrop: { flex: 1, backgroundColor: themeColors.overlay, justifyContent: 'flex-end' },
+        sheet: {
+          backgroundColor: themeColors.bgSecondary,
+          borderTopLeftRadius: layout.borderRadiusLg,
+          borderTopRightRadius: layout.borderRadiusLg,
+          borderWidth: 1,
+          borderColor: themeColors.glassBorder,
+          paddingTop: spacing.lg,
+          paddingBottom: spacing['2xl'],
+          paddingHorizontal: layout.cardPadding,
+          gap: spacing.md,
+        },
+        title: { ...typography.h3, color: themeColors.textPrimary, textAlign: 'center', paddingBottom: spacing.sm },
+        option: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingVertical: spacing.base,
+          paddingHorizontal: spacing.md,
+          borderRadius: layout.borderRadiusSm,
+        },
+        optionSelected: { backgroundColor: themeColors.glassLight },
+        optionLabel: { ...typography.body, color: themeColors.textSecondary, flex: 1 },
+        optionLabelSelected: { color: themeColors.accent1, fontWeight: '600' },
+        check: { color: themeColors.accent1, fontSize: 18, fontWeight: '700' },
+        divider: { height: 1, backgroundColor: themeColors.glassBorder },
+        cancelBtn: { marginTop: spacing.sm, paddingVertical: spacing.md, alignItems: 'center' },
+        cancelText: { ...typography.body, color: themeColors.textMuted },
+      }),
+    [themeColors],
+  );
+
   return (
     <Modal
       visible={visible}
@@ -71,65 +106,3 @@ export function OptionModal<T extends string = string>({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: colors.overlay,
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: colors.bgSecondary,
-    borderTopLeftRadius: layout.borderRadiusLg,
-    borderTopRightRadius: layout.borderRadiusLg,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing['2xl'],
-    paddingHorizontal: layout.cardPadding,
-    gap: spacing.md,
-  },
-  title: {
-    ...typography.h3,
-    color: colors.textPrimary,
-    textAlign: 'center',
-    paddingBottom: spacing.sm,
-  },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.base,
-    paddingHorizontal: spacing.md,
-    borderRadius: layout.borderRadiusSm,
-  },
-  optionSelected: {
-    backgroundColor: colors.glassLight,
-  },
-  optionLabel: {
-    ...typography.body,
-    color: colors.textSecondary,
-    flex: 1,
-  },
-  optionLabelSelected: {
-    color: colors.accent1,
-    fontWeight: '600',
-  },
-  check: {
-    color: colors.accent1,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.glassBorder,
-  },
-  cancelBtn: {
-    marginTop: spacing.sm,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  cancelText: {
-    ...typography.body,
-    color: colors.textMuted,
-  },
-});

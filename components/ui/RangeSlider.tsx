@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { View, StyleSheet, LayoutChangeEvent, Text } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -6,7 +6,7 @@ import Animated, {
   useAnimatedStyle,
   runOnJS,
 } from 'react-native-reanimated';
-import { colors, typography } from '@/theme';
+import { useThemeColors, typography } from '@/theme';
 
 interface RangeSliderProps {
   min: number; // 0–100
@@ -24,9 +24,36 @@ export function RangeSlider({
   onMinChange,
   onMaxChange,
   minGap = 5,
-  trackColor = colors.glassMedium,
-  activeColor = colors.accent1,
+  trackColor,
+  activeColor,
 }: RangeSliderProps) {
+  const themeColors = useThemeColors();
+  const resolvedTrackColor = trackColor ?? themeColors.glassMedium;
+  const resolvedActiveColor = activeColor ?? themeColors.accent1;
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { height: 40, justifyContent: 'center' },
+        track: { height: 6, borderRadius: 3, position: 'absolute', left: 0, right: 0 },
+        activeTrack: { height: 6, borderRadius: 3, position: 'absolute' },
+        handle: {
+          width: 24,
+          height: 24,
+          borderRadius: 12,
+          position: 'absolute',
+          top: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.3,
+          shadowRadius: 4,
+          elevation: 4,
+        },
+        labels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
+        label: { ...typography.caption, color: themeColors.textSecondary },
+      }),
+    [themeColors],
+  );
   const trackWidth = useSharedValue(0);
   const minX = useSharedValue(0);
   const maxX = useSharedValue(0);
@@ -103,19 +130,19 @@ export function RangeSlider({
     <View>
       <View style={styles.container} onLayout={onLayout}>
         {/* Background track */}
-        <View style={[styles.track, { backgroundColor: trackColor }]} />
+        <View style={[styles.track, { backgroundColor: resolvedTrackColor }]} />
 
         {/* Active range */}
-        <Animated.View style={[styles.activeTrack, { backgroundColor: activeColor }, activeStyle]} />
+        <Animated.View style={[styles.activeTrack, { backgroundColor: resolvedActiveColor }, activeStyle]} />
 
         {/* Min handle */}
         <GestureDetector gesture={minPan}>
-          <Animated.View style={[styles.handle, { backgroundColor: activeColor }, minHandleStyle]} />
+          <Animated.View style={[styles.handle, { backgroundColor: resolvedActiveColor }, minHandleStyle]} />
         </GestureDetector>
 
         {/* Max handle */}
         <GestureDetector gesture={maxPan}>
-          <Animated.View style={[styles.handle, { backgroundColor: activeColor }, maxHandleStyle]} />
+          <Animated.View style={[styles.handle, { backgroundColor: resolvedActiveColor }, maxHandleStyle]} />
         </GestureDetector>
       </View>
 
@@ -127,43 +154,3 @@ export function RangeSlider({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    height: 40,
-    justifyContent: 'center',
-  },
-  track: {
-    height: 6,
-    borderRadius: 3,
-    position: 'absolute',
-    left: 0,
-    right: 0,
-  },
-  activeTrack: {
-    height: 6,
-    borderRadius: 3,
-    position: 'absolute',
-  },
-  handle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    position: 'absolute',
-    top: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  labels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  label: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-});

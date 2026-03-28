@@ -1,17 +1,15 @@
-import React from 'react';
-import { Text, Pressable, View, StyleSheet, Dimensions } from 'react-native';
-import { colors, typography, layout } from '@/theme';
+import React, { useMemo } from 'react';
+import { Text, Pressable, View, StyleSheet } from 'react-native';
+import { useThemeColors } from '@/theme';
+import { typography, layout, spacing } from '@/theme';
 import { SoundConfig } from '@/types';
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const CARD_WIDTH = (SCREEN_WIDTH - layout.screenPaddingH * 2 - layout.gridGap) / 2;
 
 interface SoundCardProps {
   sound: SoundConfig;
   active: boolean;
   isPremium: boolean;
-  isLocked: boolean; // premium sound for free user
-  volume?: number; // 0–100 current average volume (for display)
+  isLocked: boolean;
+  volume?: number; // 0–100 current average volume
   onPress: () => void;
   onLongPress?: () => void;
   categoryColor: string;
@@ -27,100 +25,85 @@ export function SoundCard({
   onLongPress,
   categoryColor,
 }: SoundCardProps) {
+  const themeColors = useThemeColors();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        card: {
+          borderRadius: layout.borderRadiusMd,
+          backgroundColor: active ? themeColors.glassHeavy : themeColors.glassLight,
+          paddingVertical: spacing.md,
+          paddingHorizontal: layout.cardPadding,
+          // 테두리 없음
+        },
+        row: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        },
+        name: {
+          ...typography.bodyMedium,
+          color: active ? themeColors.textPrimary : themeColors.textSecondary,
+          flex: 1,
+        },
+        checkDot: {
+          width: 8,
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: themeColors.accent2,
+          marginLeft: spacing.sm,
+        },
+        lockIcon: {
+          fontSize: 13,
+          marginLeft: spacing.sm,
+        },
+        volumeBarBg: {
+          height: 2,
+          borderRadius: 1,
+          backgroundColor: themeColors.glassMedium,
+          overflow: 'hidden',
+          marginTop: spacing.sm,
+        },
+        volumeBarFill: {
+          height: 2,
+        },
+        premiumLabel: {
+          ...typography.overline,
+          color: themeColors.accent3,
+          fontSize: 10,
+          marginTop: spacing.xs,
+        },
+      }),
+    [themeColors, active],
+  );
+
   return (
     <Pressable
       onPress={onPress}
       onLongPress={onLongPress}
       style={({ pressed }) => [
         styles.card,
-        active && styles.cardActive,
-        active && { borderColor: colors.accent2 },
-        isLocked && styles.cardLocked,
-        { opacity: pressed ? 0.8 : isLocked ? 0.6 : 1 },
+        { opacity: pressed ? 0.75 : isLocked ? 0.55 : 1 },
       ]}
     >
-      {/* Emoji icon */}
-      <Text style={styles.emoji}>{sound.iconEmoji}</Text>
+      <View style={styles.row}>
+        <Text style={styles.name} numberOfLines={1}>
+          {sound.name}
+        </Text>
+        {active && <View style={styles.checkDot} />}
+        {isLocked && !active && <Text style={styles.lockIcon}>🔒</Text>}
+      </View>
 
-      {/* Top-right indicator */}
-      {active && (
-        <View style={[styles.badge, { backgroundColor: colors.accent2 }]}>
-          <Text style={styles.badgeText}>✓</Text>
-        </View>
-      )}
-      {isLocked && !active && (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>🔒</Text>
-        </View>
-      )}
-
-      {/* Sound name */}
-      <Text style={styles.name} numberOfLines={1}>
-        {sound.name}
-      </Text>
-
-      {/* Volume mini bar (active only) */}
       {active && volume != null && (
         <View style={styles.volumeBarBg}>
           <View style={[styles.volumeBarFill, { width: `${volume}%`, backgroundColor: categoryColor }]} />
         </View>
       )}
 
-      {/* Premium label */}
       {sound.isPremium && !active && (
         <Text style={styles.premiumLabel}>★ Premium</Text>
       )}
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    width: CARD_WIDTH,
-    height: 100,
-    borderRadius: layout.borderRadiusMd,
-    backgroundColor: colors.glassLight,
-    padding: layout.cardPadding,
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-  },
-  cardActive: {
-    backgroundColor: colors.glassHeavy,
-    borderWidth: 2,
-  },
-  cardLocked: {
-    // just reduced opacity handled in press
-  },
-  emoji: {
-    fontSize: 32,
-  },
-  badge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-  },
-  badgeText: {
-    fontSize: 14,
-  },
-  name: {
-    ...typography.h3,
-    color: colors.textPrimary,
-    fontSize: 14,
-  },
-  volumeBarBg: {
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: colors.glassMedium,
-    overflow: 'hidden',
-  },
-  volumeBarFill: {
-    height: 3,
-    borderRadius: 1.5,
-  },
-  premiumLabel: {
-    ...typography.overline,
-    color: colors.accent3,
-    fontSize: 10,
-  },
-});

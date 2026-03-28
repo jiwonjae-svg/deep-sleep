@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, SectionList, StyleSheet } from 'react-native';
 import { Preset } from '@/types';
 import { PresetCard } from './PresetCard';
-import { colors, typography, spacing, layout } from '@/theme';
+import { useThemeColors, typography, spacing, layout } from '@/theme';
 
 interface PresetListProps {
   defaultPresets: Preset[];
@@ -17,6 +17,25 @@ export function PresetList({
   onPresetPress,
   onPresetLongPress,
 }: PresetListProps) {
+  const themeColors = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        sectionTitle: {
+          ...typography.h2,
+          color: themeColors.textPrimary,
+          marginBottom: spacing.md,
+        },
+        separator: { height: spacing.md },
+        sectionSeparator: { height: spacing.xl },
+        content: {
+          paddingHorizontal: layout.screenPaddingH,
+          paddingBottom: 100,
+        },
+      }),
+    [themeColors],
+  );
+
   const sections = [
     { title: '기본 프리셋', data: defaultPresets },
     ...(customPresets.length > 0 ? [{ title: '내 프리셋', data: customPresets }] : []),
@@ -44,20 +63,4 @@ export function PresetList({
   );
 }
 
-const styles = StyleSheet.create({
-  sectionTitle: {
-    ...typography.h2,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
-  },
-  separator: {
-    height: spacing.md,
-  },
-  sectionSeparator: {
-    height: spacing.xl,
-  },
-  content: {
-    paddingHorizontal: layout.screenPaddingH,
-    paddingBottom: 100,
-  },
-});
+

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OnboardingSlide } from '@/components/onboarding/OnboardingSlide';
 import { Button } from '@/components/ui/Button';
 import { usePermissions } from '@/hooks/usePermissions';
-import { colors, typography, spacing, layout } from '@/theme';
+import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { STORAGE_KEYS } from '@/utils/constants';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -47,6 +47,19 @@ export default function OnboardingScreen() {
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const { requestNotification } = usePermissions();
+  const themeColors = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: themeColors.bgPrimary },
+        indicatorRow: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm, paddingBottom: spacing.xl },
+        dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: themeColors.textMuted },
+        dotActive: { backgroundColor: themeColors.accent1, width: 24 },
+        footer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: layout.screenPaddingH, paddingBottom: spacing['2xl'], gap: spacing.md },
+        skipText: { ...typography.body, color: themeColors.textSecondary },
+      }),
+    [themeColors],
+  );
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -129,36 +142,4 @@ export default function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bgPrimary,
-  },
-  indicatorRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    paddingBottom: spacing.xl,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.textMuted,
-  },
-  dotActive: {
-    backgroundColor: colors.accent1,
-    width: 24,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: layout.screenPaddingH,
-    paddingBottom: spacing['2xl'],
-    gap: spacing.md,
-  },
-  skipText: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-});
+

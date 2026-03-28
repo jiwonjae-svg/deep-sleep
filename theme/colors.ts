@@ -53,3 +53,53 @@ export const colors = {
   black: '#000000',
   overlay: 'rgba(0,0,0,0.5)',
 } as const;
+
+export const lightColors = {
+  bgPrimary: '#F2F4F8',
+  bgSecondary: '#E6EAF4',
+  bgTertiary: '#D8DEEE',
+
+  glassLight: 'rgba(0,0,0,0.04)',
+  glassMedium: 'rgba(0,0,0,0.08)',
+  glassHeavy: 'rgba(0,0,0,0.13)',
+  glassBorder: 'rgba(0,0,0,0.10)',
+
+  accent1: '#5A52E0',
+  accent2: '#3DBDB4',
+  accent3: '#C49A00',
+
+  textPrimary: '#16182E',
+  textSecondary: '#4A4F6A',
+  textMuted: '#8A90AC',
+  textAccent: '#5A52E0',
+
+  success: '#3DBDB4',
+  warning: '#C49A00',
+  error: '#CC4444',
+  info: '#5A52E0',
+
+  category: {
+    'rain-water': '#3A7FC0',
+    'ocean-beach': '#1E6A90',
+    'wind-weather': '#5A9EC4',
+    'forest-nature': '#3E9E52',
+    'fire-warmth': '#C06020',
+    'indoor-ambient': '#A07040',
+    'urban-transport': '#5A6080',
+    'musical-tonal': '#6A40B0',
+    'special-environments': '#1A9090',
+    'seasonal-special': '#B06090',
+  } as Record<string, string>,
+
+  sleepBg: '#000000',
+  sleepClockDefault: 'rgba(234,234,234,0.10)',
+  sleepClockActive: 'rgba(234,234,234,0.60)',
+  sleepIcon: 'rgba(108,99,255,0.15)',
+  sleepStop: 'rgba(255,107,107,0.30)',
+
+  white: '#FFFFFF',
+  black: '#000000',
+  overlay: 'rgba(0,0,0,0.4)',
+} as const;
+
+export type AppColors = typeof colors;

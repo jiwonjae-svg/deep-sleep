@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
-import { colors } from '@/theme';
+import { useThemeColors } from '@/theme';
 
 interface ToggleProps {
   value: boolean;
@@ -15,6 +15,7 @@ interface ToggleProps {
 
 export function Toggle({ value, onValueChange, disabled = false }: ToggleProps) {
   const offset = useSharedValue(value ? 14 : 0);
+  const themeColors = useThemeColors();
 
   React.useEffect(() => {
     offset.value = withTiming(value ? 14 : 0, { duration: 200 });
@@ -23,6 +24,25 @@ export function Toggle({ value, onValueChange, disabled = false }: ToggleProps) 
   const handleStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: offset.value }],
   }));
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        track: {
+          width: 32,
+          height: 20,
+          borderRadius: 10,
+          backgroundColor: themeColors.glassMedium,
+          justifyContent: 'center',
+          paddingHorizontal: 1,
+        },
+        trackActive: { backgroundColor: themeColors.accent2 },
+        handle: { width: 18, height: 18, borderRadius: 9 },
+        handleActive: { backgroundColor: '#ffffff' },
+        handleInactive: { backgroundColor: '#888DAA' },
+      }),
+    [themeColors],
+  );
 
   return (
     <Pressable
@@ -39,28 +59,3 @@ export function Toggle({ value, onValueChange, disabled = false }: ToggleProps) 
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  track: {
-    width: 32,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.glassMedium,
-    justifyContent: 'center',
-    paddingHorizontal: 1,
-  },
-  trackActive: {
-    backgroundColor: colors.accent2,
-  },
-  handle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-  },
-  handleActive: {
-    backgroundColor: colors.white,
-  },
-  handleInactive: {
-    backgroundColor: '#888DAA',
-  },
-});

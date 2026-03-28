@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Modal,
   View,
@@ -7,7 +7,7 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
-import { colors, typography, spacing, layout } from '@/theme';
+import { useThemeColors, typography, spacing, layout } from '@/theme';
 
 interface TermsModalProps {
   visible: boolean;
@@ -44,6 +44,47 @@ const TERMS_CONTENT = `제1조 (목적)
 시행일: 2026년 3월 1일`;
 
 export function TermsModal({ visible, onClose }: TermsModalProps) {
+  const themeColors = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        backdrop: { flex: 1, backgroundColor: themeColors.overlay, justifyContent: 'flex-end' },
+        sheet: {
+          backgroundColor: themeColors.bgSecondary,
+          borderTopLeftRadius: layout.borderRadiusLg,
+          borderTopRightRadius: layout.borderRadiusLg,
+          borderWidth: 1,
+          borderColor: themeColors.glassBorder,
+          maxHeight: '85%',
+          paddingBottom: spacing['2xl'],
+        },
+        header: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: layout.cardPadding,
+          paddingVertical: spacing.base,
+          borderBottomWidth: 1,
+          borderBottomColor: themeColors.glassBorder,
+        },
+        title: { ...typography.h3, color: themeColors.textPrimary, flex: 1 },
+        closeBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+        closeText: { color: themeColors.textMuted, fontSize: 18 },
+        scroll: { flex: 1 },
+        scrollContent: { padding: layout.cardPadding },
+        content: { ...typography.body, color: themeColors.textSecondary, lineHeight: 22 },
+        confirmBtn: {
+          marginHorizontal: layout.cardPadding,
+          marginTop: spacing.md,
+          backgroundColor: themeColors.accent1,
+          borderRadius: layout.borderRadiusMd,
+          paddingVertical: spacing.md,
+          alignItems: 'center',
+        },
+        confirmText: { ...typography.bodyMedium, color: '#ffffff' },
+      }),
+    [themeColors],
+  );
+
   return (
     <Modal
       visible={visible}
@@ -74,66 +115,3 @@ export function TermsModal({ visible, onClose }: TermsModalProps) {
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: colors.overlay,
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: colors.bgSecondary,
-    borderTopLeftRadius: layout.borderRadiusLg,
-    borderTopRightRadius: layout.borderRadiusLg,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-    maxHeight: '85%',
-    paddingBottom: spacing['2xl'],
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: layout.cardPadding,
-    paddingVertical: spacing.base,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.glassBorder,
-  },
-  title: {
-    ...typography.h3,
-    color: colors.textPrimary,
-    flex: 1,
-  },
-  closeBtn: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  closeText: {
-    color: colors.textMuted,
-    fontSize: 18,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: layout.cardPadding,
-  },
-  content: {
-    ...typography.body,
-    color: colors.textSecondary,
-    lineHeight: 22,
-  },
-  confirmBtn: {
-    marginHorizontal: layout.cardPadding,
-    marginTop: spacing.md,
-    backgroundColor: colors.accent1,
-    borderRadius: layout.borderRadiusMd,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  confirmText: {
-    ...typography.bodyMedium,
-    color: colors.white,
-  },
-});

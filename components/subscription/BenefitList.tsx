@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, typography, spacing } from '@/theme';
+import { useThemeColors, typography, spacing } from '@/theme';
 
 const BENEFITS = [
   '모든 광고 제거',
@@ -12,6 +12,18 @@ const BENEFITS = [
 ];
 
 export function BenefitList() {
+  const themeColors = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { gap: spacing.md },
+        row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+        check: { fontSize: 16 },
+        text: { ...typography.bodyMedium, color: themeColors.textPrimary },
+      }),
+    [themeColors],
+  );
+
   return (
     <View style={styles.container}>
       {BENEFITS.map((b, i) => (
@@ -23,21 +35,3 @@ export function BenefitList() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    gap: spacing.md,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  check: {
-    fontSize: 16,
-  },
-  text: {
-    ...typography.bodyMedium,
-    color: colors.textPrimary,
-  },
-});

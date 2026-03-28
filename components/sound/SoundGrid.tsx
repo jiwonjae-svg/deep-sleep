@@ -1,10 +1,10 @@
 import React from 'react';
-import { FlatList, View, StyleSheet } from 'react-native';
-import { SoundConfig, SoundCategory } from '@/types';
+import { FlatList, StyleSheet } from 'react-native';
+import { SoundConfig } from '@/types';
 import { SoundCard } from './SoundCard';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
-import { colors, layout } from '@/theme';
+import { spacing } from '@/theme';
 
 interface SoundGridProps {
   sounds: SoundConfig[];
@@ -47,20 +47,20 @@ export function SoundGrid({
       data={sounds}
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
-      numColumns={2}
-      columnWrapperStyle={styles.row}
+      style={styles.list}
       contentContainerStyle={styles.content}
+      ItemSeparatorComponent={() => <></>}
       showsVerticalScrollIndicator={false}
     />
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    gap: layout.gridGap,
-    marginBottom: layout.gridGap,
+  list: {
+    flex: 1,
   },
   content: {
-    paddingBottom: 120, // space for active sounds bar + tab bar
+    gap: spacing.sm,
+    paddingBottom: 120,
   },
 });

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { colors, typography, spacing } from '@/theme';
+import { useThemeColors, typography, spacing } from '@/theme';
 
 const LABELS = ['월', '화', '수', '목', '금', '토', '일'];
 
@@ -10,6 +10,19 @@ interface DaySelectorProps {
 }
 
 export function DaySelector({ days, onChange }: DaySelectorProps) {
+  const themeColors = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flexDirection: 'row', gap: spacing.sm, justifyContent: 'center' },
+        btn: { width: 40, height: 40, borderRadius: 20, backgroundColor: themeColors.glassLight, alignItems: 'center', justifyContent: 'center' },
+        btnActive: { backgroundColor: themeColors.accent1 },
+        label: { ...typography.buttonSmall, color: themeColors.textSecondary },
+        labelActive: { color: '#ffffff' },
+      }),
+    [themeColors],
+  );
+
   const toggle = (index: number) => {
     const next = [...days];
     next[index] = !next[index];
@@ -33,29 +46,3 @@ export function DaySelector({ days, onChange }: DaySelectorProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    justifyContent: 'center',
-  },
-  btn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.glassLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnActive: {
-    backgroundColor: colors.accent1,
-  },
-  label: {
-    ...typography.buttonSmall,
-    color: colors.textSecondary,
-  },
-  labelActive: {
-    color: colors.white,
-  },
-});
