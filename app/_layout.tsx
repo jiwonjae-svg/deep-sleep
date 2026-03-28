@@ -1,15 +1,11 @@
+// ⚠️ 첫 번째 import여야 함: Expo Go 콘솔 억제 설정 (LogBox + console 인터셉터)
+// Babel이 모든 import를 hoist하므로 파일 내 순서가 로드 순서를 결정한다.
+import '@/utils/setupDevSuppressions';
 import React, { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { StyleSheet, LogBox } from 'react-native';
-
-// Expo Go에서 push notification 자동 등록 시도 시 발생하는 알려진 제한 경고 억제
-// (Dev Build 또는 스토어 빌드에서는 발생하지 않음)
-LogBox.ignoreLogs([
-  'expo-notifications: Android Push notifications',
-  '`expo-notifications` functionality is not fully supported in Expo Go',
-]);
+import { StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import '@/i18n'; // i18n 초기화
 import { usePresetStore } from '@/stores/usePresetStore';
