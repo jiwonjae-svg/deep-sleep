@@ -59,6 +59,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     gap: spacing.base,
     paddingBottom: spacing.sm,
+    alignItems: 'flex-start', // prevent tabs from stretching vertically
   },
   tab: {
     alignItems: 'center',

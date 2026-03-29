@@ -1,26 +1,39 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAudio } from '@/hooks/useAudio';
+import { useAI } from '@/hooks/useAI';
+import { useAudioStore } from '@/stores/useAudioStore';
+import { usePresetStore } from '@/stores/usePresetStore';
 import { CategoryTabs } from '@/components/sound/CategoryTabs';
 import { SoundGrid } from '@/components/sound/SoundGrid';
 import { ActiveSoundsBar } from '@/components/sound/ActiveSoundsBar';
 import { SoundDetailSheet } from '@/components/sound/SoundDetailSheet';
-import { SoundCategory, SoundConfig } from '@/types';
+import { AIRecommendButton } from '@/components/ai/AIRecommendButton';
+import { AIInputSheet } from '@/components/ai/AIInputSheet';
+import { AIResultPreview } from '@/components/ai/AIResultPreview';
+import { BottomSheet } from '@/components/ui/BottomSheet';
+import { SoundCategory, SoundConfig, ActiveSoundState, AIPresetResult } from '@/types';
 import { getSoundsByCategory } from '@/data/sounds';
 import { getCategoryById } from '@/data/categories';
 import { useThemeColors } from '@/theme';
 import { typography, layout } from '@/theme';
-import * as AdService from '@/services/AdService';
 
 export default function MixerScreen() {
   const router = useRouter();
   const themeColors = useThemeColors();
   const { activeSounds, isPlaying, soundCount, toggleSound, play, stop } = useAudio();
+  const { recommend, isLoading: aiLoading, isPremium, canCall } = useAI();
+
   const [selectedCategory, setSelectedCategory] = useState<SoundCategory>('rain-water');
   const [detailSound, setDetailSound] = useState<SoundConfig | null>(null);
   const [sheetVisible, setSheetVisible] = useState(false);
+
+  // AI state
+  const [aiSheetVisible, setAiSheetVisible] = useState(false);
+  const [aiResultVisible, setAiResultVisible] = useState(false);
+  const [aiResult, setAiResult] = useState<AIPresetResult | null>(null);
 
   const categorySounds = getSoundsByCategory(selectedCategory);
   const categoryInfo = getCategoryById(selectedCategory);
@@ -39,6 +52,7 @@ export default function MixerScreen() {
         },
         title: { ...typography.h1, color: themeColors.textPrimary },
         count: { ...typography.caption, color: themeColors.textSecondary },
+        headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
         gridPad: { paddingHorizontal: layout.screenPaddingH },
       }),
     [themeColors],
@@ -46,8 +60,63 @@ export default function MixerScreen() {
 
   const handleCategoryChange = useCallback((cat: SoundCategory) => {
     setSelectedCategory(cat);
-    AdService.shouldShowProbabilisticInterstitial();
   }, []);
+
+  // AI handlers
+  const handleAIPress = useCallback(() => {
+    if (!isPremium) {
+      router.push('/subscription');
+      return;
+    }
+    if (!canCall) {
+      Alert.alert('일일 한도 초과', 'AI 추천은 하루에 최대 5회까지 사용할 수 있습니다.');
+      return;
+    }
+    setAiSheetVisible(true);
+  }, [isPremium, canCall, router]);
+
+  const handleAISubmit = useCallback(async (input: string) => {
+    setAiSheetVisible(false);
+    const result = await recommend(input);
+    if (result) {
+      setAiResult(result);
+      setAiResultVisible(true);
+    } else {
+      Alert.alert('오류', 'AI 추천에 실패했습니다. 다시 시도해주세요.');
+    }
+  }, [recommend]);
+
+  const handleAIApply = useCallback(() => {
+    if (!aiResult) return;
+    const sounds: ActiveSoundState[] = aiResult.sounds.map((s) => ({ ...s, pan: 0 }));
+    useAudioStore.getState().setActiveSounds(sounds);
+    setAiResultVisible(false);
+    setAiResult(null);
+  }, [aiResult]);
+
+  const handleAIRetry = useCallback(() => {
+    setAiResultVisible(false);
+    setAiResult(null);
+    setAiSheetVisible(true);
+  }, []);
+
+  const handleAISavePreset = useCallback(() => {
+    if (!aiResult) return;
+    const sounds: ActiveSoundState[] = aiResult.sounds.map((s) => ({ ...s, pan: 0 }));
+    const now = Date.now();
+    usePresetStore.getState().addPreset({
+      id: `ai_${now}`,
+      name: aiResult.preset_name,
+      description: aiResult.description,
+      isDefault: false,
+      sounds,
+      createdAt: now,
+      updatedAt: now,
+    });
+    setAiResultVisible(false);
+    setAiResult(null);
+    Alert.alert('저장 완료', `"${aiResult.preset_name}" 프리셋이 저장됐습니다.`);
+  }, [aiResult]);
 
   const handleSoundPress = useCallback(
     (sound: SoundConfig) => {
@@ -92,7 +161,10 @@ export default function MixerScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>사운드 믹서</Text>
-        <Text style={styles.count}>{soundCount}/10 활성</Text>
+        <View style={styles.headerRight}>
+          <Text style={styles.count}>{soundCount}/10 활성</Text>
+          <AIRecommendButton isPremium={isPremium} onPress={handleAIPress} />
+        </View>
       </View>
 
       {/* Category tabs */}
@@ -117,6 +189,31 @@ export default function MixerScreen() {
         onClose={() => setSheetVisible(false)}
         sound={detailSound}
       />
+
+      {/* AI input sheet */}
+      <AIInputSheet
+        visible={aiSheetVisible}
+        onClose={() => setAiSheetVisible(false)}
+        onSubmit={handleAISubmit}
+        isLoading={aiLoading}
+      />
+
+      {/* AI result sheet */}
+      <BottomSheet
+        visible={aiResultVisible}
+        onClose={() => { setAiResultVisible(false); setAiResult(null); }}
+        maxHeightPct={0.78}
+      >
+        {aiResult && (
+          <AIResultPreview
+            result={aiResult}
+            onApply={handleAIApply}
+            onRetry={handleAIRetry}
+            onSaveAsPreset={handleAISavePreset}
+            onCancel={() => { setAiResultVisible(false); setAiResult(null); }}
+          />
+        )}
+      </BottomSheet>
     </SafeAreaView>
   );
 }

@@ -291,8 +291,7 @@ function makeStyles(c: AppColors) {
       gap: spacing.sm,
     },
     radioGroup: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+      flexDirection: 'column',
       gap: spacing.sm,
     },
     radioOption: {
