@@ -18,10 +18,10 @@ import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
 import { Slider } from '@/components/ui/Slider';
 import { MascotImage } from '@/components/common/MascotImage';
 import { AIRecommendButton } from '@/components/ai/AIRecommendButton';
+import { TimerModal } from '@/components/ui/TimerModal';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { formatRemainingTime, msUntilAlarm, getCurrentTimeString } from '@/utils/formatTime';
 import { getSoundById } from '@/data/sounds';
-import { TIMER_PRESETS } from '@/utils/constants';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -36,12 +36,15 @@ export default function HomeScreen() {
     stop,
     setVolume,
     startTimer,
+    applyPreset,
   } = useAudio();
 
   const alarms = useAlarmStore((s) => s.alarms);
   const timer = useTimerStore();
   const presets = usePresetStore();
   const isPremium = useSubscriptionStore((s) => s.isPremium);
+
+  const [timerModalVisible, setTimerModalVisible] = useState(false);
 
   // Clock
   const [clock, setClock] = useState(getCurrentTimeString());
@@ -140,16 +143,6 @@ export default function HomeScreen() {
         presetIcons: { flexDirection: 'row', alignItems: 'center' },
         presetEmoji: { fontSize: 16, marginRight: 2 },
         presetMeta: { ...typography.caption, color: themeColors.textMuted },
-        timerRow: { flexDirection: 'row', gap: spacing.sm },
-        timerChip: {
-          backgroundColor: themeColors.glassLight,
-          borderRadius: 16,
-          paddingVertical: 6,
-          paddingHorizontal: spacing.md,
-          borderWidth: 1,
-          borderColor: themeColors.glassBorder,
-        },
-        timerChipText: { ...typography.caption, color: themeColors.textSecondary },
         timerText: { ...typography.bodyMedium, color: themeColors.accent2 },
         playBtn: {
           width: 80,
@@ -166,9 +159,30 @@ export default function HomeScreen() {
         playIcon: { color: '#ffffff', fontSize: 28, marginLeft: 4 },
         volumeRow: { flexDirection: 'row', alignItems: 'center', width: '100%', gap: spacing.md },
         volumeIcon: { fontSize: 18 },
+        alarmCountdown: { ...typography.caption, color: themeColors.textSecondary, textAlign: 'center' },
+        presetNameLabel: { ...typography.caption, color: themeColors.textSecondary, textAlign: 'center', marginTop: spacing.xs },
+        timerButton: {
+          backgroundColor: themeColors.glassLight,
+          borderRadius: 16,
+          paddingVertical: 8,
+          paddingHorizontal: spacing.lg,
+          borderWidth: 1,
+          borderColor: themeColors.glassBorder,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.xs,
+        },
+        timerButtonText: { ...typography.caption, color: themeColors.textSecondary },
       }),
     [themeColors],
   );
+
+  const handleTimerStart = async (minutes: number, preset: import('@/types').Preset | null) => {
+    if (preset) {
+      await applyPreset(preset);
+    }
+    startTimer(minutes);
+  };
 
   const handlePlayToggle = async () => {
     if (isPlaying) {
@@ -198,6 +212,13 @@ export default function HomeScreen() {
         {/* Mascot */}
         <MascotImage pose={isPlaying ? 'sleeping' : 'yawning'} size={180} />
 
+        {/* 알람 카운트다운 */}
+        {nextAlarm && (
+          <Text style={styles.alarmCountdown}>
+            {formatRemainingTime(nextAlarm.ms)} 뒤에 알람이 울립니다.
+          </Text>
+        )}
+
         {/* Current preset card */}
         {currentPreset && (
           <Pressable style={styles.presetCard} onPress={() => router.push('/presets')}>
@@ -223,21 +244,13 @@ export default function HomeScreen() {
         {/* Timer */}
         {timer.isActive && timerText ? (
           <Pressable onPress={() => timer.cancelTimer()}>
-            <Text style={styles.timerText}>타이머: {timerText}</Text>
+            <Text style={styles.timerText}>타이머: {timerText} (탭하여 취소)</Text>
           </Pressable>
-        ) : !timer.isActive ? (
-          <View style={styles.timerRow}>
-            {TIMER_PRESETS.map((min) => (
-              <Pressable
-                key={min}
-                style={styles.timerChip}
-                onPress={() => startTimer(min)}
-              >
-                <Text style={styles.timerChipText}>{min}분</Text>
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
+        ) : (
+          <Pressable style={styles.timerButton} onPress={() => setTimerModalVisible(true)}>
+            <Text style={styles.timerButtonText}>⏱ 타이머 설정</Text>
+          </Pressable>
+        )}
 
         {/* Play button */}
         <Animated.View style={playBtnAnimStyle}>
@@ -250,6 +263,9 @@ export default function HomeScreen() {
             </LinearGradient>
           </Pressable>
         </Animated.View>
+        {currentPreset && (
+          <Text style={styles.presetNameLabel}>{currentPreset.name}</Text>
+        )}
 
         {/* Master volume */}
         <View style={styles.volumeRow}>
@@ -272,6 +288,12 @@ export default function HomeScreen() {
           }}
         />
       </View>
+
+      <TimerModal
+        visible={timerModalVisible}
+        onClose={() => setTimerModalVisible(false)}
+        onStart={handleTimerStart}
+      />
     </SafeAreaView>
   );
 }

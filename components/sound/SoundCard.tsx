@@ -32,10 +32,11 @@ export function SoundCard({
       StyleSheet.create({
         card: {
           borderRadius: layout.borderRadiusMd,
-          backgroundColor: active ? themeColors.glassHeavy : themeColors.glassLight,
+          backgroundColor: active ? themeColors.glassMedium : themeColors.glassLight,
           paddingVertical: spacing.md,
           paddingHorizontal: layout.cardPadding,
-          // 테두리 없음
+          borderWidth: 1,
+          borderColor: active ? categoryColor : 'transparent',
         },
         row: {
           flexDirection: 'row',
@@ -57,16 +58,6 @@ export function SoundCard({
         lockIcon: {
           fontSize: 13,
           marginLeft: spacing.sm,
-        },
-        volumeBarBg: {
-          height: 2,
-          borderRadius: 1,
-          backgroundColor: themeColors.glassMedium,
-          overflow: 'hidden',
-          marginTop: spacing.sm,
-        },
-        volumeBarFill: {
-          height: 2,
         },
         premiumLabel: {
           ...typography.overline,
@@ -94,12 +85,6 @@ export function SoundCard({
         {active && <View style={styles.checkDot} />}
         {isLocked && !active && <Text style={styles.lockIcon}>🔒</Text>}
       </View>
-
-      {active && volume != null && (
-        <View style={styles.volumeBarBg}>
-          <View style={[styles.volumeBarFill, { width: `${volume}%`, backgroundColor: categoryColor }]} />
-        </View>
-      )}
 
       {sound.isPremium && !active && (
         <Text style={styles.premiumLabel}>★ Premium</Text>
