@@ -1,19 +1,16 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, Text, Pressable, TextInput, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, Pressable, TextInput, ScrollView, StyleSheet } from 'react-native';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
-import { usePresetStore } from '@/stores/usePresetStore';
 import { useAlarmStore } from '@/stores/useAlarmStore';
 import { msUntilAlarm, formatRemainingTime } from '@/utils/formatTime';
-import { Preset } from '@/types';
 
 const QUICK_MINUTES = [15, 30, 45, 60, 90, 120] as const;
 
 interface TimerModalProps {
   visible: boolean;
   onClose: () => void;
-  /** minutes: 설정된 시간(분), preset: 적용할 프리셋(없으면 null=현재 유지) */
-  onStart: (minutes: number, preset: Preset | null) => void;
+  onStart: (minutes: number) => void;
 }
 
 export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
@@ -24,15 +21,8 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
   const [useAlarmSync, setUseAlarmSync] = useState(false);
   const [customHours, setCustomHours] = useState('');
   const [customMins, setCustomMins] = useState('');
-  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
 
-  const { defaultPresets, customPresets } = usePresetStore();
   const alarms = useAlarmStore((s) => s.alarms);
-
-  const allPresets = useMemo(
-    () => [...defaultPresets, ...customPresets],
-    [defaultPresets, customPresets],
-  );
 
   const nextAlarmMs = useMemo(() => {
     const active = alarms.filter((a) => a.enabled);
@@ -50,27 +40,20 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
   }, [useAlarmSync, useCustom, nextAlarmMs, customHours, customMins, selectedQuick]);
 
   const hasTime = totalMinutes > 0;
-  const hasPreset = selectedPresetId !== null;
 
   const handleStart = useCallback(() => {
-    if (!hasPreset) {
-      Alert.alert('소리 선택 필요', '재생할 소리(프리셋)를 선택해주세요.');
-      return;
-    }
     if (!hasTime) return;
-    const preset = allPresets.find((p) => p.id === selectedPresetId) ?? null;
-    onStart(totalMinutes, preset);
+    onStart(totalMinutes);
     onClose();
-  }, [hasPreset, hasTime, totalMinutes, selectedPresetId, allPresets, onStart, onClose]);
+  }, [hasTime, totalMinutes, onStart, onClose]);
 
   const startLabel = useMemo(() => {
-    if (!hasPreset) return '소리를 선택해주세요';
     if (!hasTime) return '시간을 선택하세요';
     const h = Math.floor(totalMinutes / 60);
     const m = totalMinutes % 60;
     const timeStr = h > 0 && m > 0 ? `${h}시간 ${m}분` : h > 0 ? `${h}시간` : `${m}분`;
     return `${timeStr} 타이머 시작`;
-  }, [hasPreset, hasTime, totalMinutes]);
+  }, [hasTime, totalMinutes]);
 
   const styles = useMemo(
     () =>
@@ -261,47 +244,15 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
           </View>
         </View>
 
-        {/* 소리 선택 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>소리 선택</Text>
-
-          {allPresets.map((preset) => {
-            const isSelected = selectedPresetId === preset.id;
-            return (
-              <Pressable
-                key={preset.id}
-                style={[
-                  styles.presetItem,
-                  {
-                    backgroundColor: isSelected ? themeColors.glassLight : 'transparent',
-                    borderColor: isSelected ? themeColors.accent1 : themeColors.glassBorder,
-                  },
-                ]}
-                onPress={() => setSelectedPresetId(preset.id)}
-              >
-                <Text
-                  style={[
-                    styles.presetName,
-                    { color: isSelected ? themeColors.textPrimary : themeColors.textSecondary },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {preset.name}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
         {/* 시작 버튼 */}
         <Pressable
           style={[
             styles.startBtn,
-            { backgroundColor: hasTime && hasPreset ? themeColors.accent1 : themeColors.glassLight },
+            { backgroundColor: hasTime ? themeColors.accent1 : themeColors.glassLight },
           ]}
           onPress={handleStart}
         >
-          <Text style={[styles.startBtnText, { color: hasTime && hasPreset ? '#fff' : themeColors.textSecondary }]}>{startLabel}</Text>
+          <Text style={[styles.startBtnText, { color: hasTime ? '#fff' : themeColors.textSecondary }]}>{startLabel}</Text>
         </Pressable>
       </ScrollView>
     </BottomSheet>

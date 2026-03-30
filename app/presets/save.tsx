@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { usePresetStore } from '@/stores/usePresetStore';
 import { Button } from '@/components/ui/Button';
@@ -26,6 +27,19 @@ export default function PresetSaveScreen() {
         previewLabel: { ...typography.caption, color: themeColors.textMuted },
         soundRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
         emoji: { fontSize: 24 },
+        imagePlaceholder: {
+          width: '100%',
+          height: 160,
+          borderRadius: layout.borderRadiusMd,
+          backgroundColor: themeColors.bgSecondary,
+          borderWidth: 1,
+          borderColor: themeColors.glassBorder,
+          borderStyle: 'dashed',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: spacing.xs,
+        },
+        imagePlaceholderText: { ...typography.caption, color: themeColors.textMuted },
         inputLabel: { ...typography.bodyMedium, color: themeColors.textSecondary, marginTop: spacing.sm },
         input: { backgroundColor: themeColors.bgSecondary, borderRadius: layout.borderRadiusSm, borderWidth: 1, borderColor: themeColors.glassBorder, padding: layout.cardPadding, ...typography.body, color: themeColors.textPrimary },
         inputMultiline: { height: 80, textAlignVertical: 'top' },
@@ -82,6 +96,12 @@ export default function PresetSaveScreen() {
               ))}
             </View>
           </View>
+
+          {/* Image placeholder */}
+          <Pressable style={styles.imagePlaceholder} onPress={() => Alert.alert('준비 중', '이미지 선택 기능은 곧 추가됩니다.')}>
+            <Ionicons name="image-outline" size={36} color={themeColors.textMuted} />
+            <Text style={styles.imagePlaceholderText}>프리셋 이미지 선택 (선택)</Text>
+          </Pressable>
 
           {/* Name input */}
           <Text style={styles.inputLabel}>프리셋 이름</Text>

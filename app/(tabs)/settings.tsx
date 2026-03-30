@@ -94,18 +94,6 @@ export default function SettingsScreen() {
           <Divider styles={styles} />
           <SettingRow
             styles={styles}
-            icon="📱"
-            label="자동 수면 화면"
-            right={
-              <Toggle
-                value={settings.autoSleepScreen}
-                onValueChange={(v) => updateSettings({ autoSleepScreen: v })}
-              />
-            }
-          />
-          <Divider styles={styles} />
-          <SettingRow
-            styles={styles}
             icon="🔅"
             label="자동 밝기 감소"
             right={

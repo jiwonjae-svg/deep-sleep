@@ -6,30 +6,62 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAlarm } from '@/hooks/useAlarm';
 import { AlarmCard } from '@/components/alarm/AlarmCard';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
+import { msUntilAlarm, formatRemainingTime } from '@/utils/formatTime';
 
 export default function AlarmsScreen() {
   const router = useRouter();
   const themeColors = useThemeColors();
   const { alarms, toggleAlarm } = useAlarm();
 
+  const nextAlarmText = useMemo(() => {
+    const active = alarms.filter((a) => a.enabled);
+    if (active.length === 0) return null;
+    const best = active.reduce<{ ms: number; label: string } | null>((acc, a) => {
+      const ms = msUntilAlarm(a.time.hour, a.time.minute);
+      if (!acc || ms < acc.ms) return { ms, label: formatRemainingTime(ms) };
+      return acc;
+    }, null);
+    return best ? `${best.label} 뒤에 알람이 울립니다` : null;
+  }, [alarms]);
+
   const styles = useMemo(
     () =>
       StyleSheet.create({
         container: { flex: 1, backgroundColor: themeColors.bgPrimary },
         header: {
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
           paddingHorizontal: layout.screenPaddingH,
           height: layout.headerHeight,
+          justifyContent: 'center',
         },
         title: { ...typography.h1, color: themeColors.textPrimary },
-        addBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-        list: { paddingHorizontal: layout.screenPaddingH, paddingBottom: 100 },
+        countdown: {
+          ...typography.h2,
+          color: themeColors.accent1,
+          textAlign: 'center',
+          paddingHorizontal: layout.screenPaddingH,
+          paddingBottom: spacing.md,
+        },
+        list: { paddingHorizontal: layout.screenPaddingH, paddingBottom: 120 },
         empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
         emptyImage: { width: 200, height: 200, marginBottom: spacing.sm },
         emptyText: { ...typography.h3, color: themeColors.textPrimary },
         emptyHint: { ...typography.caption, color: themeColors.textMuted },
+        fab: {
+          position: 'absolute',
+          bottom: 100,
+          right: layout.screenPaddingH,
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          backgroundColor: themeColors.accent1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          elevation: 6,
+          shadowColor: themeColors.accent1,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+        },
       }),
     [themeColors],
   );
@@ -39,10 +71,12 @@ export default function AlarmsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>알람</Text>
-        <Pressable onPress={() => router.push('/alarms/edit')} style={styles.addBtn}>
-          <Ionicons name="add" size={24} color={themeColors.accent1} />
-        </Pressable>
       </View>
+
+      {/* Countdown */}
+      {nextAlarmText && (
+        <Text style={styles.countdown}>{nextAlarmText}</Text>
+      )}
 
       {alarms.length === 0 ? (
         <View style={styles.empty}>
@@ -52,7 +86,7 @@ export default function AlarmsScreen() {
             resizeMode="contain"
           />
           <Text style={styles.emptyText}>설정된 알람이 없습니다</Text>
-          <Text style={styles.emptyHint}>우상단 + 버튼으로 알람을 추가해주세요</Text>
+          <Text style={styles.emptyHint}>우하단 + 버튼으로 알람을 추가해주세요</Text>
         </View>
       ) : (
         <FlatList
@@ -71,8 +105,12 @@ export default function AlarmsScreen() {
           ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
         />
       )}
+
+      {/* FAB */}
+      <Pressable style={styles.fab} onPress={() => router.push('/alarms/edit')}>
+        <Ionicons name="add" size={28} color="#ffffff" />
+      </Pressable>
     </SafeAreaView>
   );
 }
-
 

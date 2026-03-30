@@ -1,9 +1,17 @@
 import React, { useMemo } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
 import { Preset } from '@/types';
 import { getSoundById } from '@/data/sounds';
 import { useThemeColors } from '@/theme';
 import { typography, spacing, layout } from '@/theme';
+
+const PRESET_IMAGES: Record<string, ReturnType<typeof require>> = {
+  'preset-rain-night': require('@/assets/images/presets/rainy_presets.png'),
+  'preset-forest-night': require('@/assets/images/presets/forest_persets.png'),
+  'preset-campfire': require('@/assets/images/presets/campfire_presets.png'),
+  'preset-warm-fireplace': require('@/assets/images/presets/fire_presets.png'),
+  'preset-cafe': require('@/assets/images/presets/cafe_presets.png'),
+};
 
 interface PresetCardProps {
   preset: Preset;
@@ -20,9 +28,24 @@ export function PresetCard({ preset, onPress, onLongPress }: PresetCardProps) {
         card: {
           backgroundColor: themeColors.glassLight,
           borderRadius: layout.borderRadiusMd,
+          overflow: 'hidden',
+          borderWidth: 1,
+          borderColor: themeColors.glassBorder,
+        },
+        cardImage: {
+          width: '100%',
+          height: 140,
+        },
+        cardImageFallback: {
+          width: '100%',
+          height: 140,
+          backgroundColor: themeColors.bgSecondary,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        cardBody: {
           padding: layout.cardPadding,
-          // 테두리 없음
-          gap: spacing.sm,
+          gap: spacing.xs,
         },
         name: {
           ...typography.h3,
@@ -61,6 +84,7 @@ export function PresetCard({ preset, onPress, onLongPress }: PresetCardProps) {
 
   const soundNames = preset.sounds.slice(0, 4).map((s) => getSoundById(s.soundId)?.name ?? s.soundId);
   const extra = preset.sounds.length - 4;
+  const img = PRESET_IMAGES[preset.id];
 
   return (
     <Pressable
@@ -68,19 +92,28 @@ export function PresetCard({ preset, onPress, onLongPress }: PresetCardProps) {
       onPress={onPress}
       onLongPress={onLongPress}
     >
-      <Text style={styles.name}>{preset.name}</Text>
-      {!!preset.description && (
-        <Text style={styles.description} numberOfLines={1}>
-          {preset.description}
-        </Text>
+      {img ? (
+        <Image source={img} style={styles.cardImage} resizeMode="cover" />
+      ) : (
+        <View style={styles.cardImageFallback}>
+          <Text style={{ fontSize: 40 }}>{preset.name.charAt(0)}</Text>
+        </View>
       )}
-      <View style={styles.footer}>
-        {soundNames.map((name, i) => (
-          <View key={i} style={styles.chip}>
-            <Text style={styles.chipText}>{name}</Text>
-          </View>
-        ))}
-        {extra > 0 && <Text style={styles.meta}>+{extra}</Text>}
+      <View style={styles.cardBody}>
+        <Text style={styles.name}>{preset.name}</Text>
+        {!!preset.description && (
+          <Text style={styles.description} numberOfLines={1}>
+            {preset.description}
+          </Text>
+        )}
+        <View style={styles.footer}>
+          {soundNames.map((name, i) => (
+            <View key={i} style={styles.chip}>
+              <Text style={styles.chipText}>{name}</Text>
+            </View>
+          ))}
+          {extra > 0 && <Text style={styles.meta}>+{extra}</Text>}
+        </View>
       </View>
     </Pressable>
   );

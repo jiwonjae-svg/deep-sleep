@@ -35,15 +35,14 @@ export function OptionModal<T extends string = string>({
   const styles = useMemo(
     () =>
       StyleSheet.create({
-        backdrop: { flex: 1, backgroundColor: themeColors.overlay, justifyContent: 'flex-end' },
+        backdrop: { flex: 1, backgroundColor: themeColors.overlay, justifyContent: 'center', paddingHorizontal: layout.screenPaddingH },
         sheet: {
           backgroundColor: themeColors.bgSecondary,
-          borderTopLeftRadius: layout.borderRadiusLg,
-          borderTopRightRadius: layout.borderRadiusLg,
+          borderRadius: layout.borderRadiusLg,
           borderWidth: 1,
           borderColor: themeColors.glassBorder,
           paddingTop: spacing.lg,
-          paddingBottom: spacing['2xl'],
+          paddingBottom: spacing.lg,
           paddingHorizontal: layout.cardPadding,
           gap: spacing.md,
         },

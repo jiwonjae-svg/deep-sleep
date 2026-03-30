@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, Image, FlatList, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,7 +36,6 @@ export default function HomeScreen() {
     activeSounds,
     isPlaying,
     masterVolume,
-    activePresetId,
     soundCount,
     play,
     stop,
@@ -55,6 +54,15 @@ export default function HomeScreen() {
   );
 
   const [timerModalVisible, setTimerModalVisible] = useState(false);
+
+  // 현재 화면에 보이는 프리셋 인덱스 추적
+  const visiblePresetRef = useRef(0);
+  const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 50 });
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
+    if (viewableItems.length > 0) {
+      visiblePresetRef.current = viewableItems[0].index ?? 0;
+    }
+  });
 
   // Clock
   const [clock, setClock] = useState(getCurrentTimeString());
@@ -107,12 +115,6 @@ export default function HomeScreen() {
   const playBtnAnimStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
-
-  // Current preset name
-  const currentPreset =
-    activePresetId != null
-      ? [...presets.defaultPresets, ...presets.customPresets].find((p) => p.id === activePresetId)
-      : null;
 
   const styles = useMemo(
     () =>
@@ -197,34 +199,19 @@ export default function HomeScreen() {
     [themeColors, cardWidth],
   );
 
-  const handleTimerStart = async (minutes: number, preset: import('@/types').Preset | null) => {
-    if (preset) {
-      await applyPreset(preset);
-    }
+  const handleTimerStart = (minutes: number) => {
     startTimer(minutes);
   };
-
-  const handlePresetPress = useCallback(
-    async (preset: import('@/types').Preset) => {
-      await applyPreset(preset);
-    },
-    [applyPreset],
-  );
 
   const renderPresetCard = useCallback(
     ({ item: preset }: { item: import('@/types').Preset }) => {
       const img = PRESET_IMAGES[preset.id];
-      const isActive = activePresetId === preset.id;
       const soundNames = preset.sounds
         .map((s) => getSoundById(s.soundId)?.name ?? s.soundId)
         .join(', ');
       return (
-        <Pressable
-          style={[
-            styles.presetCarouselCard,
-            isActive && styles.presetCarouselCardActive,
-          ]}
-          onPress={() => handlePresetPress(preset)}
+        <View
+          style={styles.presetCarouselCard}
         >
           {img ? (
             <Image
@@ -242,17 +229,19 @@ export default function HomeScreen() {
             <Text style={styles.presetCardDesc} numberOfLines={1}>{preset.description}</Text>
             <Text style={styles.presetCardSounds} numberOfLines={1}>{soundNames}</Text>
           </View>
-        </Pressable>
+        </View>
       );
     },
-    [styles, activePresetId, themeColors, handlePresetPress],
+    [styles, themeColors],
   );
 
-  const handlePlayToggle = async () => {
+  const handlePlayToggle = () => {
     if (isPlaying) {
-      await stop();
+      stop();
     } else {
-      await play();
+      const preset = allPresets[visiblePresetRef.current];
+      if (preset) applyPreset(preset);
+      play();
     }
   };
 
@@ -278,6 +267,9 @@ export default function HomeScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderPresetCard}
           ItemSeparatorComponent={() => <View style={{ width: spacing.sm }} />}
+          scrollEnabled={!isPlaying}
+          onViewableItemsChanged={onViewableItemsChanged.current}
+          viewabilityConfig={viewabilityConfig.current}
           style={{ flexGrow: 0, width: cardWidth }}
         />
 
@@ -310,10 +302,6 @@ export default function HomeScreen() {
             </LinearGradient>
           </Pressable>
         </Animated.View>
-        {currentPreset && (
-          <Text style={styles.presetNameLabel}>{currentPreset.name}</Text>
-        )}
-
         {/* Master volume */}
         <View style={styles.volumeRow}>
           <Text style={styles.volumeIcon}>🔈</Text>
