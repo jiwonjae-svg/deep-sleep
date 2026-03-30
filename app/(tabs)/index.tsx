@@ -1,6 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { View, Text, Pressable, StyleSheet, Image, FlatList, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -14,18 +13,25 @@ import { useAudio } from '@/hooks/useAudio';
 import { useAlarmStore } from '@/stores/useAlarmStore';
 import { useTimerStore } from '@/stores/useTimerStore';
 import { usePresetStore } from '@/stores/usePresetStore';
-import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
 import { Slider } from '@/components/ui/Slider';
-import { MascotImage } from '@/components/common/MascotImage';
-import { AIRecommendButton } from '@/components/ai/AIRecommendButton';
 import { TimerModal } from '@/components/ui/TimerModal';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { formatRemainingTime, msUntilAlarm, getCurrentTimeString } from '@/utils/formatTime';
 import { getSoundById } from '@/data/sounds';
 
+// 프리셋 ID → 이미지 매핑 (정적 require)
+const PRESET_IMAGES: Record<string, ReturnType<typeof require>> = {
+  'preset-rain-night': require('@/assets/images/presets/rainy_presets.png'),
+  'preset-forest-night': require('@/assets/images/presets/forest_persets.png'),
+  'preset-campfire': require('@/assets/images/presets/campfire_presets.png'),
+  'preset-warm-fireplace': require('@/assets/images/presets/fire_presets.png'),
+  'preset-cafe': require('@/assets/images/presets/cafe_presets.png'),
+};
+
 export default function HomeScreen() {
-  const router = useRouter();
   const themeColors = useThemeColors();
+  const { width: screenWidth } = useWindowDimensions();
+  const cardWidth = screenWidth - layout.screenPaddingH * 2;
   const {
     activeSounds,
     isPlaying,
@@ -42,7 +48,11 @@ export default function HomeScreen() {
   const alarms = useAlarmStore((s) => s.alarms);
   const timer = useTimerStore();
   const presets = usePresetStore();
-  const isPremium = useSubscriptionStore((s) => s.isPremium);
+
+  const allPresets = useMemo(
+    () => [...presets.defaultPresets, ...presets.customPresets],
+    [presets.defaultPresets, presets.customPresets],
+  );
 
   const [timerModalVisible, setTimerModalVisible] = useState(false);
 
@@ -116,7 +126,6 @@ export default function HomeScreen() {
           height: layout.headerHeight,
         },
         logo: { ...typography.h3, color: themeColors.textPrimary },
-        nextAlarm: { ...typography.caption, color: themeColors.accent2 },
         content: {
           flex: 1,
           alignItems: 'center',
@@ -130,19 +139,30 @@ export default function HomeScreen() {
           color: themeColors.textPrimary,
           letterSpacing: 2,
         },
-        presetCard: {
-          backgroundColor: themeColors.glassLight,
+        // Preset carousel card
+        presetCarouselCard: {
+          width: cardWidth,
           borderRadius: layout.borderRadiusMd,
-          padding: layout.cardPadding,
-          width: '100%',
-          gap: spacing.sm,
+          overflow: 'hidden',
+          backgroundColor: themeColors.glassLight,
           borderWidth: 1,
           borderColor: themeColors.glassBorder,
         },
-        presetName: { ...typography.h3, color: themeColors.textPrimary },
-        presetIcons: { flexDirection: 'row', alignItems: 'center' },
-        presetEmoji: { fontSize: 16, marginRight: 2 },
-        presetMeta: { ...typography.caption, color: themeColors.textMuted },
+        presetCarouselCardActive: {
+          borderColor: themeColors.accent1,
+          borderWidth: 2,
+        },
+        presetCardImage: {
+          width: cardWidth,
+          height: 150,
+        },
+        presetCardBody: {
+          padding: spacing.md,
+          gap: spacing.xs,
+        },
+        presetCardName: { ...typography.h3, color: themeColors.textPrimary },
+        presetCardDesc: { ...typography.caption, color: themeColors.textSecondary },
+        presetCardSounds: { ...typography.caption, color: themeColors.textMuted },
         timerText: { ...typography.bodyMedium, color: themeColors.accent2 },
         playBtn: {
           width: 80,
@@ -174,7 +194,7 @@ export default function HomeScreen() {
         },
         timerButtonText: { ...typography.caption, color: themeColors.textSecondary },
       }),
-    [themeColors],
+    [themeColors, cardWidth],
   );
 
   const handleTimerStart = async (minutes: number, preset: import('@/types').Preset | null) => {
@@ -184,12 +204,55 @@ export default function HomeScreen() {
     startTimer(minutes);
   };
 
+  const handlePresetPress = useCallback(
+    async (preset: import('@/types').Preset) => {
+      await applyPreset(preset);
+    },
+    [applyPreset],
+  );
+
+  const renderPresetCard = useCallback(
+    ({ item: preset }: { item: import('@/types').Preset }) => {
+      const img = PRESET_IMAGES[preset.id];
+      const isActive = activePresetId === preset.id;
+      const soundNames = preset.sounds
+        .map((s) => getSoundById(s.soundId)?.name ?? s.soundId)
+        .join(', ');
+      return (
+        <Pressable
+          style={[
+            styles.presetCarouselCard,
+            isActive && styles.presetCarouselCardActive,
+          ]}
+          onPress={() => handlePresetPress(preset)}
+        >
+          {img ? (
+            <Image
+              source={img}
+              style={styles.presetCardImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={[styles.presetCardImage, { backgroundColor: themeColors.glassLight, alignItems: 'center', justifyContent: 'center' }]}>
+              <Text style={{ fontSize: 40 }}>{preset.name.split(' ')[0]}</Text>
+            </View>
+          )}
+          <View style={styles.presetCardBody}>
+            <Text style={styles.presetCardName} numberOfLines={1}>{preset.name}</Text>
+            <Text style={styles.presetCardDesc} numberOfLines={1}>{preset.description}</Text>
+            <Text style={styles.presetCardSounds} numberOfLines={1}>{soundNames}</Text>
+          </View>
+        </Pressable>
+      );
+    },
+    [styles, activePresetId, themeColors, handlePresetPress],
+  );
+
   const handlePlayToggle = async () => {
     if (isPlaying) {
       await stop();
     } else {
       await play();
-      router.push('/playing');
     }
   };
 
@@ -204,36 +267,25 @@ export default function HomeScreen() {
         {/* Clock */}
         <Text style={styles.clock}>{clock}</Text>
 
-        {/* Mascot */}
-        <MascotImage pose={isPlaying ? 'sleeping' : 'yawning'} size={180} />
+        {/* 프리셋 캐러셀 (마스코트 대체) */}
+        <FlatList
+          data={allPresets}
+          horizontal
+          pagingEnabled
+          snapToInterval={cardWidth + spacing.sm}
+          decelerationRate="fast"
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item) => item.id}
+          renderItem={renderPresetCard}
+          ItemSeparatorComponent={() => <View style={{ width: spacing.sm }} />}
+          style={{ flexGrow: 0, width: cardWidth }}
+        />
 
         {/* 알람 카운트다운 */}
         {nextAlarm && (
           <Text style={styles.alarmCountdown}>
             {formatRemainingTime(nextAlarm.ms)} 뒤에 알람이 울립니다.
           </Text>
-        )}
-
-        {/* Current preset card */}
-        {currentPreset && (
-          <Pressable style={styles.presetCard} onPress={() => router.push('/presets')}>
-            <Text style={styles.presetName}>{currentPreset.name}</Text>
-            <View style={styles.presetIcons}>
-              {currentPreset.sounds.slice(0, 5).map((s) => (
-                <Text key={s.soundId} style={styles.presetEmoji}>
-                  {getSoundById(s.soundId)?.iconEmoji ?? '🔊'}
-                </Text>
-              ))}
-              <Text style={styles.presetMeta}> · {currentPreset.sounds.length} 소리</Text>
-            </View>
-          </Pressable>
-        )}
-
-        {soundCount === 0 && !currentPreset && (
-          <Pressable style={styles.presetCard} onPress={() => router.push('/mixer')}>
-            <Text style={styles.presetName}>소리를 선택해주세요</Text>
-            <Text style={styles.presetMeta}>믹서에서 소리를 추가하세요</Text>
-          </Pressable>
         )}
 
         {/* Timer */}
@@ -270,18 +322,6 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.volumeIcon}>🔊</Text>
         </View>
-
-        {/* AI Recommend */}
-        <AIRecommendButton
-          isPremium={isPremium}
-          onPress={() => {
-            if (isPremium) {
-              // TODO: open AI input sheet
-            } else {
-              router.push('/subscription');
-            }
-          }}
-        />
       </View>
 
       <TimerModal

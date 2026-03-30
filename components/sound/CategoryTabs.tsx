@@ -25,6 +25,7 @@ export function CategoryTabs({ selectedCategory, onSelect }: CategoryTabsProps) 
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.container}
+      style={styles.scrollView}
     >
       {visibleCategories.map((cat) => {
         const isSelected = cat.id === selectedCategory;
@@ -55,6 +56,10 @@ export function CategoryTabs({ selectedCategory, onSelect }: CategoryTabsProps) 
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
   container: {
     paddingHorizontal: spacing.xl,
     gap: spacing.base,

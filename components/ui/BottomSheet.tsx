@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { View, Pressable, StyleSheet, Dimensions, useWindowDimensions } from 'react-native';
+import { View, Pressable, StyleSheet, BackHandler, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withTiming,
   runOnJS,
 } from 'react-native-reanimated';
@@ -58,13 +57,23 @@ export function BottomSheet({
 
   useEffect(() => {
     if (visible) {
-      translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
-      overlayOpacity.value = withTiming(1, { duration: 250 });
+      translateY.value = withTiming(0, { duration: 180 });
+      overlayOpacity.value = withTiming(1, { duration: 150 });
     } else {
-      translateY.value = withTiming(maxHeight, { duration: 250 });
-      overlayOpacity.value = withTiming(0, { duration: 250 });
+      translateY.value = withTiming(maxHeight, { duration: 180 });
+      overlayOpacity.value = withTiming(0, { duration: 150 });
     }
   }, [visible, maxHeight]);
+
+  // Android용 back button 인터셉
+  useEffect(() => {
+    if (!visible) return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      onClose();
+      return true;
+    });
+    return () => subscription.remove();
+  }, [visible, onClose]);
 
   const handleClose = useCallback(() => {
     onClose();
@@ -78,11 +87,11 @@ export function BottomSheet({
     })
     .onEnd((e) => {
       if (e.translationY > maxHeight * 0.3 || e.velocityY > 500) {
-        translateY.value = withTiming(maxHeight, { duration: 250 });
-        overlayOpacity.value = withTiming(0, { duration: 250 });
+        translateY.value = withTiming(maxHeight, { duration: 180 });
+        overlayOpacity.value = withTiming(0, { duration: 180 });
         runOnJS(handleClose)();
       } else {
-        translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
+        translateY.value = withTiming(0, { duration: 180 });
       }
     });
 
