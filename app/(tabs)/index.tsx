@@ -138,13 +138,15 @@ export default function HomeScreen() {
         container: { flex: 1, backgroundColor: themeColors.bgPrimary },
         bgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.42)' },
         header: {
-          flexDirection: 'row',
-          justifyContent: 'space-between',
           alignItems: 'center',
+          justifyContent: 'center',
           paddingHorizontal: layout.screenPaddingH,
           height: layout.headerHeight,
         },
-        logo: { ...typography.h3, color: themeColors.textPrimary },
+        logoImage: {
+          height: layout.headerHeight * 0.7,
+          width: 160,
+        },
         content: {
           flex: 1,
           alignItems: 'center',
@@ -285,7 +287,11 @@ export default function HomeScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.logo}>🐻 Deep Sleep</Text>
+        <Image
+          source={require('@/assets/images/logo/main_logo.png')}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
       </View>
 
       <View style={styles.content}>
