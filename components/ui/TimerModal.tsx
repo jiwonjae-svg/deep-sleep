@@ -1,8 +1,10 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, Text, Pressable, TextInput, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Pressable, TextInput, ScrollView, StyleSheet, Alert } from 'react-native';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { usePresetStore } from '@/stores/usePresetStore';
+import { useAlarmStore } from '@/stores/useAlarmStore';
+import { msUntilAlarm, formatRemainingTime } from '@/utils/formatTime';
 import { Preset } from '@/types';
 
 const QUICK_MINUTES = [15, 30, 45, 60, 90, 120] as const;
@@ -19,36 +21,56 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
 
   const [selectedQuick, setSelectedQuick] = useState<number>(30);
   const [useCustom, setUseCustom] = useState(false);
+  const [useAlarmSync, setUseAlarmSync] = useState(false);
   const [customHours, setCustomHours] = useState('');
   const [customMins, setCustomMins] = useState('');
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
 
   const { defaultPresets, customPresets } = usePresetStore();
+  const alarms = useAlarmStore((s) => s.alarms);
+
   const allPresets = useMemo(
     () => [...defaultPresets, ...customPresets],
     [defaultPresets, customPresets],
   );
 
-  const totalMinutes = useCustom
-    ? (parseInt(customHours || '0', 10) * 60 + parseInt(customMins || '0', 10))
-    : selectedQuick;
+  const nextAlarmMs = useMemo(() => {
+    const active = alarms.filter((a) => a.enabled);
+    if (active.length === 0) return null;
+    return active.reduce<number | null>((best, a) => {
+      const ms = msUntilAlarm(a.time.hour, a.time.minute);
+      return best === null || ms < best ? ms : best;
+    }, null);
+  }, [alarms]);
 
-  const canStart = totalMinutes > 0;
+  const totalMinutes = useMemo(() => {
+    if (useAlarmSync && nextAlarmMs !== null) return Math.max(1, Math.ceil(nextAlarmMs / 60_000));
+    if (useCustom) return parseInt(customHours || '0', 10) * 60 + parseInt(customMins || '0', 10);
+    return selectedQuick;
+  }, [useAlarmSync, useCustom, nextAlarmMs, customHours, customMins, selectedQuick]);
+
+  const hasTime = totalMinutes > 0;
+  const hasPreset = selectedPresetId !== null;
 
   const handleStart = useCallback(() => {
-    if (!canStart) return;
+    if (!hasPreset) {
+      Alert.alert('소리 선택 필요', '재생할 소리(프리셋)를 선택해주세요.');
+      return;
+    }
+    if (!hasTime) return;
     const preset = allPresets.find((p) => p.id === selectedPresetId) ?? null;
     onStart(totalMinutes, preset);
     onClose();
-  }, [canStart, totalMinutes, selectedPresetId, allPresets, onStart, onClose]);
+  }, [hasPreset, hasTime, totalMinutes, selectedPresetId, allPresets, onStart, onClose]);
 
   const startLabel = useMemo(() => {
-    if (!canStart) return '시간을 선택하세요';
+    if (!hasPreset) return '소리를 선택해주세요';
+    if (!hasTime) return '시간을 선택하세요';
     const h = Math.floor(totalMinutes / 60);
     const m = totalMinutes % 60;
     const timeStr = h > 0 && m > 0 ? `${h}시간 ${m}분` : h > 0 ? `${h}시간` : `${m}분`;
     return `${timeStr} 타이머 시작`;
-  }, [canStart, totalMinutes]);
+  }, [hasPreset, hasTime, totalMinutes]);
 
   const styles = useMemo(
     () =>
@@ -132,7 +154,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
           <Text style={styles.sectionTitle}>간단 설정</Text>
           <View style={styles.quickRow}>
             {QUICK_MINUTES.map((min) => {
-              const isSelected = !useCustom && selectedQuick === min;
+              const isSelected = !useCustom && !useAlarmSync && selectedQuick === min;
               return (
                 <Pressable
                   key={min}
@@ -146,6 +168,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
                   onPress={() => {
                     setSelectedQuick(min);
                     setUseCustom(false);
+                    setUseAlarmSync(false);
                   }}
                 >
                   <Text
@@ -159,6 +182,41 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
                 </Pressable>
               );
             })}
+
+            {/* 알람에 맞춰 */}
+            {(() => {
+              const hasAlarm = nextAlarmMs !== null;
+              const isSelected = useAlarmSync;
+              const label = hasAlarm
+                ? `알람까지 (${formatRemainingTime(nextAlarmMs!)})`
+                : '알람에 맞춰';
+              return (
+                <Pressable
+                  style={[
+                    styles.chip,
+                    {
+                      backgroundColor: isSelected ? themeColors.accent2 : themeColors.glassLight,
+                      borderColor: isSelected ? themeColors.accent2 : themeColors.glassBorder,
+                      opacity: hasAlarm ? 1 : 0.4,
+                    },
+                  ]}
+                  onPress={() => {
+                    if (!hasAlarm) return;
+                    setUseAlarmSync(true);
+                    setUseCustom(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      { color: isSelected ? '#fff' : themeColors.textSecondary },
+                    ]}
+                  >
+                    {label}
+                  </Text>
+                </Pressable>
+              );
+            })()}
           </View>
         </View>
 
@@ -175,6 +233,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
               onChangeText={(t) => {
                 setCustomHours(t.replace(/[^0-9]/g, ''));
                 setUseCustom(true);
+                setUseAlarmSync(false);
               }}
               keyboardType="number-pad"
               maxLength={2}
@@ -191,6 +250,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
               onChangeText={(t) => {
                 setCustomMins(t.replace(/[^0-9]/g, ''));
                 setUseCustom(true);
+                setUseAlarmSync(false);
               }}
               keyboardType="number-pad"
               maxLength={2}
@@ -203,34 +263,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
 
         {/* 소리 선택 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>소리 선택 (선택사항)</Text>
-
-          {/* 현재 사운드 유지 옵션 */}
-          <Pressable
-            style={[
-              styles.presetItem,
-              {
-                backgroundColor: selectedPresetId === null ? themeColors.glassLight : 'transparent',
-                borderColor:
-                  selectedPresetId === null ? themeColors.accent1 : themeColors.glassBorder,
-              },
-            ]}
-            onPress={() => setSelectedPresetId(null)}
-          >
-            <Text
-              style={[
-                styles.presetName,
-                {
-                  color:
-                    selectedPresetId === null
-                      ? themeColors.textPrimary
-                      : themeColors.textSecondary,
-                },
-              ]}
-            >
-              현재 사운드 유지
-            </Text>
-          </Pressable>
+          <Text style={styles.sectionTitle}>소리 선택</Text>
 
           {allPresets.map((preset) => {
             const isSelected = selectedPresetId === preset.id;
@@ -264,12 +297,11 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
         <Pressable
           style={[
             styles.startBtn,
-            { backgroundColor: canStart ? themeColors.accent1 : themeColors.textMuted },
+            { backgroundColor: hasTime && hasPreset ? themeColors.accent1 : themeColors.glassLight },
           ]}
           onPress={handleStart}
-          disabled={!canStart}
         >
-          <Text style={styles.startBtnText}>{startLabel}</Text>
+          <Text style={[styles.startBtnText, { color: hasTime && hasPreset ? '#fff' : themeColors.textSecondary }]}>{startLabel}</Text>
         </Pressable>
       </ScrollView>
     </BottomSheet>

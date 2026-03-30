@@ -198,11 +198,6 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.logo}>🐻 Deep Sleep</Text>
-        {nextAlarm && (
-          <Text style={styles.nextAlarm}>
-            ⏰ {formatRemainingTime(nextAlarm.ms)}
-          </Text>
-        )}
       </View>
 
       <View style={styles.content}>
