@@ -95,7 +95,7 @@ export function OptionModal<T extends string = string>({
                 </Pressable>
               );
             }}
-            ItemSeparatorComponent={() => <View style={styles.divider} />}
+            ItemSeparatorComponent={undefined}
           />
           <Pressable style={styles.cancelBtn} onPress={onClose}>
             <Text style={styles.cancelText}>취소</Text>

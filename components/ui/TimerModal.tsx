@@ -18,7 +18,8 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
 
   const [selectedQuick, setSelectedQuick] = useState<number>(30);
   const [useCustom, setUseCustom] = useState(false);
-  const [useAlarmSync, setUseAlarmSync] = useState(false);
+  // 알람이 있으면 기본적으로 '알람까지' 선택
+  const [useAlarmSync, setUseAlarmSync] = useState(true);
   const [customHours, setCustomHours] = useState('');
   const [customMins, setCustomMins] = useState('');
 
@@ -49,11 +50,8 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
 
   const startLabel = useMemo(() => {
     if (!hasTime) return '시간을 선택하세요';
-    const h = Math.floor(totalMinutes / 60);
-    const m = totalMinutes % 60;
-    const timeStr = h > 0 && m > 0 ? `${h}시간 ${m}분` : h > 0 ? `${h}시간` : `${m}분`;
-    return `${timeStr} 타이머 시작`;
-  }, [hasTime, totalMinutes]);
+    return '설정';
+  }, [hasTime]);
 
   const styles = useMemo(
     () =>

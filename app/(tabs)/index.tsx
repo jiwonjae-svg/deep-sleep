@@ -55,6 +55,9 @@ export default function HomeScreen() {
 
   const [timerModalVisible, setTimerModalVisible] = useState(false);
 
+  // 재생 중 배경으로 사용할 프리셋 이미지
+  const [playingBgImg, setPlayingBgImg] = useState<ReturnType<typeof require> | null>(null);
+
   // 현재 화면에 보이는 프리셋 인덱스 추적
   const visiblePresetRef = useRef(0);
   const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 50 });
@@ -71,23 +74,25 @@ export default function HomeScreen() {
     return () => clearInterval(id);
   }, []);
 
-  // Timer remaining
-  const [timerText, setTimerText] = useState('');
+  // Timer remaining (재생 중일 때만 카운트다운)
+  const [timerRemaining, setTimerRemaining] = useState(0);
   useEffect(() => {
     if (!timer.isActive) {
-      setTimerText('');
+      setTimerRemaining(0);
       return;
     }
+    setTimerRemaining(Math.max(0, timer.endTime - Date.now()));
+  }, [timer.isActive, timer.endTime]);
+
+  useEffect(() => {
+    if (!timer.isActive || !isPlaying) return;
     const id = setInterval(() => {
-      const remaining = timer.endTime - Date.now();
-      if (remaining <= 0) {
-        setTimerText('');
-      } else {
-        setTimerText(formatRemainingTime(remaining));
-      }
+      setTimerRemaining((r) => Math.max(0, r - 1000));
     }, 1000);
     return () => clearInterval(id);
-  }, [timer.isActive, timer.endTime]);
+  }, [timer.isActive, isPlaying]);
+
+  const timerText = timerRemaining > 0 ? formatRemainingTime(timerRemaining) : '';
 
   // Next alarm
   const nextAlarm = alarms
@@ -116,10 +121,22 @@ export default function HomeScreen() {
     transform: [{ scale: scale.value }],
   }));
 
+  // 배경 fade 애니메이션
+  const bgOpacity = useSharedValue(0);
+  useEffect(() => {
+    bgOpacity.value = withTiming(isPlaying && playingBgImg != null ? 1 : 0, {
+      duration: 600,
+      easing: Easing.inOut(Easing.ease),
+    });
+  }, [isPlaying, playingBgImg]);
+  const bgAnimStyle = useAnimatedStyle(() => ({ opacity: bgOpacity.value }));
+  const hasBgImg = isPlaying && playingBgImg != null;
+
   const styles = useMemo(
     () =>
       StyleSheet.create({
         container: { flex: 1, backgroundColor: themeColors.bgPrimary },
+        bgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.42)' },
         header: {
           flexDirection: 'row',
           justifyContent: 'space-between',
@@ -165,7 +182,7 @@ export default function HomeScreen() {
         presetCardName: { ...typography.h3, color: themeColors.textPrimary },
         presetCardDesc: { ...typography.caption, color: themeColors.textSecondary },
         presetCardSounds: { ...typography.caption, color: themeColors.textMuted },
-        timerText: { ...typography.bodyMedium, color: themeColors.accent2 },
+        timerText: { ...typography.bodyMedium, color: themeColors.accent1 },
         playBtn: {
           width: 80,
           height: 80,
@@ -182,7 +199,6 @@ export default function HomeScreen() {
         volumeRow: { flexDirection: 'row', alignItems: 'center', width: '100%', gap: spacing.md },
         volumeIcon: { fontSize: 18 },
         alarmCountdown: { ...typography.caption, color: themeColors.textSecondary, textAlign: 'center' },
-        presetNameLabel: { ...typography.caption, color: themeColors.textSecondary, textAlign: 'center', marginTop: spacing.xs },
         timerButton: {
           backgroundColor: themeColors.glassLight,
           borderRadius: 16,
@@ -200,7 +216,10 @@ export default function HomeScreen() {
   );
 
   const handleTimerStart = (minutes: number) => {
+    const preset = allPresets[visiblePresetRef.current];
+    if (preset) applyPreset(preset);
     startTimer(minutes);
+    play();
   };
 
   const renderPresetCard = useCallback(
@@ -224,29 +243,46 @@ export default function HomeScreen() {
               <Text style={{ fontSize: 40 }}>{preset.name.split(' ')[0]}</Text>
             </View>
           )}
-          <View style={styles.presetCardBody}>
-            <Text style={styles.presetCardName} numberOfLines={1}>{preset.name}</Text>
-            <Text style={styles.presetCardDesc} numberOfLines={1}>{preset.description}</Text>
-            <Text style={styles.presetCardSounds} numberOfLines={1}>{soundNames}</Text>
+          <View style={[
+              styles.presetCardBody,
+              isPlaying && playingBgImg != null ? { backgroundColor: 'rgba(0,0,0,0.35)' } : null,
+            ]}>
+            <Text style={[styles.presetCardName, isPlaying && playingBgImg != null ? { color: '#ffffff' } : null]} numberOfLines={1}>{preset.name}</Text>
+            <Text style={[styles.presetCardDesc, isPlaying && playingBgImg != null ? { color: 'rgba(255,255,255,0.7)' } : null]} numberOfLines={1}>{preset.description}</Text>
+            <Text style={[styles.presetCardSounds, isPlaying && playingBgImg != null ? { color: 'rgba(255,255,255,0.5)' } : null]} numberOfLines={1}>{soundNames}</Text>
           </View>
         </View>
       );
     },
-    [styles, themeColors],
+    [styles, themeColors, isPlaying, playingBgImg],
   );
 
   const handlePlayToggle = () => {
     if (isPlaying) {
       stop();
+      setPlayingBgImg(null);
     } else {
       const preset = allPresets[visiblePresetRef.current];
-      if (preset) applyPreset(preset);
+      if (preset) {
+        applyPreset(preset);
+        setPlayingBgImg(PRESET_IMAGES[preset.id] ?? null);
+      }
       play();
     }
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* 재생 중 배경 이미지 (블러 + 오버레이) */}
+      <Animated.View style={[StyleSheet.absoluteFill, bgAnimStyle]} pointerEvents="none">
+        {playingBgImg != null && (
+          <>
+            <Image source={playingBgImg as number} style={StyleSheet.absoluteFill} resizeMode="cover" blurRadius={20} />
+            <View style={styles.bgOverlay} />
+          </>
+        )}
+      </Animated.View>
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.logo}>🐻 Deep Sleep</Text>
@@ -254,7 +290,7 @@ export default function HomeScreen() {
 
       <View style={styles.content}>
         {/* Clock */}
-        <Text style={styles.clock}>{clock}</Text>
+        <Text style={[styles.clock, hasBgImg && { color: '#ffffff' }]}>{clock}</Text>
 
         {/* 프리셋 캐러셀 (마스코트 대체) */}
         <FlatList
@@ -275,19 +311,19 @@ export default function HomeScreen() {
 
         {/* 알람 카운트다운 */}
         {nextAlarm && (
-          <Text style={styles.alarmCountdown}>
+          <Text style={[styles.alarmCountdown, hasBgImg && { color: 'rgba(255,255,255,0.75)' }]}>
             {formatRemainingTime(nextAlarm.ms)} 뒤에 알람이 울립니다.
           </Text>
         )}
 
         {/* Timer */}
         {timer.isActive && timerText ? (
-          <Pressable onPress={() => timer.cancelTimer()}>
-            <Text style={styles.timerText}>타이머: {timerText} (탭하여 취소)</Text>
-          </Pressable>
+          <Text style={[styles.timerText, hasBgImg && { color: '#ffffff' }]}>
+            {timerText} 동안 소리가 나옵니다.
+          </Text>
         ) : (
           <Pressable style={styles.timerButton} onPress={() => setTimerModalVisible(true)}>
-            <Text style={styles.timerButtonText}>⏱ 타이머 설정</Text>
+            <Text style={styles.timerButtonText}>⏱ 수면 타이머</Text>
           </Pressable>
         )}
 
@@ -306,7 +342,7 @@ export default function HomeScreen() {
         <View style={styles.volumeRow}>
           <Text style={styles.volumeIcon}>🔈</Text>
           <View style={{ flex: 1 }}>
-            <Slider value={masterVolume} onValueChange={setVolume} activeColor={themeColors.accent2} />
+            <Slider value={masterVolume} onValueChange={setVolume} activeColor={themeColors.accent1} />
           </View>
           <Text style={styles.volumeIcon}>🔊</Text>
         </View>
