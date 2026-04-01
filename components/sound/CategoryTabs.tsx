@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
-import { ScrollView, Pressable, Text, StyleSheet, View } from 'react-native';
+import { ScrollView, Pressable, Text, StyleSheet } from 'react-native';
 import { categories } from '@/data/categories';
 import { getSoundsByCategory } from '@/data/sounds';
 import { SoundCategory } from '@/types';
 import { useThemeColors } from '@/theme';
-import { typography, spacing } from '@/theme';
+import { spacing } from '@/theme';
 
 interface CategoryTabsProps {
   selectedCategory: SoundCategory;
@@ -14,7 +14,6 @@ interface CategoryTabsProps {
 export function CategoryTabs({ selectedCategory, onSelect }: CategoryTabsProps) {
   const themeColors = useThemeColors();
 
-  // 소리가 하나도 없는 카테고리는 탭에서 제거한다
   const visibleCategories = useMemo(
     () => categories.filter((cat) => getSoundsByCategory(cat.id).length > 0),
     [],
@@ -33,21 +32,23 @@ export function CategoryTabs({ selectedCategory, onSelect }: CategoryTabsProps) 
           <Pressable
             key={cat.id}
             onPress={() => onSelect(cat.id)}
-            style={styles.tab}
+            style={[
+              styles.pill,
+              {
+                backgroundColor: isSelected ? themeColors.accent1 : 'rgba(255,255,255,0.08)',
+                borderColor: isSelected ? themeColors.accent1 : 'rgba(255,255,255,0.15)',
+              },
+            ]}
           >
-            <Text style={styles.emoji}>{cat.emoji}</Text>
             <Text
               style={[
-                styles.label,
-                { color: isSelected ? themeColors.textPrimary : themeColors.textSecondary },
+                styles.pillText,
+                { color: isSelected ? themeColors.white : themeColors.textPrimary },
               ]}
               numberOfLines={1}
             >
               {cat.name}
             </Text>
-            {isSelected && (
-              <View style={[styles.indicator, { backgroundColor: themeColors.accent1 }]} />
-            )}
           </Pressable>
         );
       })}
@@ -61,29 +62,21 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   container: {
-    paddingHorizontal: spacing.xl,
-    gap: spacing.base,
-    paddingBottom: spacing.sm,
-    alignItems: 'flex-start', // prevent tabs from stretching vertically
-  },
-  tab: {
+    paddingHorizontal: 24,
+    gap: spacing.sm,
+    paddingBottom: spacing.md,
+    paddingTop: spacing.xs,
     alignItems: 'center',
-    paddingVertical: spacing.sm,
-    minWidth: 56,
   },
-  emoji: {
-    fontSize: 20,
-    marginBottom: 2,
+  pill: {
+    borderRadius: 9999,
+    borderWidth: 1,
+    paddingVertical: 8,
+    paddingHorizontal: spacing.base,
   },
-  label: {
-    ...typography.caption,
-  },
-  indicator: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 2,
-    borderRadius: 1,
+  pillText: {
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
 });

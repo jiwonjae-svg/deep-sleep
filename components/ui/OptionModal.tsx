@@ -35,18 +35,18 @@ export function OptionModal<T extends string = string>({
   const styles = useMemo(
     () =>
       StyleSheet.create({
-        backdrop: { flex: 1, backgroundColor: themeColors.overlay, justifyContent: 'center', paddingHorizontal: layout.screenPaddingH },
+        backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', paddingHorizontal: layout.screenPaddingH },
         sheet: {
-          backgroundColor: themeColors.bgSecondary,
+          backgroundColor: '#11151f',
           borderRadius: layout.borderRadiusLg,
           borderWidth: 1,
-          borderColor: themeColors.glassBorder,
+          borderColor: 'rgba(255,255,255,0.15)',
           paddingTop: spacing.lg,
           paddingBottom: spacing.lg,
           paddingHorizontal: layout.cardPadding,
           gap: spacing.md,
         },
-        title: { ...typography.h3, color: themeColors.textPrimary, textAlign: 'center', paddingBottom: spacing.sm },
+        title: { ...typography.h3, color: '#ffffff', textAlign: 'center', paddingBottom: spacing.sm },
         option: {
           flexDirection: 'row',
           alignItems: 'center',
@@ -54,13 +54,13 @@ export function OptionModal<T extends string = string>({
           paddingHorizontal: spacing.md,
           borderRadius: layout.borderRadiusSm,
         },
-        optionSelected: { backgroundColor: themeColors.glassLight },
-        optionLabel: { ...typography.body, color: themeColors.textSecondary, flex: 1 },
-        optionLabelSelected: { color: themeColors.accent1, fontWeight: '600' },
+        optionSelected: { backgroundColor: 'rgba(255,255,255,0.08)' },
+        optionLabel: { ...typography.body, color: 'rgba(255,255,255,0.7)', flex: 1 },
+        optionLabelSelected: { color: themeColors.accent1, fontWeight: '700' },
         check: { color: themeColors.accent1, fontSize: 18, fontWeight: '700' },
-        divider: { height: 1, backgroundColor: themeColors.glassBorder },
+        divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)' },
         cancelBtn: { marginTop: spacing.sm, paddingVertical: spacing.md, alignItems: 'center' },
-        cancelText: { ...typography.body, color: themeColors.textMuted },
+        cancelText: { ...typography.body, color: 'rgba(255,255,255,0.4)' },
       }),
     [themeColors],
   );

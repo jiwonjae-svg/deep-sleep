@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Text, Pressable, View, StyleSheet } from 'react-native';
 import { useThemeColors } from '@/theme';
-import { typography, layout, spacing } from '@/theme';
+import { spacing } from '@/theme';
 import { SoundConfig } from '@/types';
 
 interface SoundCardProps {
@@ -9,7 +9,7 @@ interface SoundCardProps {
   active: boolean;
   isPremium: boolean;
   isLocked: boolean;
-  volume?: number; // 0–100 current average volume
+  volume?: number;
   onPress: () => void;
   onLongPress?: () => void;
   categoryColor: string;
@@ -20,7 +20,6 @@ export function SoundCard({
   active,
   isPremium,
   isLocked,
-  volume,
   onPress,
   onLongPress,
   categoryColor,
@@ -31,64 +30,59 @@ export function SoundCard({
     () =>
       StyleSheet.create({
         card: {
-          borderRadius: layout.borderRadiusMd,
-          backgroundColor: active ? themeColors.glassMedium : themeColors.glassLight,
-          paddingVertical: spacing.md,
-          paddingHorizontal: layout.cardPadding,
-          borderWidth: 1,
-          borderColor: active ? categoryColor : 'transparent',
-        },
-        row: {
-          flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          gap: spacing.sm,
+          paddingVertical: spacing.md,
         },
-        name: {
-          ...typography.bodyMedium,
-          color: active ? themeColors.textPrimary : themeColors.textSecondary,
-          flex: 1,
+        iconBox: {
+          width: '100%',
+          aspectRatio: 1,
+          borderRadius: 24,
+          backgroundColor: 'rgba(255,255,255,0.08)',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.15)',
         },
-        checkDot: {
-          width: 8,
-          height: 8,
-          borderRadius: 4,
-          backgroundColor: themeColors.accent2,
-          marginLeft: spacing.sm,
+        iconBoxActive: {
+          borderWidth: 2,
+          borderColor: categoryColor,
+          backgroundColor: 'rgba(255,255,255,0.18)',
         },
-        lockIcon: {
-          fontSize: 13,
-          marginLeft: spacing.sm,
+        emoji: {
+          fontSize: 28,
         },
-        premiumLabel: {
-          ...typography.overline,
-          color: themeColors.accent3,
+        lockOverlay: {
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          fontSize: 11,
+        },
+        label: {
           fontSize: 10,
-          marginTop: spacing.xs,
+          fontWeight: '700',
+          letterSpacing: 1.5,
+          textTransform: 'uppercase',
+          textAlign: 'center',
+          color: active ? '#ffffff' : 'rgba(255,255,255,0.5)',
         },
       }),
-    [themeColors, active],
+    [themeColors, active, categoryColor],
   );
 
   return (
     <Pressable
       onPress={onPress}
       onLongPress={onLongPress}
-      style={({ pressed }) => [
-        styles.card,
-        { opacity: pressed ? 0.75 : isLocked ? 0.55 : 1 },
-      ]}
+      style={({ pressed }) => [{ opacity: pressed ? 0.75 : isLocked ? 0.55 : 1 }]}
     >
-      <View style={styles.row}>
-        <Text style={styles.name} numberOfLines={1}>
-          {sound.name}
-        </Text>
-        {active && <View style={styles.checkDot} />}
-        {isLocked && !active && <Text style={styles.lockIcon}>🔒</Text>}
+      <View style={[styles.iconBox, active && styles.iconBoxActive]}>
+        <Text style={styles.emoji}>{sound.iconEmoji}</Text>
+        {isLocked && !active && <Text style={styles.lockOverlay}>🔒</Text>}
       </View>
-
-      {sound.isPremium && !active && (
-        <Text style={styles.premiumLabel}>★ Premium</Text>
-      )}
+      <Text style={styles.label} numberOfLines={2}>
+        {sound.name}
+      </Text>
     </Pressable>
   );
 }

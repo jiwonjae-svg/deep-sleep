@@ -28,8 +28,8 @@ export function Slider({
   showLabel = false,
 }: SliderProps) {
   const themeColors = useThemeColors();
-  const resolvedTrackColor = trackColor ?? themeColors.glassMedium;
-  const resolvedActiveColor = activeColor ?? themeColors.accent2;
+  const resolvedTrackColor = trackColor ?? 'rgba(255,255,255,0.08)';
+  const resolvedActiveColor = activeColor ?? themeColors.accent1;
 
   const styles = useMemo(
     () =>

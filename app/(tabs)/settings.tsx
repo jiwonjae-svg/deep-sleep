@@ -233,24 +233,26 @@ function makeStyles(c: AppColors) {
       height: layout.headerHeight,
       justifyContent: 'center',
     },
-    title: { ...typography.h1, color: c.textPrimary },
+    title: { ...typography.h1, color: '#ffffff' },
     content: {
       paddingHorizontal: layout.screenPaddingH,
       paddingBottom: 100,
       gap: spacing.sm,
     },
     sectionTitle: {
-      ...typography.overline,
-      color: c.textMuted,
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 3,
+      color: 'rgba(255,255,255,0.5)',
       marginTop: spacing.lg,
       marginBottom: spacing.sm,
       textTransform: 'uppercase',
     },
     group: {
-      backgroundColor: c.glassLight,
-      borderRadius: layout.borderRadiusMd,
+      backgroundColor: 'rgba(255,255,255,0.08)',
+      borderRadius: layout.borderRadiusLg,
       borderWidth: 1,
-      borderColor: c.glassBorder,
+      borderColor: 'rgba(255,255,255,0.15)',
       overflow: 'hidden',
     },
     row: {
@@ -261,11 +263,11 @@ function makeStyles(c: AppColors) {
       gap: spacing.md,
     },
     rowIcon: { fontSize: 18 },
-    rowLabel: { ...typography.body, color: c.textPrimary, flex: 1 },
+    rowLabel: { ...typography.body, color: '#ffffff', flex: 1 },
     rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-    rowValue: { ...typography.body, color: c.textSecondary },
-    chevron: { fontSize: 20, color: c.textMuted },
-    divider: { height: 1, backgroundColor: c.glassBorder, marginLeft: 52 },
+    rowValue: { ...typography.body, color: 'rgba(255,255,255,0.7)' },
+    chevron: { fontSize: 20, color: 'rgba(255,255,255,0.4)' },
+    divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginLeft: 52 },
     // Theme radio
     themeRow: {
       flexDirection: 'row',
@@ -294,7 +296,7 @@ function makeStyles(c: AppColors) {
       height: 20,
       borderRadius: 10,
       borderWidth: 2,
-      borderColor: c.textMuted,
+      borderColor: 'rgba(255,255,255,0.3)',
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -309,12 +311,12 @@ function makeStyles(c: AppColors) {
     },
     radioLabel: {
       ...typography.body,
-      color: c.textSecondary,
+      color: 'rgba(255,255,255,0.7)',
       fontSize: 13,
     },
     radioLabelSelected: {
       color: c.accent1,
-      fontWeight: '600',
+      fontWeight: '700',
     },
   });
 }

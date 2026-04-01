@@ -1,31 +1,33 @@
 export const colors = {
-  // Primary backgrounds — 기존보다 어둡고 채도 낮춤
-  bgPrimary: '#06080E',
-  bgSecondary: '#0D0F1B',
-  bgTertiary: '#141728',
+  // Nocturne Glass — surface hierarchy
+  bgPrimary: '#0b0f19',          // background / surface-dim
+  bgSecondary: '#11151f',        // surface-container
+  bgTertiary: '#191e2a',         // surface-container-high
+  bgElevated: '#242936',         // surface-container-highest
 
   // Glassmorphism
-  glassLight: 'rgba(255,255,255,0.06)',
-  glassMedium: 'rgba(255,255,255,0.10)',
-  glassHeavy: 'rgba(255,255,255,0.15)',
-  glassBorder: 'rgba(255,255,255,0.12)',
+  glassLight: 'rgba(255,255,255,0.08)',
+  glassMedium: 'rgba(255,255,255,0.18)',
+  glassHeavy: 'rgba(255,255,255,0.30)',
+  glassBorder: 'rgba(255,255,255,0.15)',
+  glassBorderActive: 'rgba(255,255,255,0.30)',
 
   // Accent
-  accent1: '#6C63FF', // purple
-  accent2: '#4ECDC4', // mint
-  accent3: '#FFD93D', // yellow
+  accent1: '#456eea',            // primary blue
+  accent2: '#ffb59b',            // tertiary warm peach
+  accent3: '#b4c5ff',            // secondary-fixed-dim
 
   // Text
-  textPrimary: '#EAEAEA',
-  textSecondary: '#888DAA',
-  textMuted: '#4A4F6A',
-  textAccent: '#6C63FF',
+  textPrimary: '#ffffff',
+  textSecondary: 'rgba(255,255,255,0.7)',
+  textMuted: 'rgba(255,255,255,0.4)',
+  textAccent: '#456eea',
 
   // Semantic
-  success: '#4ECDC4',
-  warning: '#FFD93D',
-  error: '#FF6B6B',
-  info: '#6C63FF',
+  success: '#4ade80',
+  warning: '#ffb59b',
+  error: '#ff6b6b',
+  info: '#456eea',
 
   // Category accent colors
   category: {
@@ -43,9 +45,9 @@ export const colors = {
 
   // Sleep mode
   sleepBg: '#000000',
-  sleepClockDefault: 'rgba(234,234,234,0.10)',
-  sleepClockActive: 'rgba(234,234,234,0.60)',
-  sleepIcon: 'rgba(108,99,255,0.15)',
+  sleepClockDefault: 'rgba(255,255,255,0.08)',
+  sleepClockActive: 'rgba(255,255,255,0.60)',
+  sleepIcon: 'rgba(69,110,234,0.15)',
   sleepStop: 'rgba(255,107,107,0.30)',
 
   // Misc
@@ -55,51 +57,54 @@ export const colors = {
 } as const;
 
 export const lightColors = {
-  bgPrimary: '#F2F4F8',
-  bgSecondary: '#E6EAF4',
-  bgTertiary: '#D8DEEE',
+  // Nocturne Glass Light variant — same dark aesthetic
+  bgPrimary: '#0b0f19',
+  bgSecondary: '#11151f',
+  bgTertiary: '#191e2a',
+  bgElevated: '#242936',
 
-  glassLight: 'rgba(0,0,0,0.04)',
-  glassMedium: 'rgba(0,0,0,0.08)',
-  glassHeavy: 'rgba(0,0,0,0.13)',
-  glassBorder: 'rgba(0,0,0,0.10)',
+  glassLight: 'rgba(255,255,255,0.08)',
+  glassMedium: 'rgba(255,255,255,0.18)',
+  glassHeavy: 'rgba(255,255,255,0.30)',
+  glassBorder: 'rgba(255,255,255,0.15)',
+  glassBorderActive: 'rgba(255,255,255,0.30)',
 
-  accent1: '#5A52E0',
-  accent2: '#3DBDB4',
-  accent3: '#C49A00',
+  accent1: '#456eea',
+  accent2: '#ffb59b',
+  accent3: '#b4c5ff',
 
-  textPrimary: '#16182E',
-  textSecondary: '#4A4F6A',
-  textMuted: '#8A90AC',
-  textAccent: '#5A52E0',
+  textPrimary: '#ffffff',
+  textSecondary: 'rgba(255,255,255,0.7)',
+  textMuted: 'rgba(255,255,255,0.4)',
+  textAccent: '#456eea',
 
-  success: '#3DBDB4',
-  warning: '#C49A00',
-  error: '#CC4444',
-  info: '#5A52E0',
+  success: '#4ade80',
+  warning: '#ffb59b',
+  error: '#ff6b6b',
+  info: '#456eea',
 
   category: {
-    'rain-water': '#3A7FC0',
-    'ocean-beach': '#1E6A90',
-    'wind-weather': '#5A9EC4',
-    'forest-nature': '#3E9E52',
-    'fire-warmth': '#C06020',
-    'indoor-ambient': '#A07040',
-    'urban-transport': '#5A6080',
-    'musical-tonal': '#6A40B0',
-    'special-environments': '#1A9090',
-    'seasonal-special': '#B06090',
+    'rain-water': '#5B9BD5',
+    'ocean-beach': '#2E86AB',
+    'wind-weather': '#87CEEB',
+    'forest-nature': '#6BCB77',
+    'fire-warmth': '#FF8C42',
+    'indoor-ambient': '#D4A574',
+    'urban-transport': '#8D93AB',
+    'musical-tonal': '#9B72CF',
+    'special-environments': '#2EC4B6',
+    'seasonal-special': '#E8A0BF',
   } as Record<string, string>,
 
   sleepBg: '#000000',
-  sleepClockDefault: 'rgba(234,234,234,0.10)',
-  sleepClockActive: 'rgba(234,234,234,0.60)',
-  sleepIcon: 'rgba(108,99,255,0.15)',
+  sleepClockDefault: 'rgba(255,255,255,0.08)',
+  sleepClockActive: 'rgba(255,255,255,0.60)',
+  sleepIcon: 'rgba(69,110,234,0.15)',
   sleepStop: 'rgba(255,107,107,0.30)',
 
   white: '#FFFFFF',
   black: '#000000',
-  overlay: 'rgba(0,0,0,0.4)',
+  overlay: 'rgba(0,0,0,0.5)',
 } as const;
 
 export type AppColors = typeof colors;

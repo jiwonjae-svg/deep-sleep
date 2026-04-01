@@ -37,12 +37,12 @@ export default function TabLayout() {
       StyleSheet.create({
         container: { flex: 1, backgroundColor: themeColors.bgPrimary },
         tabBar: {
-          backgroundColor: themeColors.bgSecondary,
+          backgroundColor: 'rgba(11,15,25,0.8)',
           borderTopWidth: 1,
           borderTopColor: themeColors.glassBorder,
-          paddingTop: 4,
+          paddingTop: 8,
         },
-        tabLabel: { fontSize: 11, fontWeight: '600' },
+        tabLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
       }),
     [themeColors],
   );
@@ -58,7 +58,7 @@ export default function TabLayout() {
             paddingBottom: 8 + insets.bottom,
           },
           tabBarActiveTintColor: themeColors.accent1,
-          tabBarInactiveTintColor: themeColors.textMuted,
+          tabBarInactiveTintColor: 'rgba(255,255,255,0.5)',
           tabBarLabelStyle: styles.tabLabel,
         }}
       >

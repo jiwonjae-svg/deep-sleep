@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, StyleSheet } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { SoundConfig } from '@/types';
 import { SoundCard } from './SoundCard';
 import { useAudioStore } from '@/stores/useAudioStore';
@@ -29,16 +29,18 @@ export function SoundGrid({
     const volume = state ? Math.round((state.volumeMin + state.volumeMax) / 2) : undefined;
 
     return (
-      <SoundCard
-        sound={item}
-        active={active}
-        isPremium={isPremium}
-        isLocked={isLocked}
-        volume={volume}
-        onPress={() => onSoundPress(item)}
-        onLongPress={() => onSoundLongPress?.(item)}
-        categoryColor={categoryColor}
-      />
+      <View style={styles.cellWrapper}>
+        <SoundCard
+          sound={item}
+          active={active}
+          isPremium={isPremium}
+          isLocked={isLocked}
+          volume={volume}
+          onPress={() => onSoundPress(item)}
+          onLongPress={() => onSoundLongPress?.(item)}
+          categoryColor={categoryColor}
+        />
+      </View>
     );
   };
 
@@ -47,9 +49,9 @@ export function SoundGrid({
       data={sounds}
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
+      numColumns={3}
       style={styles.list}
       contentContainerStyle={styles.content}
-      ItemSeparatorComponent={() => <></>}
       showsVerticalScrollIndicator={false}
     />
   );
@@ -60,7 +62,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: spacing.sm,
-    paddingBottom: 120,
+    paddingHorizontal: 24,
+    paddingBottom: 32,
+    paddingTop: spacing.sm,
+  },
+  cellWrapper: {
+    flex: 1,
+    paddingHorizontal: spacing.xs,
   },
 });

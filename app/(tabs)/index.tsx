@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, Image, FlatList, useWindowDimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
@@ -136,7 +135,15 @@ export default function HomeScreen() {
     () =>
       StyleSheet.create({
         container: { flex: 1, backgroundColor: themeColors.bgPrimary },
-        bgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.42)' },
+        bgOverlay: {
+          ...StyleSheet.absoluteFillObject,
+          backgroundColor: 'transparent',
+          // dark gradient overlay from design
+        },
+        bgGradient: {
+          ...StyleSheet.absoluteFillObject,
+          backgroundColor: 'rgba(11,15,25,0.65)',
+        },
         header: {
           alignItems: 'center',
           justifyContent: 'center',
@@ -153,21 +160,38 @@ export default function HomeScreen() {
           paddingHorizontal: layout.screenPaddingH,
           gap: spacing.lg,
         },
-        clock: {
-          fontFamily: 'monospace',
-          fontSize: 40,
-          fontWeight: '700',
-          color: themeColors.textPrimary,
-          letterSpacing: 2,
+        // Glass timer display (pill shape)
+        timerDisplay: {
+          backgroundColor: 'rgba(255,255,255,0.08)',
+          borderRadius: 40,
+          paddingVertical: 24,
+          paddingHorizontal: 40,
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.15)',
+          alignItems: 'center',
+          gap: spacing.xs,
         },
-        // Preset carousel card
+        clock: {
+          fontSize: 56,
+          fontWeight: '800',
+          color: '#ffffff',
+          letterSpacing: -2,
+        },
+        clockLabel: {
+          fontSize: 10,
+          fontWeight: '700',
+          letterSpacing: 3,
+          textTransform: 'uppercase',
+          color: 'rgba(255,255,255,0.5)',
+        },
+        // Preset carousel card — glass style
         presetCarouselCard: {
           width: cardWidth,
-          borderRadius: layout.borderRadiusMd,
+          borderRadius: layout.borderRadiusLg,
           overflow: 'hidden',
-          backgroundColor: themeColors.glassLight,
+          backgroundColor: 'rgba(255,255,255,0.08)',
           borderWidth: 1,
-          borderColor: themeColors.glassBorder,
+          borderColor: 'rgba(255,255,255,0.15)',
         },
         presetCarouselCardActive: {
           borderColor: themeColors.accent1,
@@ -181,38 +205,66 @@ export default function HomeScreen() {
           padding: spacing.md,
           gap: spacing.xs,
         },
-        presetCardName: { ...typography.h3, color: themeColors.textPrimary },
-        presetCardDesc: { ...typography.caption, color: themeColors.textSecondary },
-        presetCardSounds: { ...typography.caption, color: themeColors.textMuted },
-        timerText: { ...typography.bodyMedium, color: themeColors.accent1 },
+        presetCardName: { ...typography.h3, color: '#ffffff' },
+        presetCardDesc: { ...typography.caption, color: 'rgba(255,255,255,0.7)' },
+        presetCardSounds: { ...typography.caption, color: 'rgba(255,255,255,0.5)' },
+        // Timer text
+        timerText: {
+          ...typography.bodyMedium,
+          color: themeColors.accent1,
+        },
+        // Play button — primary glow
         playBtn: {
           width: 80,
           height: 80,
-          borderRadius: 40,
+          borderRadius: 16,
           alignItems: 'center',
           justifyContent: 'center',
           shadowColor: themeColors.accent1,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.4,
-          shadowRadius: 20,
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.5,
+          shadowRadius: 15,
           elevation: 8,
         },
-        playIcon: { color: '#ffffff', fontSize: 28, marginLeft: 4 },
-        volumeRow: { flexDirection: 'row', alignItems: 'center', width: '100%', gap: spacing.md },
-        volumeIcon: { fontSize: 18 },
-        alarmCountdown: { ...typography.caption, color: themeColors.textSecondary, textAlign: 'center' },
-        timerButton: {
-          backgroundColor: themeColors.glassLight,
-          borderRadius: 16,
-          paddingVertical: 8,
-          paddingHorizontal: spacing.lg,
+        playIcon: { color: '#ffffff', fontSize: 26, marginLeft: 3 },
+        // Glass volume panel
+        volumeRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          width: '100%',
+          gap: spacing.md,
+          backgroundColor: 'rgba(255,255,255,0.08)',
+          borderRadius: layout.borderRadiusLg,
+          paddingVertical: 14,
+          paddingHorizontal: 20,
           borderWidth: 1,
-          borderColor: themeColors.glassBorder,
+          borderColor: 'rgba(255,255,255,0.15)',
+        },
+        volumeIcon: { fontSize: 18, color: 'rgba(255,255,255,0.5)' },
+        alarmCountdown: {
+          ...typography.caption,
+          color: 'rgba(255,255,255,0.6)',
+          textAlign: 'center',
+        },
+        // Timer button — glass pill
+        timerButton: {
+          backgroundColor: 'rgba(255,255,255,0.08)',
+          borderRadius: 9999,
+          paddingVertical: 10,
+          paddingHorizontal: spacing.xl,
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.15)',
           flexDirection: 'row',
           alignItems: 'center',
           gap: spacing.xs,
         },
-        timerButtonText: { ...typography.caption, color: themeColors.textSecondary },
+        timerButtonText: {
+          fontSize: 12,
+          fontWeight: '700',
+          letterSpacing: 2,
+          textTransform: 'uppercase',
+          color: 'rgba(255,255,255,0.7)',
+        },
       }),
     [themeColors, cardWidth],
   );
@@ -247,11 +299,10 @@ export default function HomeScreen() {
           )}
           <View style={[
               styles.presetCardBody,
-              isPlaying && playingBgImg != null ? { backgroundColor: 'rgba(0,0,0,0.35)' } : null,
             ]}>
-            <Text style={[styles.presetCardName, isPlaying && playingBgImg != null ? { color: '#ffffff' } : null]} numberOfLines={1}>{preset.name}</Text>
-            <Text style={[styles.presetCardDesc, isPlaying && playingBgImg != null ? { color: 'rgba(255,255,255,0.7)' } : null]} numberOfLines={1}>{preset.description}</Text>
-            <Text style={[styles.presetCardSounds, isPlaying && playingBgImg != null ? { color: 'rgba(255,255,255,0.5)' } : null]} numberOfLines={1}>{soundNames}</Text>
+            <Text style={styles.presetCardName} numberOfLines={1}>{preset.name}</Text>
+            <Text style={styles.presetCardDesc} numberOfLines={1}>{preset.description}</Text>
+            <Text style={styles.presetCardSounds} numberOfLines={1}>{soundNames}</Text>
           </View>
         </View>
       );
@@ -280,7 +331,7 @@ export default function HomeScreen() {
         {playingBgImg != null && (
           <>
             <Image source={playingBgImg as number} style={StyleSheet.absoluteFill} resizeMode="cover" blurRadius={20} />
-            <View style={styles.bgOverlay} />
+            <View style={styles.bgGradient} />
           </>
         )}
       </Animated.View>
@@ -295,8 +346,11 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.content}>
-        {/* Clock */}
-        <Text style={[styles.clock, hasBgImg && { color: '#ffffff' }]}>{clock}</Text>
+        {/* Glass Timer Display */}
+        <View style={styles.timerDisplay}>
+          <Text style={styles.clock}>{clock}</Text>
+          <Text style={styles.clockLabel}>현재 시각</Text>
+        </View>
 
         {/* 프리셋 캐러셀 (마스코트 대체) */}
         <FlatList
@@ -317,14 +371,14 @@ export default function HomeScreen() {
 
         {/* 알람 카운트다운 */}
         {nextAlarm && (
-          <Text style={[styles.alarmCountdown, hasBgImg && { color: 'rgba(255,255,255,0.75)' }]}>
+          <Text style={styles.alarmCountdown}>
             {formatRemainingTime(nextAlarm.ms)} 뒤에 알람이 울립니다.
           </Text>
         )}
 
         {/* Timer */}
         {timer.isActive && timerText ? (
-          <Text style={[styles.timerText, hasBgImg && { color: '#ffffff' }]}>
+          <Text style={styles.timerText}>
             {timerText} 동안 소리가 나옵니다.
           </Text>
         ) : (
@@ -336,15 +390,14 @@ export default function HomeScreen() {
         {/* Play button */}
         <Animated.View style={playBtnAnimStyle}>
           <Pressable onPress={handlePlayToggle} disabled={soundCount === 0}>
-            <LinearGradient
-              colors={soundCount > 0 ? [themeColors.accent1, themeColors.accent2] : [themeColors.textMuted, themeColors.textMuted]}
-              style={styles.playBtn}
+            <View
+              style={[styles.playBtn, { backgroundColor: soundCount > 0 ? themeColors.accent1 : themeColors.bgTertiary }]}
             >
               <Text style={styles.playIcon}>{isPlaying ? '■' : '▶'}</Text>
-            </LinearGradient>
+            </View>
           </Pressable>
         </Animated.View>
-        {/* Master volume */}
+        {/* Master volume — glass panel */}
         <View style={styles.volumeRow}>
           <Text style={styles.volumeIcon}>🔈</Text>
           <View style={{ flex: 1 }}>

@@ -20,22 +20,32 @@ export function AlarmCard({ alarm, onToggle, onPress }: AlarmCardProps) {
     () =>
       StyleSheet.create({
         card: {
-          backgroundColor: themeColors.glassLight,
-          borderRadius: layout.borderRadiusMd,
+          backgroundColor: 'rgba(255,255,255,0.08)',
+          borderRadius: 32,
           padding: layout.cardPadding,
           borderWidth: 1,
-          borderColor: themeColors.glassBorder,
+          borderColor: alarm.enabled ? 'rgba(255,255,255,0.30)' : 'rgba(255,255,255,0.15)',
           gap: spacing.sm,
         },
         top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-        time: { ...typography.display, color: themeColors.textPrimary },
+        time: {
+          fontSize: 32,
+          fontWeight: '900',
+          color: '#ffffff',
+        },
         days: { flexDirection: 'row', gap: spacing.sm },
-        day: { ...typography.overline, color: themeColors.textMuted },
+        day: {
+          fontSize: 10,
+          fontWeight: '700',
+          letterSpacing: 1,
+          color: 'rgba(255,255,255,0.4)',
+          textTransform: 'uppercase',
+        },
         dayActive: { color: themeColors.accent2 },
         disabled: { opacity: 0.4 },
-        label: { ...typography.caption, color: themeColors.textSecondary },
+        label: { ...typography.caption, color: 'rgba(255,255,255,0.7)' },
       }),
-    [themeColors],
+    [themeColors, alarm.enabled],
   );
 
   return (

@@ -30,23 +30,26 @@ export function BottomSheet({
   const styles = useMemo(
     () =>
       StyleSheet.create({
-        overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: themeColors.overlay },
+        overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)' },
         sheet: {
           position: 'absolute',
           bottom: 0,
           left: 0,
           right: 0,
-          backgroundColor: themeColors.bgSecondary,
+          backgroundColor: '#11151f',
           borderTopLeftRadius: layout.borderRadiusLg,
           borderTopRightRadius: layout.borderRadiusLg,
           paddingHorizontal: layout.screenPaddingH,
           paddingBottom: 32,
+          borderWidth: 1,
+          borderBottomWidth: 0,
+          borderColor: 'rgba(255,255,255,0.15)',
         },
         handleBar: {
           width: 40,
           height: 4,
           borderRadius: 2,
-          backgroundColor: themeColors.glassHeavy,
+          backgroundColor: 'rgba(255,255,255,0.3)',
           alignSelf: 'center',
           marginTop: 12,
           marginBottom: 20,

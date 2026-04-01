@@ -29,6 +29,9 @@ yarn-error.*
 .DS_Store
 *.pem
 
+# VS Code secrets
+.vscode/mcp.json
+
 # Local env files
 .env
 .env.local

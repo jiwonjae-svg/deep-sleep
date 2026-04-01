@@ -3,7 +3,7 @@ import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { getSoundById } from '@/data/sounds';
 import { useThemeColors } from '@/theme';
-import { typography, spacing, layout } from '@/theme';
+import { spacing } from '@/theme';
 
 interface ActiveSoundsBarProps {
   onSoundPress: (soundId: string) => void;
@@ -22,11 +22,11 @@ export function ActiveSoundsBar({ onSoundPress, onPlayPress }: ActiveSoundsBarPr
         container: {
           flexDirection: 'row',
           alignItems: 'center',
-          backgroundColor: themeColors.bgSecondary,
+          backgroundColor: 'rgba(11,15,25,0.8)',
           borderTopWidth: StyleSheet.hairlineWidth,
-          borderTopColor: themeColors.glassBorder,
+          borderTopColor: 'rgba(255,255,255,0.15)',
           paddingVertical: spacing.sm,
-          paddingHorizontal: layout.screenPaddingH,
+          paddingHorizontal: 24,
           gap: spacing.md,
         },
         scroll: { flex: 1 },
@@ -36,32 +36,42 @@ export function ActiveSoundsBar({ onSoundPress, onPlayPress }: ActiveSoundsBarPr
           gap: spacing.xs,
         },
         chip: {
-          backgroundColor: themeColors.accent1,
-          borderRadius: layout.borderRadiusSm,
-          paddingVertical: spacing.xs,
+          backgroundColor: 'rgba(255,255,255,0.08)',
+          borderRadius: 9999,
+          paddingVertical: 5,
           paddingHorizontal: spacing.sm,
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.15)',
         },
         chipText: {
-          ...typography.caption,
-          color: themeColors.white,
+          fontSize: 11,
           fontWeight: '600',
+          color: '#ffffff',
+          letterSpacing: 0.3,
         },
         playBtn: {
           flexDirection: 'row',
           alignItems: 'center',
           backgroundColor: themeColors.accent1,
-          borderRadius: layout.borderRadiusSm,
+          borderRadius: 9999,
           paddingVertical: spacing.sm,
           paddingHorizontal: spacing.base,
           gap: spacing.xs,
+          shadowColor: themeColors.accent1,
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.4,
+          shadowRadius: 8,
+          elevation: 4,
         },
         playIcon: {
-          fontSize: 12,
-          color: themeColors.white,
+          fontSize: 11,
+          color: '#ffffff',
         },
         playLabel: {
-          ...typography.buttonSmall,
-          color: themeColors.white,
+          fontSize: 11,
+          fontWeight: '700',
+          letterSpacing: 1.5,
+          color: '#ffffff',
         },
       }),
     [themeColors],
@@ -79,7 +89,7 @@ export function ActiveSoundsBar({ onSoundPress, onPlayPress }: ActiveSoundsBarPr
               <Pressable key={id} onPress={() => onSoundPress(id)}>
                 <View style={styles.chip}>
                   <Text style={styles.chipText} numberOfLines={1}>
-                    {meta?.name ?? id}
+                    {meta?.iconEmoji} {meta?.name ?? id}
                   </Text>
                 </View>
               </Pressable>

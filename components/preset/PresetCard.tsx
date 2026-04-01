@@ -26,11 +26,12 @@ export function PresetCard({ preset, onPress, onLongPress }: PresetCardProps) {
     () =>
       StyleSheet.create({
         card: {
-          backgroundColor: themeColors.glassLight,
-          borderRadius: layout.borderRadiusMd,
+          backgroundColor: 'rgba(255,255,255,0.08)',
+          borderRadius: 32,
           overflow: 'hidden',
           borderWidth: 1,
-          borderColor: themeColors.glassBorder,
+          borderColor: 'rgba(255,255,255,0.15)',
+          minHeight: 220,
         },
         cardImage: {
           width: '100%',
@@ -39,7 +40,7 @@ export function PresetCard({ preset, onPress, onLongPress }: PresetCardProps) {
         cardImageFallback: {
           width: '100%',
           height: 140,
-          backgroundColor: themeColors.bgSecondary,
+          backgroundColor: 'rgba(255,255,255,0.04)',
           alignItems: 'center',
           justifyContent: 'center',
         },
@@ -48,12 +49,14 @@ export function PresetCard({ preset, onPress, onLongPress }: PresetCardProps) {
           gap: spacing.xs,
         },
         name: {
-          ...typography.h3,
-          color: themeColors.textPrimary,
+          fontSize: 17,
+          fontWeight: '700',
+          color: '#ffffff',
         },
         description: {
-          ...typography.body,
-          color: themeColors.textSecondary,
+          fontSize: 13,
+          fontWeight: '500',
+          color: 'rgba(255,255,255,0.7)',
         },
         footer: {
           flexDirection: 'row',
@@ -63,20 +66,22 @@ export function PresetCard({ preset, onPress, onLongPress }: PresetCardProps) {
           marginTop: spacing.xs,
         },
         chip: {
-          backgroundColor: themeColors.accent1,
-          borderRadius: layout.borderRadiusSm,
+          backgroundColor: 'rgba(255,255,255,0.08)',
+          borderRadius: 9999,
           paddingVertical: 3,
           paddingHorizontal: spacing.sm,
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.15)',
         },
         chipText: {
-          ...typography.caption,
-          color: themeColors.white,
-          fontWeight: '600',
           fontSize: 11,
+          fontWeight: '600',
+          color: 'rgba(255,255,255,0.7)',
         },
         meta: {
-          ...typography.caption,
-          color: themeColors.textMuted,
+          fontSize: 11,
+          fontWeight: '600',
+          color: 'rgba(255,255,255,0.4)',
         },
       }),
     [themeColors],

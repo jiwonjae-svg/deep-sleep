@@ -13,12 +13,12 @@ export const spacing = {
 export const layout = {
   screenPaddingH: 24,
   headerHeight: 56,
-  tabBarHeight: 64,
+  tabBarHeight: 88,
   cardPadding: 16,
   cardGap: 12,
   gridGap: 12,
   borderRadiusPill: 9999,
-  borderRadiusLg: 24,
-  borderRadiusMd: 16,
-  borderRadiusSm: 12,
+  borderRadiusLg: 32,
+  borderRadiusMd: 24,
+  borderRadiusSm: 16,
 } as const;
