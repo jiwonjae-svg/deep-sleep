@@ -6,7 +6,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Toggle } from '@/components/ui/Toggle';
 import { OptionModal, OptionItem } from '@/components/ui/OptionModal';
 import { TermsModal } from '@/components/settings/TermsModal';
-import { GradientBackground } from '@/components/ui/GradientBackground';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
 import * as BillingService from '@/services/BillingService';
@@ -50,17 +49,6 @@ export default function SettingsScreen() {
   const [termsModalVisible, setTermsModalVisible] = useState(false);
 
   return (
-    <GradientBackground
-      gradients={[
-        ['#0f3460', '#1a1a2e'],
-        ['#2d1b69', '#11998e'],
-        ['#134e5e', '#0f3460'],
-        ['#1a1a2e', '#16213e'],
-      ]}
-      duration={10000}
-      overlay
-      overlayOpacity={0.5}
-    >
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScrollView contentContainerStyle={styles.content}>
           {/* ────── GENERAL ────── */}
@@ -221,7 +209,6 @@ export default function SettingsScreen() {
           onClose={() => setTermsModalVisible(false)}
         />
       </SafeAreaView>
-    </GradientBackground>
   );
 }
 

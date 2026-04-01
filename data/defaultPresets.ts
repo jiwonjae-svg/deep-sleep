@@ -8,7 +8,7 @@ import { Preset } from '@/types';
 export const defaultPresets: Preset[] = [
   {
     id: 'preset-rain-night',
-    name: '🌧️ 비 오는 밤',
+    name: '비 오는 밤',
     description: '전형적인 비 오는 밤',
     isDefault: true,
     sounds: [
@@ -20,7 +20,7 @@ export const defaultPresets: Preset[] = [
   },
   {
     id: 'preset-forest-night',
-    name: '🌲 숲속의 밤',
+    name: '숲속의 밤',
     description: '숲속 캠핑',
     isDefault: true,
     sounds: [
@@ -33,7 +33,7 @@ export const defaultPresets: Preset[] = [
   },
   {
     id: 'preset-campfire',
-    name: '🔥 캠프파이어',
+    name: '캠프파이어',
     description: '캠핑장의 밤',
     isDefault: true,
     sounds: [
@@ -46,7 +46,7 @@ export const defaultPresets: Preset[] = [
   },
   {
     id: 'preset-warm-fireplace',
-    name: '❄️ 따뜻한 벽난로',
+    name: '따뜻한 벽난로',
     description: '따뜻한 실내에서 겨울 밤',
     isDefault: true,
     sounds: [
@@ -59,7 +59,7 @@ export const defaultPresets: Preset[] = [
   },
   {
     id: 'preset-cafe',
-    name: '☕ 카페',
+    name: '카페',
     description: '카페 분위기 (수면+집중 겸용)',
     isDefault: true,
     sounds: [

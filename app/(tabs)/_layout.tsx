@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors, typography } from '@/theme';
 import { layout } from '@/theme/spacing';
 import { AdBanner } from '@/components/common/AdBanner';
+import { GradientBackground } from '@/components/ui/GradientBackground';
 import { View, StyleSheet } from 'react-native';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
@@ -48,7 +49,7 @@ export default function TabLayout() {
   );
 
   return (
-    <View style={styles.container}>
+    <GradientBackground overlay overlayOpacity={0.45}>
       <Tabs
         screenOptions={{
           headerShown: false,
@@ -60,6 +61,7 @@ export default function TabLayout() {
           tabBarActiveTintColor: themeColors.accent1,
           tabBarInactiveTintColor: 'rgba(255,255,255,0.5)',
           tabBarLabelStyle: styles.tabLabel,
+          sceneStyle: { backgroundColor: 'transparent' },
         }}
       >
         {TAB_CONFIG.map((tab) => (
@@ -80,6 +82,6 @@ export default function TabLayout() {
         ))}
       </Tabs>
       <AdBanner />
-    </View>
+    </GradientBackground>
   );
 }

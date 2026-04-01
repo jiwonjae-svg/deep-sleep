@@ -5,7 +5,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { usePresetStore } from '@/stores/usePresetStore';
 import { useAudio } from '@/hooks/useAudio';
-import { GradientBackground } from '@/components/ui/GradientBackground';
 import { Preset } from '@/types';
 import { getSoundById } from '@/data/sounds';
 import { useThemeColors, spacing, layout } from '@/theme';
@@ -39,9 +38,8 @@ export default function PresetsScreen() {
     [applyPreset],
   );
 
-  const handlePresetLongPress = useCallback(
+  const handleDeletePreset = useCallback(
     (preset: Preset) => {
-      if (preset.isDefault) return;
       Alert.alert('프리셋 삭제', `"${preset.name}"을 삭제하시겠습니까?`, [
         { text: '취소', style: 'cancel' },
         { text: '삭제', style: 'destructive', onPress: () => deletePreset(preset.id) },
@@ -50,18 +48,14 @@ export default function PresetsScreen() {
     [deletePreset],
   );
 
+  const handleEditPreset = useCallback(
+    (preset: Preset) => {
+      router.push({ pathname: '/presets/save', params: { presetId: preset.id } });
+    },
+    [router],
+  );
+
   return (
-    <GradientBackground
-      gradients={[
-        ['#134e5e', '#71b280'],
-        ['#0f3460', '#1a1a2e'],
-        ['#2d1b69', '#11998e'],
-        ['#1a1a2e', '#16213e'],
-      ]}
-      duration={10000}
-      overlay
-      overlayOpacity={0.5}
-    >
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Top bar with search */}
         <View style={styles.topBar}>
@@ -77,7 +71,9 @@ export default function PresetsScreen() {
           contentContainerStyle={styles.scrollContent}
         >
           {allPresets.map((preset) => {
-            const img = PRESET_IMAGES[preset.id];
+            const defaultImg = PRESET_IMAGES[preset.id];
+            const customImg = preset.imageUri ? { uri: preset.imageUri } : null;
+            const img = defaultImg ?? customImg;
             const soundNames = preset.sounds
               .slice(0, 4)
               .map((s) => getSoundById(s.soundId)?.name ?? s.soundId);
@@ -88,12 +84,28 @@ export default function PresetsScreen() {
                 key={preset.id}
                 style={({ pressed }) => [styles.card, { opacity: pressed ? 0.95 : 1 }]}
                 onPress={() => handlePresetPress(preset)}
-                onLongPress={() => handlePresetLongPress(preset)}
               >
                 {/* Background image */}
                 {img && (
                   <View style={styles.cardImageWrap}>
                     <Image source={img} style={styles.cardImage} resizeMode="cover" />
+                  </View>
+                )}
+                {/* Edit/Delete buttons — custom presets only */}
+                {!preset.isDefault && (
+                  <View style={styles.cardActions}>
+                    <Pressable
+                      style={styles.cardActionBtn}
+                      onPress={() => handleEditPreset(preset)}
+                    >
+                      <MaterialIcons name="edit" size={16} color="#ffffff" />
+                    </Pressable>
+                    <Pressable
+                      style={styles.cardActionBtn}
+                      onPress={() => handleDeletePreset(preset)}
+                    >
+                      <MaterialIcons name="delete-outline" size={16} color="#ffffff" />
+                    </Pressable>
                   </View>
                 )}
                 {/* Glass content overlay */}
@@ -130,7 +142,6 @@ export default function PresetsScreen() {
           </Pressable>
         )}
       </SafeAreaView>
-    </GradientBackground>
   );
 }
 
@@ -185,6 +196,24 @@ const styles = StyleSheet.create({
     padding: 24,
     gap: 8,
   },
+  cardActions: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    flexDirection: 'row',
+    gap: 8,
+    zIndex: 10,
+  },
+  cardActionBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   cardName: {
     fontSize: 22,
     fontWeight: '700',
@@ -226,7 +255,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 32,
     right: 24,
     width: 56,
     height: 56,

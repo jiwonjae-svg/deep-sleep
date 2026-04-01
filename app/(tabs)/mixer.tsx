@@ -12,7 +12,6 @@ import { SoundDetailSheet } from '@/components/sound/SoundDetailSheet';
 import { AIInputSheet } from '@/components/ai/AIInputSheet';
 import { AIResultPreview } from '@/components/ai/AIResultPreview';
 import { BottomSheet } from '@/components/ui/BottomSheet';
-import { GradientBackground } from '@/components/ui/GradientBackground';
 import { SoundCategory, SoundConfig, ActiveSoundState, AIPresetResult } from '@/types';
 import { getSoundsByCategory, getSoundById } from '@/data/sounds';
 import { categories, getCategoryById } from '@/data/categories';
@@ -30,6 +29,25 @@ const CATEGORY_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'musical-tonal': 'music-note',
   'special-environments': 'auto-awesome',
   'seasonal-special': 'eco',
+};
+
+// Material icon name for each sound
+const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
+  'rain-light': 'water-drop',
+  'thunder': 'bolt',
+  'wave-gentle': 'waves',
+  'wind-gentle': 'air',
+  'birds-morning': 'flutter-dash',
+  'crickets': 'grass',
+  'campfire': 'local-fire-department',
+  'fireplace': 'fireplace',
+  'cafe-chatter': 'local-cafe',
+  'white-noise': 'graphic-eq',
+  'rain-car': 'directions-car',
+  'owl': 'visibility',
+  'singing-bowl': 'notifications',
+  'jazz-piano': 'piano',
+  'cat-purr': 'pets',
 };
 
 export default function MixerScreen() {
@@ -123,17 +141,7 @@ export default function MixerScreen() {
   };
 
   return (
-    <GradientBackground
-      gradients={[
-        ['#2d1b69', '#11998e'],
-        ['#0f3460', '#1a1a2e'],
-        ['#134e5e', '#71b280'],
-        ['#1a1a2e', '#16213e'],
-      ]}
-      duration={10000}
-      overlay
-      overlayOpacity={0.5}
-    >
+    <>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
           {/* Status Header */}
@@ -210,9 +218,11 @@ export default function MixerScreen() {
                       isLocked && { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.05)' },
                     ]}
                   >
-                    <Text style={{ fontSize: 18, opacity: isLocked ? 0.5 : 1 }}>
-                      {sound.iconEmoji}
-                    </Text>
+                    <MaterialIcons
+                      name={SOUND_ICONS[sound.id] ?? 'music-note'}
+                      size={22}
+                      color={isLocked ? 'rgba(255,255,255,0.3)' : '#ffffff'}
+                    />
                   </View>
                   <View style={styles.trackInfo}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -302,7 +312,7 @@ export default function MixerScreen() {
           />
         )}
       </BottomSheet>
-    </GradientBackground>
+    </>
   );
 }
 

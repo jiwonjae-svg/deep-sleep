@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAlarm } from '@/hooks/useAlarm';
-import { GradientBackground } from '@/components/ui/GradientBackground';
 import { Toggle } from '@/components/ui/Toggle';
 import { useThemeColors, spacing, layout } from '@/theme';
 import { msUntilAlarm, formatRemainingTime } from '@/utils/formatTime';
@@ -78,17 +77,6 @@ export default function AlarmsScreen() {
   };
 
   return (
-    <GradientBackground
-      gradients={[
-        ['#0f3460', '#1a1a2e'],
-        ['#2d1b69', '#11998e'],
-        ['#134e5e', '#0f3460'],
-        ['#1a1a2e', '#16213e'],
-      ]}
-      duration={10000}
-      overlay
-      overlayOpacity={0.5}
-    >
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Countdown header */}
         {nextAlarmText && (
@@ -131,7 +119,6 @@ export default function AlarmsScreen() {
           <MaterialIcons name="add" size={28} color="#ffffff" />
         </Pressable>
       </SafeAreaView>
-    </GradientBackground>
   );
 }
 
@@ -254,7 +241,7 @@ const styles = StyleSheet.create({
   // FAB
   fab: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 32,
     right: 24,
     width: 56,
     height: 56,

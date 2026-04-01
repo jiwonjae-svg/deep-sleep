@@ -16,7 +16,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           ? 'light'
           : 'dark'
         : themeMode;
-    return effective === 'light' ? (lightColors as AppColors) : colors;
+    return effective === 'light' ? (lightColors as unknown as AppColors) : colors;
   }, [themeMode, systemScheme]);
 
   return <ThemeContext.Provider value={themeColors}>{children}</ThemeContext.Provider>;

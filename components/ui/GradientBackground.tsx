@@ -8,15 +8,25 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 
-const DEFAULT_GRADIENTS: [string, string][] = [
-  ['#2d1b69', '#11998e'],
-  ['#8e2de2', '#4a00e0'],
-  ['#0f3460', '#e94560'],
-  ['#134e5e', '#71b280'],
+export type GradientDef = {
+  colors: [string, string, ...string[]];
+  start?: { x: number; y: number };
+  end?: { x: number; y: number };
+};
+
+const DEFAULT_GRADIENTS: GradientDef[] = [
+  { colors: ['#2d1b69', '#11998e'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
+  { colors: ['#0f3460', '#e94560', '#1a1a2e'], start: { x: 0, y: 0.3 }, end: { x: 1, y: 0.7 } },
+  { colors: ['#134e5e', '#71b280'], start: { x: 0.2, y: 0 }, end: { x: 0.8, y: 1 } },
+  { colors: ['#1a1a2e', '#456eea', '#0f3460'], start: { x: 1, y: 0 }, end: { x: 0, y: 1 } },
+  { colors: ['#0d0221', '#0a7e8c', '#1b0845'], start: { x: 0, y: 0 }, end: { x: 1, y: 0.8 } },
+  { colors: ['#16213e', '#e94560', '#533483'], start: { x: 0.5, y: 0 }, end: { x: 0.5, y: 1 } },
+  { colors: ['#1a1a2e', '#2d1b69', '#11998e'], start: { x: 0, y: 1 }, end: { x: 1, y: 0 } },
+  { colors: ['#0b0f19', '#456eea', '#134e5e'], start: { x: 0, y: 0.5 }, end: { x: 1, y: 0.5 } },
 ];
 
 interface GradientBackgroundProps {
-  gradients?: [string, string][];
+  gradients?: GradientDef[];
   duration?: number;
   overlay?: boolean;
   overlayOpacity?: number;
@@ -37,24 +47,24 @@ export function GradientBackground({
   const indexBRef = useRef(1 % gradients.length);
   const opacityB = useSharedValue(0);
 
-  const [colorsA, setColorsA] = useState(gradients[0]);
-  const [colorsB, setColorsB] = useState(gradients[1 % gradients.length]);
+  const [gradA, setGradA] = useState(gradients[0]);
+  const [gradB, setGradB] = useState(gradients[1 % gradients.length]);
 
   const advance = useCallback(() => {
     if (showARef.current) {
       indexBRef.current = (indexARef.current + 1) % gradients.length;
-      setColorsB(gradients[indexBRef.current]);
+      setGradB(gradients[indexBRef.current]);
       showARef.current = false;
       opacityB.value = withTiming(1, {
-        duration: 2000,
+        duration: 3000,
         easing: Easing.inOut(Easing.ease),
       });
     } else {
       indexARef.current = (indexBRef.current + 1) % gradients.length;
-      setColorsA(gradients[indexARef.current]);
+      setGradA(gradients[indexARef.current]);
       showARef.current = true;
       opacityB.value = withTiming(0, {
-        duration: 2000,
+        duration: 3000,
         easing: Easing.inOut(Easing.ease),
       });
     }
@@ -72,16 +82,16 @@ export function GradientBackground({
   return (
     <View style={[styles.container, style]}>
       <LinearGradient
-        colors={colorsA}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        colors={gradA.colors}
+        start={gradA.start ?? { x: 0, y: 0 }}
+        end={gradA.end ?? { x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
       <Animated.View style={[StyleSheet.absoluteFill, animatedStyleB]}>
         <LinearGradient
-          colors={colorsB}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          colors={gradB.colors}
+          start={gradB.start ?? { x: 0, y: 0 }}
+          end={gradB.end ?? { x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
       </Animated.View>

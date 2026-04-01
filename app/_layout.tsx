@@ -12,7 +12,7 @@ import { usePresetStore } from '@/stores/usePresetStore';
 import { useAlarmStore } from '@/stores/useAlarmStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAIStore } from '@/stores/useAIStore';
-import { initAudioMode } from '@/services/AudioService';
+import { initAudioMode, stopAll as stopAllAudio } from '@/services/AudioService';
 import { configureNotifications } from '@/services/AlarmService';
 import { ThemeProvider, useThemeColors, useIsDarkTheme } from '@/theme';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
@@ -26,6 +26,8 @@ export default function RootLayout() {
   useEffect(() => {
     async function bootstrap() {
       await initAudioMode();
+      // Ensure no stale playback from previous session
+      await stopAllAudio();
       configureNotifications();
       await Promise.all([
         usePresetStore.getState().loadPresets(),
@@ -68,6 +70,20 @@ function ThemedApp() {
         <Stack.Screen name="playing" options={{ animation: 'fade' }} />
         <Stack.Screen name="alarm-dismiss" options={{ animation: 'fade', gestureEnabled: false }} />
         <Stack.Screen name="subscription" options={{ presentation: 'modal' }} />
+        <Stack.Screen
+          name="presets/save"
+          options={{
+            animation: 'fade',
+            contentStyle: { backgroundColor: '#0b0f19' },
+          }}
+        />
+        <Stack.Screen
+          name="alarms/edit"
+          options={{
+            animation: 'fade',
+            contentStyle: { backgroundColor: '#0b0f19' },
+          }}
+        />
       </Stack>
     </GestureHandlerRootView>
   );

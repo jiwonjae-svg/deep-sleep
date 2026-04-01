@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -33,21 +33,37 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
   const removeSound = useAudioStore((s) => s.removeSound);
   const isPremium = useSubscriptionStore((s) => s.isPremium);
 
-  // 중앙 fade-in 애니메이션
+  // 중앙 fade-in/out 애니메이션
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.92)).current;
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     if (visible) {
+      setModalVisible(true);
       Animated.parallel([
         Animated.timing(fadeAnim, { toValue: 1, duration: 180, useNativeDriver: true }),
         Animated.spring(scaleAnim, { toValue: 1, tension: 220, friction: 22, useNativeDriver: true }),
       ]).start();
-    } else {
-      fadeAnim.setValue(0);
-      scaleAnim.setValue(0.92);
+    } else if (modalVisible) {
+      Animated.parallel([
+        Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 0.92, duration: 150, useNativeDriver: true }),
+      ]).start(() => {
+        setModalVisible(false);
+      });
     }
   }, [visible]);
+
+  const handleClose = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 0.92, duration: 150, useNativeDriver: true }),
+    ]).start(() => {
+      setModalVisible(false);
+      onClose();
+    });
+  }, [onClose, fadeAnim, scaleAnim]);
 
   const styles = useMemo(
     () =>
@@ -157,10 +173,10 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
   const freqIndex = FREQUENCY_VALUES.indexOf(state.frequency);
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+    <Modal visible={modalVisible} transparent animationType="none" onRequestClose={handleClose}>
       <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
         {/* 백드롭 탭으로 닫기 */}
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
 
         <Animated.View
           style={[styles.dialog, { transform: [{ scale: scaleAnim }], opacity: fadeAnim }]}
@@ -169,7 +185,7 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
             {/* Header */}
             <View style={styles.header}>
               <Text style={styles.name}>{sound.name}</Text>
-              <Pressable style={styles.closeBtn} onPress={onClose}>
+              <Pressable style={styles.closeBtn} onPress={handleClose}>
                 <Text style={styles.closeText}>✕</Text>
               </Pressable>
             </View>
@@ -226,12 +242,12 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
                 style={styles.removeBtn}
                 onPress={() => {
                   removeSound(sound.id);
-                  onClose();
+                  handleClose();
                 }}
               >
                 <Text style={styles.removeText}>🗑️ 제거</Text>
               </Pressable>
-              <Pressable style={styles.doneBtn} onPress={onClose}>
+              <Pressable style={styles.doneBtn} onPress={handleClose}>
                 <Text style={styles.doneText}>완료</Text>
               </Pressable>
             </View>

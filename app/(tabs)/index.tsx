@@ -56,7 +56,9 @@ export default function HomeScreen() {
   const [selectedPresetIndex, setSelectedPresetIndex] = useState(0);
 
   const currentPreset = allPresets[selectedPresetIndex] ?? allPresets[0];
-  const currentPresetImage = currentPreset ? PRESET_IMAGES[currentPreset.id] : null;
+  const currentPresetImage = currentPreset
+    ? PRESET_IMAGES[currentPreset.id] ?? (currentPreset.imageUri ? { uri: currentPreset.imageUri } : null)
+    : null;
 
   // Timer remaining
   const [timerRemaining, setTimerRemaining] = useState(0);
@@ -145,23 +147,19 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Background: preset image */}
+      {/* Background: preset image — center-crop, no margins */}
       <Animated.View style={[StyleSheet.absoluteFill, bgAnimStyle]} pointerEvents="none">
         {currentPresetImage != null && (
           <>
             <Image
               source={currentPresetImage as number}
-              style={StyleSheet.absoluteFill}
+              style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
               resizeMode="cover"
-              blurRadius={4}
             />
             <View style={styles.bgOverlay} />
           </>
         )}
       </Animated.View>
-      {!currentPresetImage && (
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: themeColors.bgPrimary }]} />
-      )}
 
       <View style={styles.content}>
         {/* Timer Display — glass pill */}
@@ -239,6 +237,8 @@ export default function HomeScreen() {
         <FlatList
           data={allPresets}
           keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={true}
+          indicatorStyle="white"
           renderItem={({ item, index }) => (
             <Pressable
               style={[
@@ -247,9 +247,9 @@ export default function HomeScreen() {
               ]}
               onPress={() => handlePresetSelect(item, index)}
             >
-              {PRESET_IMAGES[item.id] ? (
+              {(PRESET_IMAGES[item.id] || item.imageUri) ? (
                 <Image
-                  source={PRESET_IMAGES[item.id]}
+                  source={PRESET_IMAGES[item.id] ?? { uri: item.imageUri! }}
                   style={styles.pickerItemImage}
                   resizeMode="cover"
                 />
@@ -276,7 +276,7 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0b0f19' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   bgOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.30)',

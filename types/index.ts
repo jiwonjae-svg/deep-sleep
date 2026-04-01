@@ -46,6 +46,7 @@ export interface Preset {
   description: string;
   isDefault: boolean;
   sounds: ActiveSoundState[];
+  imageUri?: string | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -60,6 +61,7 @@ export interface Alarm {
   id: string;
   time: { hour: number; minute: number };
   days: boolean[]; // [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
+  specificDate?: string | null; // ISO date string (YYYY-MM-DD), alternative to repeat days
   enabled: boolean;
   soundId: string;
   fadeInMinutes: number; // 0 = disabled

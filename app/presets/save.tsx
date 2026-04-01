@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
+import { View, Text, TextInput, Image, StyleSheet, Alert, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { usePresetStore } from '@/stores/usePresetStore';
 import { Button } from '@/components/ui/Button';
@@ -15,6 +16,7 @@ export default function PresetSaveScreen() {
   const addPreset = usePresetStore((s) => s.addPreset);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [imageUri, setImageUri] = useState<string | null>(null);
   const themeColors = useThemeColors();
   const styles = useMemo(
     () =>
@@ -26,7 +28,21 @@ export default function PresetSaveScreen() {
         preview: { backgroundColor: themeColors.glassLight, borderRadius: layout.borderRadiusMd, padding: layout.cardPadding, gap: spacing.sm, borderWidth: 1, borderColor: themeColors.glassBorder },
         previewLabel: { ...typography.caption, color: themeColors.textMuted },
         soundRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-        emoji: { fontSize: 24 },
+        soundChip: {
+          backgroundColor: 'rgba(255,255,255,0.1)',
+          borderRadius: 9999,
+          paddingVertical: 4,
+          paddingHorizontal: 10,
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.1)',
+        },
+        soundChipText: {
+          fontSize: 10,
+          fontWeight: '700',
+          letterSpacing: 1,
+          textTransform: 'uppercase',
+          color: '#ffffff',
+        },
         imagePlaceholder: {
           width: '100%',
           height: 160,
@@ -40,6 +56,7 @@ export default function PresetSaveScreen() {
           gap: spacing.xs,
         },
         imagePlaceholderText: { ...typography.caption, color: themeColors.textMuted },
+        selectedImage: { width: '100%', height: '100%', borderRadius: layout.borderRadiusMd },
         inputLabel: { ...typography.bodyMedium, color: themeColors.textSecondary, marginTop: spacing.sm },
         input: { backgroundColor: themeColors.bgSecondary, borderRadius: layout.borderRadiusSm, borderWidth: 1, borderColor: themeColors.glassBorder, padding: layout.cardPadding, ...typography.body, color: themeColors.textPrimary },
         inputMultiline: { height: 80, textAlignVertical: 'top' },
@@ -48,6 +65,23 @@ export default function PresetSaveScreen() {
   );
 
   const soundsList = Array.from(activeSounds.values());
+
+  const handlePickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('권한 필요', '이미지를 선택하려면 사진 라이브러리 접근 권한이 필요합니다.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setImageUri(result.assets[0].uri);
+    }
+  };
 
   const handleSave = () => {
     const trimmed = name.trim();
@@ -67,6 +101,7 @@ export default function PresetSaveScreen() {
       description: description.trim(),
       isDefault: false,
       sounds: soundsList,
+      imageUri: imageUri ?? null,
       createdAt: now,
       updatedAt: now,
     });
@@ -89,18 +124,27 @@ export default function PresetSaveScreen() {
           <View style={styles.preview}>
             <Text style={styles.previewLabel}>포함된 소리 ({soundsList.length})</Text>
             <View style={styles.soundRow}>
-              {soundsList.map((s) => (
-                <Text key={s.soundId} style={styles.emoji}>
-                  {getSoundById(s.soundId)?.iconEmoji ?? '🔊'}
-                </Text>
-              ))}
+              {soundsList.map((s) => {
+                const soundInfo = getSoundById(s.soundId);
+                return (
+                  <View key={s.soundId} style={styles.soundChip}>
+                    <Text style={styles.soundChipText}>{soundInfo?.name ?? s.soundId}</Text>
+                  </View>
+                );
+              })}
             </View>
           </View>
 
-          {/* Image placeholder */}
-          <Pressable style={styles.imagePlaceholder} onPress={() => Alert.alert('준비 중', '이미지 선택 기능은 곧 추가됩니다.')}>
-            <Ionicons name="image-outline" size={36} color={themeColors.textMuted} />
-            <Text style={styles.imagePlaceholderText}>프리셋 이미지 선택 (선택)</Text>
+          {/* Image upload */}
+          <Pressable style={styles.imagePlaceholder} onPress={handlePickImage}>
+            {imageUri ? (
+              <Image source={{ uri: imageUri }} style={styles.selectedImage} resizeMode="cover" />
+            ) : (
+              <>
+                <Ionicons name="image-outline" size={36} color={themeColors.textMuted} />
+                <Text style={styles.imagePlaceholderText}>프리셋 이미지 선택 (선택)</Text>
+              </>
+            )}
           </Pressable>
 
           {/* Name input */}

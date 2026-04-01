@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Pressable, StyleSheet, BackHandler, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -27,6 +27,7 @@ export function BottomSheet({
   const translateY = useSharedValue(maxHeight);
   const overlayOpacity = useSharedValue(0);
   const themeColors = useThemeColors();
+  const [mounted, setMounted] = useState(false);
   const styles = useMemo(
     () =>
       StyleSheet.create({
@@ -60,11 +61,14 @@ export function BottomSheet({
 
   useEffect(() => {
     if (visible) {
-      translateY.value = withTiming(0, { duration: 180 });
-      overlayOpacity.value = withTiming(1, { duration: 150 });
+      setMounted(true);
+      translateY.value = withTiming(0, { duration: 250 });
+      overlayOpacity.value = withTiming(1, { duration: 200 });
     } else {
-      translateY.value = withTiming(maxHeight, { duration: 180 });
-      overlayOpacity.value = withTiming(0, { duration: 150 });
+      translateY.value = withTiming(maxHeight, { duration: 250 });
+      overlayOpacity.value = withTiming(0, { duration: 200 });
+      const timeout = setTimeout(() => setMounted(false), 300);
+      return () => clearTimeout(timeout);
     }
   }, [visible, maxHeight]);
 
@@ -106,7 +110,7 @@ export function BottomSheet({
     opacity: overlayOpacity.value,
   }));
 
-  if (!visible) return null;
+  if (!mounted && !visible) return null;
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">

@@ -4,6 +4,7 @@ import {
   Text,
   ScrollView,
   TextInput,
+  Pressable,
   StyleSheet,
   Alert,
   KeyboardAvoidingView,
@@ -46,6 +47,8 @@ export default function AlarmEditScreen() {
   const [days, setDays] = useState<boolean[]>(
     existingAlarm?.days ?? [false, false, false, false, false, false, false],
   );
+  const [useSpecificDate, setUseSpecificDate] = useState(!!existingAlarm?.specificDate);
+  const [specificDate, setSpecificDate] = useState(existingAlarm?.specificDate ?? '');
   const [label, setLabel] = useState(existingAlarm?.label ?? '');
   const [fadeInIdx, setFadeInIdx] = useState(
     FADE_VALUES.indexOf(existingAlarm?.fadeInMinutes ?? 0),
@@ -70,6 +73,11 @@ export default function AlarmEditScreen() {
         input: { backgroundColor: themeColors.bgSecondary, borderRadius: layout.borderRadiusSm, borderWidth: 1, borderColor: themeColors.glassBorder, padding: layout.cardPadding, ...typography.body, color: themeColors.textPrimary },
         toggleRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm },
         buttonGroup: { gap: spacing.md, marginTop: spacing.xl },
+        modeRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm },
+        modeBtn: { flex: 1, paddingVertical: 10, borderRadius: layout.borderRadiusSm, backgroundColor: themeColors.bgSecondary, alignItems: 'center', borderWidth: 1, borderColor: themeColors.glassBorder },
+        modeBtnActive: { backgroundColor: themeColors.accent1, borderColor: themeColors.accent1 },
+        modeBtnText: { ...typography.bodyMedium, color: themeColors.textSecondary },
+        modeBtnTextActive: { color: themeColors.white },
       }),
     [themeColors],
   );
@@ -79,7 +87,8 @@ export default function AlarmEditScreen() {
     const alarmData: Alarm = {
       id: existingAlarm?.id ?? `alarm_${now}`,
       time: { hour, minute },
-      days,
+      days: useSpecificDate ? [false, false, false, false, false, false, false] : days,
+      specificDate: useSpecificDate && specificDate ? specificDate : null,
       enabled: existingAlarm?.enabled ?? true,
       soundId: existingAlarm?.soundId ?? 'rain-light',
       label: label.trim(),
@@ -127,9 +136,42 @@ export default function AlarmEditScreen() {
           {/* Time picker */}
           <TimePicker hour={hour} minute={minute} onHourChange={setHour} onMinuteChange={setMinute} />
 
-          {/* Days */}
-          <Text style={styles.sectionTitle}>반복</Text>
-          <DaySelector days={days} onChange={setDays} />
+          {/* Schedule mode */}
+          <Text style={styles.sectionTitle}>일정</Text>
+          <View style={styles.modeRow}>
+            <Pressable
+              style={[styles.modeBtn, !useSpecificDate && styles.modeBtnActive]}
+              onPress={() => setUseSpecificDate(false)}
+            >
+              <Text style={[styles.modeBtnText, !useSpecificDate && styles.modeBtnTextActive]}>요일 반복</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.modeBtn, useSpecificDate && styles.modeBtnActive]}
+              onPress={() => setUseSpecificDate(true)}
+            >
+              <Text style={[styles.modeBtnText, useSpecificDate && styles.modeBtnTextActive]}>특정 날짜</Text>
+            </Pressable>
+          </View>
+
+          {/* Days or Date */}
+          {useSpecificDate ? (
+            <>
+              <TextInput
+                style={styles.input}
+                value={specificDate}
+                onChangeText={setSpecificDate}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={themeColors.textMuted}
+                keyboardType="number-pad"
+                maxLength={10}
+              />
+              <Text style={styles.hint}>예: 2025-01-31</Text>
+            </>
+          ) : (
+            <>
+              <DaySelector days={days} onChange={setDays} />
+            </>
+          )}
 
           {/* Label */}
           <Text style={styles.sectionTitle}>라벨</Text>

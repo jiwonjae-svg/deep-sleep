@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react';
 import {
   Modal,
   View,
@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Animated,
 } from 'react-native';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
 
@@ -45,14 +46,49 @@ const TERMS_CONTENT = `제1조 (목적)
 
 export function TermsModal({ visible, onClose }: TermsModalProps) {
   const themeColors = useThemeColors();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.92)).current;
+  const [modalVisible, setModalVisible] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      setModalVisible(true);
+      Animated.parallel([
+        Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.spring(scaleAnim, { toValue: 1, tension: 220, friction: 22, useNativeDriver: true }),
+      ]).start();
+    } else if (modalVisible) {
+      Animated.parallel([
+        Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 0.92, duration: 150, useNativeDriver: true }),
+      ]).start(() => setModalVisible(false));
+    }
+  }, [visible]);
+
+  const handleClose = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 0.92, duration: 150, useNativeDriver: true }),
+    ]).start(() => {
+      setModalVisible(false);
+      onClose();
+    });
+  }, [onClose, fadeAnim, scaleAnim]);
+
   const styles = useMemo(
     () =>
       StyleSheet.create({
-        backdrop: { flex: 1, backgroundColor: themeColors.overlay, justifyContent: 'flex-end' },
+        backdrop: {
+          flex: 1,
+          backgroundColor: themeColors.overlay,
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: layout.screenPaddingH,
+        },
         sheet: {
+          width: '100%',
           backgroundColor: themeColors.bgSecondary,
-          borderTopLeftRadius: layout.borderRadiusLg,
-          borderTopRightRadius: layout.borderRadiusLg,
+          borderRadius: layout.borderRadiusLg,
           borderWidth: 1,
           borderColor: themeColors.glassBorder,
           maxHeight: '85%',
@@ -87,16 +123,17 @@ export function TermsModal({ visible, onClose }: TermsModalProps) {
 
   return (
     <Modal
-      visible={visible}
+      visible={modalVisible}
       transparent
-      animationType="slide"
-      onRequestClose={onClose}
+      animationType="none"
+      onRequestClose={handleClose}
     >
-      <View style={styles.backdrop}>
-        <View style={styles.sheet}>
+      <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
+        <Animated.View style={[styles.sheet, { transform: [{ scale: scaleAnim }], opacity: fadeAnim }]}>
           <View style={styles.header}>
             <Text style={styles.title}>이용약관</Text>
-            <Pressable onPress={onClose} style={styles.closeBtn}>
+            <Pressable onPress={handleClose} style={styles.closeBtn}>
               <Text style={styles.closeText}>✕</Text>
             </Pressable>
           </View>
@@ -107,11 +144,11 @@ export function TermsModal({ visible, onClose }: TermsModalProps) {
           >
             <Text style={styles.content}>{TERMS_CONTENT}</Text>
           </ScrollView>
-          <Pressable style={styles.confirmBtn} onPress={onClose}>
+          <Pressable style={styles.confirmBtn} onPress={handleClose}>
             <Text style={styles.confirmText}>확인</Text>
           </Pressable>
-        </View>
-      </View>
+        </Animated.View>
+      </Animated.View>
     </Modal>
   );
 }
