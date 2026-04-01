@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { View, Text, Pressable, StyleSheet, Image, FlatList, useWindowDimensions } from 'react-native';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { View, Text, Pressable, StyleSheet, Image, FlatList, ImageSourcePropType } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -14,12 +15,13 @@ import { useTimerStore } from '@/stores/useTimerStore';
 import { usePresetStore } from '@/stores/usePresetStore';
 import { Slider } from '@/components/ui/Slider';
 import { TimerModal } from '@/components/ui/TimerModal';
-import { useThemeColors, typography, spacing, layout } from '@/theme';
-import { formatRemainingTime, msUntilAlarm, getCurrentTimeString } from '@/utils/formatTime';
-import { getSoundById } from '@/data/sounds';
+import { BottomSheet } from '@/components/ui/BottomSheet';
+import { useThemeColors, spacing, layout } from '@/theme';
+import { formatRemainingTime, msUntilAlarm } from '@/utils/formatTime';
+import { Preset } from '@/types';
 
-// 프리셋 ID → 이미지 매핑 (정적 require)
-const PRESET_IMAGES: Record<string, ReturnType<typeof require>> = {
+// 프리셋 ID → 이미지 매핑
+const PRESET_IMAGES: Record<string, ImageSourcePropType> = {
   'preset-rain-night': require('@/assets/images/presets/rainy_presets.png'),
   'preset-forest-night': require('@/assets/images/presets/forest_persets.png'),
   'preset-campfire': require('@/assets/images/presets/campfire_presets.png'),
@@ -29,10 +31,7 @@ const PRESET_IMAGES: Record<string, ReturnType<typeof require>> = {
 
 export default function HomeScreen() {
   const themeColors = useThemeColors();
-  const { width: screenWidth } = useWindowDimensions();
-  const cardWidth = screenWidth - layout.screenPaddingH * 2;
   const {
-    activeSounds,
     isPlaying,
     masterVolume,
     soundCount,
@@ -53,27 +52,13 @@ export default function HomeScreen() {
   );
 
   const [timerModalVisible, setTimerModalVisible] = useState(false);
+  const [presetPickerVisible, setPresetPickerVisible] = useState(false);
+  const [selectedPresetIndex, setSelectedPresetIndex] = useState(0);
 
-  // 재생 중 배경으로 사용할 프리셋 이미지
-  const [playingBgImg, setPlayingBgImg] = useState<ReturnType<typeof require> | null>(null);
+  const currentPreset = allPresets[selectedPresetIndex] ?? allPresets[0];
+  const currentPresetImage = currentPreset ? PRESET_IMAGES[currentPreset.id] : null;
 
-  // 현재 화면에 보이는 프리셋 인덱스 추적
-  const visiblePresetRef = useRef(0);
-  const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 50 });
-  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
-    if (viewableItems.length > 0) {
-      visiblePresetRef.current = viewableItems[0].index ?? 0;
-    }
-  });
-
-  // Clock
-  const [clock, setClock] = useState(getCurrentTimeString());
-  useEffect(() => {
-    const id = setInterval(() => setClock(getCurrentTimeString()), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  // Timer remaining (재생 중일 때만 카운트다운)
+  // Timer remaining
   const [timerRemaining, setTimerRemaining] = useState(0);
   useEffect(() => {
     if (!timer.isActive) {
@@ -91,7 +76,7 @@ export default function HomeScreen() {
     return () => clearInterval(id);
   }, [timer.isActive, isPlaying]);
 
-  const timerText = timerRemaining > 0 ? formatRemainingTime(timerRemaining) : '';
+  const timerText = timerRemaining > 0 ? formatRemainingTime(timerRemaining) : '00:00';
 
   // Next alarm
   const nextAlarm = alarms
@@ -102,7 +87,11 @@ export default function HomeScreen() {
       return best;
     }, null);
 
-  // Pulse animation for play button
+  const alarmCountdownText = nextAlarm
+    ? `${formatRemainingTime(nextAlarm.ms)} 뒤에 알람이 울립니다`
+    : null;
+
+  // Pulse animation
   const scale = useSharedValue(1);
   useEffect(() => {
     if (isPlaying) {
@@ -115,305 +104,319 @@ export default function HomeScreen() {
       scale.value = withTiming(1, { duration: 200 });
     }
   }, [isPlaying]);
-
   const playBtnAnimStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
-  // 배경 fade 애니메이션
+  // Background fade
   const bgOpacity = useSharedValue(0);
   useEffect(() => {
-    bgOpacity.value = withTiming(isPlaying && playingBgImg != null ? 1 : 0, {
+    bgOpacity.value = withTiming(currentPresetImage != null ? 1 : 0, {
       duration: 600,
       easing: Easing.inOut(Easing.ease),
     });
-  }, [isPlaying, playingBgImg]);
+  }, [currentPresetImage]);
   const bgAnimStyle = useAnimatedStyle(() => ({ opacity: bgOpacity.value }));
-  const hasBgImg = isPlaying && playingBgImg != null;
-
-  const styles = useMemo(
-    () =>
-      StyleSheet.create({
-        container: { flex: 1, backgroundColor: themeColors.bgPrimary },
-        bgOverlay: {
-          ...StyleSheet.absoluteFillObject,
-          backgroundColor: 'transparent',
-          // dark gradient overlay from design
-        },
-        bgGradient: {
-          ...StyleSheet.absoluteFillObject,
-          backgroundColor: 'rgba(11,15,25,0.65)',
-        },
-        header: {
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingHorizontal: layout.screenPaddingH,
-          height: layout.headerHeight,
-        },
-        logoImage: {
-          height: layout.headerHeight * 0.7,
-          width: 160,
-        },
-        content: {
-          flex: 1,
-          alignItems: 'center',
-          paddingHorizontal: layout.screenPaddingH,
-          gap: spacing.lg,
-        },
-        // Glass timer display (pill shape)
-        timerDisplay: {
-          backgroundColor: 'rgba(255,255,255,0.08)',
-          borderRadius: 40,
-          paddingVertical: 24,
-          paddingHorizontal: 40,
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.15)',
-          alignItems: 'center',
-          gap: spacing.xs,
-        },
-        clock: {
-          fontSize: 56,
-          fontWeight: '800',
-          color: '#ffffff',
-          letterSpacing: -2,
-        },
-        clockLabel: {
-          fontSize: 10,
-          fontWeight: '700',
-          letterSpacing: 3,
-          textTransform: 'uppercase',
-          color: 'rgba(255,255,255,0.5)',
-        },
-        // Preset carousel card — glass style
-        presetCarouselCard: {
-          width: cardWidth,
-          borderRadius: layout.borderRadiusLg,
-          overflow: 'hidden',
-          backgroundColor: 'rgba(255,255,255,0.08)',
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.15)',
-        },
-        presetCarouselCardActive: {
-          borderColor: themeColors.accent1,
-          borderWidth: 2,
-        },
-        presetCardImage: {
-          width: cardWidth,
-          height: 150,
-        },
-        presetCardBody: {
-          padding: spacing.md,
-          gap: spacing.xs,
-        },
-        presetCardName: { ...typography.h3, color: '#ffffff' },
-        presetCardDesc: { ...typography.caption, color: 'rgba(255,255,255,0.7)' },
-        presetCardSounds: { ...typography.caption, color: 'rgba(255,255,255,0.5)' },
-        // Timer text
-        timerText: {
-          ...typography.bodyMedium,
-          color: themeColors.accent1,
-        },
-        // Play button — primary glow
-        playBtn: {
-          width: 80,
-          height: 80,
-          borderRadius: 16,
-          alignItems: 'center',
-          justifyContent: 'center',
-          shadowColor: themeColors.accent1,
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.5,
-          shadowRadius: 15,
-          elevation: 8,
-        },
-        playIcon: { color: '#ffffff', fontSize: 26, marginLeft: 3 },
-        // Glass volume panel
-        volumeRow: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          width: '100%',
-          gap: spacing.md,
-          backgroundColor: 'rgba(255,255,255,0.08)',
-          borderRadius: layout.borderRadiusLg,
-          paddingVertical: 14,
-          paddingHorizontal: 20,
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.15)',
-        },
-        volumeIcon: { fontSize: 18, color: 'rgba(255,255,255,0.5)' },
-        alarmCountdown: {
-          ...typography.caption,
-          color: 'rgba(255,255,255,0.6)',
-          textAlign: 'center',
-        },
-        // Timer button — glass pill
-        timerButton: {
-          backgroundColor: 'rgba(255,255,255,0.08)',
-          borderRadius: 9999,
-          paddingVertical: 10,
-          paddingHorizontal: spacing.xl,
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.15)',
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.xs,
-        },
-        timerButtonText: {
-          fontSize: 12,
-          fontWeight: '700',
-          letterSpacing: 2,
-          textTransform: 'uppercase',
-          color: 'rgba(255,255,255,0.7)',
-        },
-      }),
-    [themeColors, cardWidth],
-  );
-
-  const handleTimerStart = (minutes: number) => {
-    const preset = allPresets[visiblePresetRef.current];
-    if (preset) applyPreset(preset);
-    startTimer(minutes);
-    play();
-  };
-
-  const renderPresetCard = useCallback(
-    ({ item: preset }: { item: import('@/types').Preset }) => {
-      const img = PRESET_IMAGES[preset.id];
-      const soundNames = preset.sounds
-        .map((s) => getSoundById(s.soundId)?.name ?? s.soundId)
-        .join(', ');
-      return (
-        <View
-          style={styles.presetCarouselCard}
-        >
-          {img ? (
-            <Image
-              source={img}
-              style={styles.presetCardImage}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={[styles.presetCardImage, { backgroundColor: themeColors.glassLight, alignItems: 'center', justifyContent: 'center' }]}>
-              <Text style={{ fontSize: 40 }}>{preset.name.split(' ')[0]}</Text>
-            </View>
-          )}
-          <View style={[
-              styles.presetCardBody,
-            ]}>
-            <Text style={styles.presetCardName} numberOfLines={1}>{preset.name}</Text>
-            <Text style={styles.presetCardDesc} numberOfLines={1}>{preset.description}</Text>
-            <Text style={styles.presetCardSounds} numberOfLines={1}>{soundNames}</Text>
-          </View>
-        </View>
-      );
-    },
-    [styles, themeColors, isPlaying, playingBgImg],
-  );
 
   const handlePlayToggle = () => {
     if (isPlaying) {
       stop();
-      setPlayingBgImg(null);
     } else {
-      const preset = allPresets[visiblePresetRef.current];
-      if (preset) {
-        applyPreset(preset);
-        setPlayingBgImg(PRESET_IMAGES[preset.id] ?? null);
-      }
+      if (currentPreset) applyPreset(currentPreset);
       play();
     }
   };
 
+  const handlePresetSelect = useCallback(
+    (preset: Preset, index: number) => {
+      setSelectedPresetIndex(index);
+      applyPreset(preset);
+      setPresetPickerVisible(false);
+      if (!isPlaying) play();
+    },
+    [applyPreset, isPlaying, play],
+  );
+
+  const handleTimerStart = (minutes: number) => {
+    if (currentPreset) applyPreset(currentPreset);
+    startTimer(minutes);
+    play();
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* 재생 중 배경 이미지 (블러 + 오버레이) */}
+      {/* Background: preset image */}
       <Animated.View style={[StyleSheet.absoluteFill, bgAnimStyle]} pointerEvents="none">
-        {playingBgImg != null && (
+        {currentPresetImage != null && (
           <>
-            <Image source={playingBgImg as number} style={StyleSheet.absoluteFill} resizeMode="cover" blurRadius={20} />
-            <View style={styles.bgGradient} />
+            <Image
+              source={currentPresetImage as number}
+              style={StyleSheet.absoluteFill}
+              resizeMode="cover"
+              blurRadius={4}
+            />
+            <View style={styles.bgOverlay} />
           </>
         )}
       </Animated.View>
-
-      {/* Header */}
-      <View style={styles.header}>
-        <Image
-          source={require('@/assets/images/logo/main_logo.png')}
-          style={styles.logoImage}
-          resizeMode="contain"
-        />
-      </View>
+      {!currentPresetImage && (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: themeColors.bgPrimary }]} />
+      )}
 
       <View style={styles.content}>
-        {/* Glass Timer Display */}
-        <View style={styles.timerDisplay}>
-          <Text style={styles.clock}>{clock}</Text>
-          <Text style={styles.clockLabel}>현재 시각</Text>
+        {/* Timer Display — glass pill */}
+        <Pressable style={styles.timerDisplay} onPress={() => setTimerModalVisible(true)}>
+          <Text style={styles.timerTime}>{timerText}</Text>
+          <Text style={styles.timerLabel}>수면 타이머</Text>
+          {alarmCountdownText && (
+            <Text style={styles.alarmHint}>{alarmCountdownText}</Text>
+          )}
+        </Pressable>
+
+        <View style={{ flex: 1 }} />
+
+        {/* Now Playing Card — glass pill */}
+        <View style={styles.nowPlayingCard}>
+          <Pressable
+            style={styles.nowPlayingInfo}
+            onPress={() => setPresetPickerVisible(true)}
+          >
+            <Text style={styles.nowPlayingName} numberOfLines={1}>
+              {currentPreset?.name ?? '프리셋 선택'}
+            </Text>
+            <Text style={styles.nowPlayingDesc} numberOfLines={1}>
+              {currentPreset?.description ?? '탭하여 선택'}
+            </Text>
+          </Pressable>
+          <Animated.View style={playBtnAnimStyle}>
+            <Pressable
+              style={[
+                styles.playBtn,
+                { backgroundColor: soundCount > 0 || currentPreset ? themeColors.accent1 : themeColors.bgTertiary },
+              ]}
+              onPress={handlePlayToggle}
+            >
+              <MaterialIcons
+                name={isPlaying ? 'pause' : 'play-arrow'}
+                size={28}
+                color="#ffffff"
+              />
+            </Pressable>
+          </Animated.View>
         </View>
 
-        {/* 프리셋 캐러셀 (마스코트 대체) */}
-        <FlatList
-          data={allPresets}
-          horizontal
-          pagingEnabled
-          snapToInterval={cardWidth + spacing.sm}
-          decelerationRate="fast"
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(item) => item.id}
-          renderItem={renderPresetCard}
-          ItemSeparatorComponent={() => <View style={{ width: spacing.sm }} />}
-          scrollEnabled={!isPlaying}
-          onViewableItemsChanged={onViewableItemsChanged.current}
-          viewabilityConfig={viewabilityConfig.current}
-          style={{ flexGrow: 0, width: cardWidth }}
-        />
-
-        {/* 알람 카운트다운 */}
-        {nextAlarm && (
-          <Text style={styles.alarmCountdown}>
-            {formatRemainingTime(nextAlarm.ms)} 뒤에 알람이 울립니다.
-          </Text>
-        )}
-
-        {/* Timer */}
-        {timer.isActive && timerText ? (
-          <Text style={styles.timerText}>
-            {timerText} 동안 소리가 나옵니다.
-          </Text>
-        ) : (
-          <Pressable style={styles.timerButton} onPress={() => setTimerModalVisible(true)}>
-            <Text style={styles.timerButtonText}>⏱ 수면 타이머</Text>
-          </Pressable>
-        )}
-
-        {/* Play button */}
-        <Animated.View style={playBtnAnimStyle}>
-          <Pressable onPress={handlePlayToggle} disabled={soundCount === 0}>
-            <View
-              style={[styles.playBtn, { backgroundColor: soundCount > 0 ? themeColors.accent1 : themeColors.bgTertiary }]}
-            >
-              <Text style={styles.playIcon}>{isPlaying ? '■' : '▶'}</Text>
+        {/* Master Volume — glass panel */}
+        <View style={styles.volumePanel}>
+          <Text style={styles.volumeLabel}>마스터 볼륨</Text>
+          <View style={styles.volumeRow}>
+            <MaterialIcons name="volume-down" size={20} color="rgba(255,255,255,0.7)" />
+            <View style={{ flex: 1 }}>
+              <Slider
+                value={masterVolume}
+                onValueChange={setVolume}
+                activeColor={themeColors.accent1}
+              />
             </View>
-          </Pressable>
-        </Animated.View>
-        {/* Master volume — glass panel */}
-        <View style={styles.volumeRow}>
-          <Text style={styles.volumeIcon}>🔈</Text>
-          <View style={{ flex: 1 }}>
-            <Slider value={masterVolume} onValueChange={setVolume} activeColor={themeColors.accent1} />
+            <MaterialIcons name="volume-up" size={20} color="rgba(255,255,255,0.7)" />
           </View>
-          <Text style={styles.volumeIcon}>🔊</Text>
         </View>
       </View>
 
+      {/* Timer Modal */}
       <TimerModal
         visible={timerModalVisible}
         onClose={() => setTimerModalVisible(false)}
         onStart={handleTimerStart}
       />
+
+      {/* Preset Picker Bottom Sheet */}
+      <BottomSheet
+        visible={presetPickerVisible}
+        onClose={() => setPresetPickerVisible(false)}
+        maxHeightPct={0.6}
+      >
+        <Text style={styles.pickerTitle}>프리셋 선택</Text>
+        <FlatList
+          data={allPresets}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => (
+            <Pressable
+              style={[
+                styles.pickerItem,
+                index === selectedPresetIndex && styles.pickerItemActive,
+              ]}
+              onPress={() => handlePresetSelect(item, index)}
+            >
+              {PRESET_IMAGES[item.id] ? (
+                <Image
+                  source={PRESET_IMAGES[item.id]}
+                  style={styles.pickerItemImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={[styles.pickerItemImage, { backgroundColor: 'rgba(255,255,255,0.08)' }]} />
+              )}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.pickerItemName}>{item.name}</Text>
+                <Text style={styles.pickerItemDesc} numberOfLines={1}>
+                  {item.description}
+                </Text>
+              </View>
+              {index === selectedPresetIndex && (
+                <MaterialIcons name="check-circle" size={20} color={themeColors.accent1} />
+              )}
+            </Pressable>
+          )}
+          ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+          contentContainerStyle={{ paddingBottom: 20 }}
+        />
+      </BottomSheet>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#0b0f19' },
+  bgOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.30)',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: layout.screenPaddingH,
+    paddingTop: spacing.xl,
+    paddingBottom: layout.tabBarHeight + 16,
+    gap: spacing.lg,
+  },
+  timerDisplay: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 40,
+    paddingVertical: 20,
+    paddingHorizontal: 40,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: 4,
+  },
+  timerTime: {
+    fontSize: 56,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: -2,
+  },
+  timerLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.5)',
+  },
+  alarmHint: {
+    fontSize: 10,
+    fontWeight: '500',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.4)',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  nowPlayingCard: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 40,
+    height: 80,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  nowPlayingInfo: {
+    flex: 1,
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  nowPlayingName: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  nowPlayingDesc: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.7)',
+  },
+  playBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#456eea',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 15,
+    elevation: 6,
+  },
+  volumePanel: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 40,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    gap: 8,
+  },
+  volumeLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
+  },
+  volumeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  pickerTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: 16,
+  },
+  pickerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 24,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  pickerItemActive: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderColor: 'rgba(255,255,255,0.30)',
+  },
+  pickerItemImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+  },
+  pickerItemName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  pickerItemDesc: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.6)',
+  },
+});
 
 

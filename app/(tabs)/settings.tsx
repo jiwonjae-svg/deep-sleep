@@ -1,14 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Toggle } from '@/components/ui/Toggle';
 import { OptionModal, OptionItem } from '@/components/ui/OptionModal';
 import { TermsModal } from '@/components/settings/TermsModal';
+import { GradientBackground } from '@/components/ui/GradientBackground';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
 import * as BillingService from '@/services/BillingService';
-import { useThemeColors, AppColors, typography, spacing, layout } from '@/theme';
+import { spacing, layout } from '@/theme';
 import { AppLanguage, AudioQuality, VolumeChangeSpeed, ThemeMode } from '@/types';
 
 const QUALITY_OPTIONS: OptionItem<AudioQuality>[] = [
@@ -39,7 +41,6 @@ const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const themeColors = useThemeColors();
   const { settings, updateSettings } = useSettingsStore();
   const isPremium = useSubscriptionStore((s) => s.isPremium);
 
@@ -48,275 +49,340 @@ export default function SettingsScreen() {
   const [langModalVisible, setLangModalVisible] = useState(false);
   const [termsModalVisible, setTermsModalVisible] = useState(false);
 
-  const styles = useMemo(() => makeStyles(themeColors), [themeColors]);
-
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>설정</Text>
-      </View>
+    <GradientBackground
+      gradients={[
+        ['#0f3460', '#1a1a2e'],
+        ['#2d1b69', '#11998e'],
+        ['#134e5e', '#0f3460'],
+        ['#1a1a2e', '#16213e'],
+      ]}
+      duration={10000}
+      overlay
+      overlayOpacity={0.5}
+    >
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView contentContainerStyle={styles.content}>
+          {/* ────── GENERAL ────── */}
+          <Text style={styles.sectionTitle}>GENERAL</Text>
+          <View style={styles.group}>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* General */}
-        <Text style={styles.sectionTitle}>일반</Text>
-        <View style={styles.group}>
-          {/* 테마 모드 — 라디오 버튼 */}
-          <View style={styles.themeRow}>
-            <Text style={styles.rowIcon}>🎨</Text>
-            <View style={styles.themeContent}>
-              <Text style={styles.rowLabel}>테마</Text>
+            {/* Theme Radio Group */}
+            <View style={styles.themeSection}>
+              <View style={styles.themeHeader}>
+                <MaterialIcons name="palette" size={20} color="rgba(255,255,255,0.7)" />
+                <Text style={styles.rowLabel}>테마</Text>
+              </View>
               <View style={styles.radioGroup}>
-                {THEME_OPTIONS.map((opt) => (
-                  <Pressable
-                    key={opt.value}
-                    style={styles.radioOption}
-                    onPress={() => updateSettings({ themeMode: opt.value })}
-                  >
-                    <View style={[styles.radioCircle, settings.themeMode === opt.value && styles.radioCircleSelected]}>
-                      {settings.themeMode === opt.value && <View style={styles.radioDot} />}
-                    </View>
-                    <Text style={[styles.radioLabel, settings.themeMode === opt.value && styles.radioLabelSelected]}>
-                      {opt.label}
-                    </Text>
-                  </Pressable>
-                ))}
+                {THEME_OPTIONS.map((opt) => {
+                  const selected = settings.themeMode === opt.value;
+                  return (
+                    <Pressable
+                      key={opt.value}
+                      style={[styles.radioOption, selected && styles.radioOptionActive]}
+                      onPress={() => updateSettings({ themeMode: opt.value })}
+                    >
+                      <Text style={[styles.radioLabel, selected && styles.radioLabelActive]}>
+                        {opt.label}
+                      </Text>
+                      {selected ? (
+                        <MaterialIcons name="check-circle" size={20} color="#ffffff" />
+                      ) : (
+                        <View style={styles.radioCircle} />
+                      )}
+                    </Pressable>
+                  );
+                })}
               </View>
             </View>
-          </View>
-          <Divider styles={styles} />
-          <SettingRow
-            styles={styles}
-            icon="🌐"
-            label="언어"
-            rightText={LANG_LABELS[settings.language]}
-            onPress={() => setLangModalVisible(true)}
-          />
-          <Divider styles={styles} />
-          <SettingRow
-            styles={styles}
-            icon="🔅"
-            label="자동 밝기 감소"
-            right={
+
+            <View style={styles.divider} />
+
+            {/* Language */}
+            <SettingRow
+              icon="language"
+              label="언어"
+              rightText={LANG_LABELS[settings.language]}
+              onPress={() => setLangModalVisible(true)}
+            />
+
+            <View style={styles.divider} />
+
+            {/* Auto Brightness */}
+            <View style={styles.row}>
+              <MaterialIcons name="brightness-6" size={20} color="rgba(255,255,255,0.7)" />
+              <Text style={[styles.rowLabel, { flex: 1 }]}>자동 밝기 감소</Text>
               <Toggle
                 value={settings.autoDimBrightness}
                 onValueChange={(v) => updateSettings({ autoDimBrightness: v })}
               />
-            }
-          />
-        </View>
+            </View>
+          </View>
 
-        {/* Audio */}
-        <Text style={styles.sectionTitle}>오디오</Text>
-        <View style={styles.group}>
-          <SettingRow
-            styles={styles}
-            icon="🎵"
-            label="오디오 품질"
-            rightText={QUALITY_LABELS[settings.audioQuality]}
-            onPress={() => setQualityModalVisible(true)}
-          />
-          <Divider styles={styles} />
-          <SettingRow
-            styles={styles}
-            icon="〰️"
-            label="음량 변화 속도"
-            rightText={SPEED_LABELS[settings.volumeChangeSpeed]}
-            onPress={() => setSpeedModalVisible(true)}
-          />
-        </View>
+          {/* ────── AUDIO ────── */}
+          <Text style={styles.sectionTitle}>AUDIO</Text>
+          <View style={styles.group}>
+            <SettingRow
+              icon="music-note"
+              label="오디오 품질"
+              rightText={QUALITY_LABELS[settings.audioQuality]}
+              onPress={() => setQualityModalVisible(true)}
+            />
+            <View style={styles.divider} />
+            <SettingRow
+              icon="tune"
+              label="음량 변화 속도"
+              rightText={SPEED_LABELS[settings.volumeChangeSpeed]}
+              onPress={() => setSpeedModalVisible(true)}
+            />
+          </View>
 
-        {/* Account */}
-        <Text style={styles.sectionTitle}>계정</Text>
-        <View style={styles.group}>
-          <SettingRow
-            styles={styles}
-            icon="👑"
-            label="구독 상태"
-            rightText={isPremium ? 'Premium' : '무료'}
-            onPress={() => router.push('/subscription')}
-          />
-          <Divider styles={styles} />
-          <SettingRow
-            styles={styles}
-            icon="🔄"
-            label="구매 복원"
-            onPress={async () => {
-              await BillingService.restorePurchases();
-            }}
-          />
-        </View>
+          {/* ────── ACCOUNT ────── */}
+          <Text style={styles.sectionTitle}>ACCOUNT</Text>
+          <View style={styles.group}>
+            <View style={styles.row}>
+              <MaterialIcons
+                name="workspace-premium"
+                size={20}
+                color="#FFD700"
+              />
+              <Text style={[styles.rowLabel, { flex: 1 }]}>구독 상태</Text>
+              <Pressable
+                style={styles.badge}
+                onPress={() => router.push('/subscription')}
+              >
+                <Text style={styles.badgeText}>{isPremium ? 'PREMIUM' : 'FREE'}</Text>
+              </Pressable>
+            </View>
+            <View style={styles.divider} />
+            <SettingRow
+              icon="restore"
+              label="구매 복원"
+              onPress={async () => {
+                await BillingService.restorePurchases();
+              }}
+            />
+          </View>
 
-        {/* Info */}
-        <Text style={styles.sectionTitle}>정보</Text>
-        <View style={styles.group}>
-          <SettingRow styles={styles} icon="📄" label="개인정보 처리방침" onPress={() => {}} />
-          <Divider styles={styles} />
-          <SettingRow styles={styles} icon="📋" label="이용약관" onPress={() => setTermsModalVisible(true)} />
-          <Divider styles={styles} />
-          <SettingRow styles={styles} icon="📧" label="문의하기" onPress={() => Linking.openURL('mailto:support@deepsleep.app')} />
-          <Divider styles={styles} />
-          <SettingRow styles={styles} icon="ℹ️" label="앱 버전" rightText="v1.0.0" />
-        </View>
-      </ScrollView>
+          {/* ────── INFO ────── */}
+          <Text style={styles.sectionTitle}>INFO</Text>
+          <View style={styles.group}>
+            <SettingRow icon="description" label="개인정보 처리방침" onPress={() => {}} />
+            <View style={styles.divider} />
+            <SettingRow icon="article" label="이용약관" onPress={() => setTermsModalVisible(true)} />
+            <View style={styles.divider} />
+            <SettingRow
+              icon="email"
+              label="문의하기"
+              onPress={() => Linking.openURL('mailto:support@deepsleep.app')}
+            />
+            <View style={styles.divider} />
+            <View style={styles.row}>
+              <MaterialIcons name="info-outline" size={20} color="rgba(255,255,255,0.7)" />
+              <Text style={[styles.rowLabel, { flex: 1 }]}>앱 버전</Text>
+              <Text style={styles.rowValue}>v1.0.0</Text>
+            </View>
+          </View>
 
-      {/* Modals */}
-      <OptionModal
-        visible={qualityModalVisible}
-        title="오디오 품질"
-        options={QUALITY_OPTIONS}
-        selected={settings.audioQuality}
-        onSelect={(v) => updateSettings({ audioQuality: v })}
-        onClose={() => setQualityModalVisible(false)}
-      />
-      <OptionModal
-        visible={speedModalVisible}
-        title="음량 변화 속도"
-        options={SPEED_OPTIONS}
-        selected={settings.volumeChangeSpeed}
-        onSelect={(v) => updateSettings({ volumeChangeSpeed: v })}
-        onClose={() => setSpeedModalVisible(false)}
-      />
-      <OptionModal
-        visible={langModalVisible}
-        title="언어"
-        options={LANG_OPTIONS}
-        selected={settings.language}
-        onSelect={(v) => updateSettings({ language: v })}
-        onClose={() => setLangModalVisible(false)}
-      />
-      <TermsModal
-        visible={termsModalVisible}
-        onClose={() => setTermsModalVisible(false)}
-      />
-    </SafeAreaView>
+          {/* Footer Branding */}
+          <View style={styles.footer}>
+            <Text style={styles.footerTitle}>NOCTURNE GLASS V1.0.0</Text>
+            <Text style={styles.footerSub}>Celestial Sanctuary Design System</Text>
+          </View>
+        </ScrollView>
+
+        {/* Modals */}
+        <OptionModal
+          visible={qualityModalVisible}
+          title="오디오 품질"
+          options={QUALITY_OPTIONS}
+          selected={settings.audioQuality}
+          onSelect={(v) => updateSettings({ audioQuality: v })}
+          onClose={() => setQualityModalVisible(false)}
+        />
+        <OptionModal
+          visible={speedModalVisible}
+          title="음량 변화 속도"
+          options={SPEED_OPTIONS}
+          selected={settings.volumeChangeSpeed}
+          onSelect={(v) => updateSettings({ volumeChangeSpeed: v })}
+          onClose={() => setSpeedModalVisible(false)}
+        />
+        <OptionModal
+          visible={langModalVisible}
+          title="언어"
+          options={LANG_OPTIONS}
+          selected={settings.language}
+          onSelect={(v) => updateSettings({ language: v })}
+          onClose={() => setLangModalVisible(false)}
+        />
+        <TermsModal
+          visible={termsModalVisible}
+          onClose={() => setTermsModalVisible(false)}
+        />
+      </SafeAreaView>
+    </GradientBackground>
   );
 }
+
+/* ────── Helper Components ────── */
 
 function SettingRow({
   icon,
   label,
-  right,
   rightText,
   onPress,
-  styles,
 }: {
   icon: string;
   label: string;
-  right?: React.ReactNode;
   rightText?: string;
   onPress?: () => void;
-  styles: ReturnType<typeof makeStyles>;
 }) {
   return (
-    <Pressable style={styles.row} onPress={onPress} disabled={!onPress && !right}>
-      <Text style={styles.rowIcon}>{icon}</Text>
-      <Text style={styles.rowLabel}>{label}</Text>
-      {right ?? (
-        <View style={styles.rowRight}>
-          {rightText && <Text style={styles.rowValue}>{rightText}</Text>}
-          {onPress && <Text style={styles.chevron}>›</Text>}
-        </View>
-      )}
+    <Pressable style={styles.row} onPress={onPress} disabled={!onPress}>
+      <MaterialIcons name={icon as any} size={20} color="rgba(255,255,255,0.7)" />
+      <Text style={[styles.rowLabel, { flex: 1 }]}>{label}</Text>
+      <View style={styles.rowRight}>
+        {rightText && <Text style={styles.rowValue}>{rightText}</Text>}
+        {onPress && (
+          <MaterialIcons name="chevron-right" size={20} color="rgba(255,255,255,0.3)" />
+        )}
+      </View>
     </Pressable>
   );
 }
 
-function Divider({ styles }: { styles: ReturnType<typeof makeStyles> }) {
-  return <View style={styles.divider} />;
-}
+/* ────── Styles ────── */
 
-function makeStyles(c: AppColors) {
-  return StyleSheet.create({
-    container: { flex: 1, backgroundColor: c.bgPrimary },
-    header: {
-      paddingHorizontal: layout.screenPaddingH,
-      height: layout.headerHeight,
-      justifyContent: 'center',
-    },
-    title: { ...typography.h1, color: '#ffffff' },
-    content: {
-      paddingHorizontal: layout.screenPaddingH,
-      paddingBottom: 100,
-      gap: spacing.sm,
-    },
-    sectionTitle: {
-      fontSize: 12,
-      fontWeight: '700',
-      letterSpacing: 3,
-      color: 'rgba(255,255,255,0.5)',
-      marginTop: spacing.lg,
-      marginBottom: spacing.sm,
-      textTransform: 'uppercase',
-    },
-    group: {
-      backgroundColor: 'rgba(255,255,255,0.08)',
-      borderRadius: layout.borderRadiusLg,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.15)',
-      overflow: 'hidden',
-    },
-    row: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      minHeight: 56,
-      paddingHorizontal: layout.cardPadding,
-      gap: spacing.md,
-    },
-    rowIcon: { fontSize: 18 },
-    rowLabel: { ...typography.body, color: '#ffffff', flex: 1 },
-    rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-    rowValue: { ...typography.body, color: 'rgba(255,255,255,0.7)' },
-    chevron: { fontSize: 20, color: 'rgba(255,255,255,0.4)' },
-    divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginLeft: 52 },
-    // Theme radio
-    themeRow: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      paddingHorizontal: layout.cardPadding,
-      paddingVertical: spacing.md,
-      gap: spacing.md,
-    },
-    themeContent: {
-      flex: 1,
-      gap: spacing.sm,
-    },
-    radioGroup: {
-      flexDirection: 'column',
-      gap: spacing.sm,
-    },
-    radioOption: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.xs,
-      paddingVertical: spacing.xs,
-      paddingRight: spacing.md,
-    },
-    radioCircle: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
-      borderWidth: 2,
-      borderColor: 'rgba(255,255,255,0.3)',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    radioCircleSelected: {
-      borderColor: c.accent1,
-    },
-    radioDot: {
-      width: 10,
-      height: 10,
-      borderRadius: 5,
-      backgroundColor: c.accent1,
-    },
-    radioLabel: {
-      ...typography.body,
-      color: 'rgba(255,255,255,0.7)',
-      fontSize: 13,
-    },
-    radioLabelSelected: {
-      color: c.accent1,
-      fontWeight: '700',
-    },
-  });
-}
+const styles = StyleSheet.create({
+  safeArea: { flex: 1 },
+  content: {
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 120,
+    gap: 8,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 3,
+    color: 'rgba(255,255,255,0.5)',
+    textTransform: 'uppercase',
+    marginTop: 24,
+    marginBottom: 8,
+    paddingHorizontal: 16,
+  },
+  group: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    overflow: 'hidden',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 56,
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  rowLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#ffffff',
+    letterSpacing: -0.3,
+  },
+  rowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  rowValue: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.4)',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    marginHorizontal: 20,
+  },
+  // Theme radio
+  themeSection: {
+    padding: 20,
+    gap: 12,
+  },
+  themeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  radioGroup: {
+    gap: 8,
+  },
+  radioOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 24,
+  },
+  radioOptionActive: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.30)',
+  },
+  radioLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: -0.3,
+  },
+  radioLabelActive: {
+    color: '#ffffff',
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  // Badge (subscription status)
+  badge: {
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  badgeText: {
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.7)',
+  },
+  // Footer
+  footer: {
+    paddingTop: 32,
+    alignItems: 'center',
+    gap: 4,
+    opacity: 0.3,
+  },
+  footerTitle: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    color: '#ffffff',
+  },
+  footerSub: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#ffffff',
+  },
+});

@@ -44,3 +44,6 @@ yarn-error.*
 
 # Internal docs (not for public repo)
 internal/
+
+# Repomix output
+repomix-output.xml
