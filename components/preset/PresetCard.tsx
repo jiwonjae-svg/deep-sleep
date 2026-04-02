@@ -4,6 +4,7 @@ import { Preset } from '@/types';
 import { getSoundById } from '@/data/sounds';
 import { useThemeColors } from '@/theme';
 import { typography, spacing, layout } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 const PRESET_IMAGES: Record<string, ReturnType<typeof require>> = {
   'preset-rain-night': require('@/assets/images/presets/rainy_presets.png'),
@@ -87,9 +88,15 @@ export function PresetCard({ preset, onPress, onLongPress }: PresetCardProps) {
     [themeColors],
   );
 
-  const soundNames = preset.sounds.slice(0, 4).map((s) => getSoundById(s.soundId)?.name ?? s.soundId);
+  const { t } = useTranslation();
+  const soundNames = preset.sounds.slice(0, 4).map((s) => {
+    const snd = getSoundById(s.soundId);
+    return snd ? t(`sounds.${snd.id}`, { defaultValue: snd.name }) : s.soundId;
+  });
   const extra = preset.sounds.length - 4;
   const img = PRESET_IMAGES[preset.id];
+  const displayName = preset.isDefault ? t(`defaultPresets.${preset.id}`, { defaultValue: preset.name }) : preset.name;
+  const displayDesc = preset.isDefault ? t(`defaultPresets.${preset.id}-desc`, { defaultValue: preset.description }) : preset.description;
 
   return (
     <Pressable
@@ -101,14 +108,14 @@ export function PresetCard({ preset, onPress, onLongPress }: PresetCardProps) {
         <Image source={img} style={styles.cardImage} resizeMode="cover" />
       ) : (
         <View style={styles.cardImageFallback}>
-          <Text style={{ fontSize: 40 }}>{preset.name.charAt(0)}</Text>
+          <Text style={{ fontSize: 40 }}>{displayName.charAt(0)}</Text>
         </View>
       )}
       <View style={styles.cardBody}>
-        <Text style={styles.name}>{preset.name}</Text>
-        {!!preset.description && (
+        <Text style={styles.name}>{displayName}</Text>
+        {!!displayDesc && (
           <Text style={styles.description} numberOfLines={1}>
-            {preset.description}
+            {displayDesc}
           </Text>
         )}
         <View style={styles.footer}>

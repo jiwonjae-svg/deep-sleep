@@ -1,41 +1,44 @@
 /**
  * 시간 포맷 유틸리티.
  */
+import i18n from '@/i18n';
+
+const t = (key: string, opts?: Record<string, unknown>) => i18n.t(key, opts);
 
 /** 남은 시간을 "X시간 Y분" 형태로 반환 */
 export function formatRemainingTime(ms: number): string {
-  if (ms <= 0) return '0분';
+  if (ms <= 0) return t('format.zeroMin');
   const totalMin = Math.ceil(ms / 60_000);
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
-  if (h > 0 && m > 0) return `${h}시간 ${m}분`;
-  if (h > 0) return `${h}시간`;
-  return `${m}분`;
+  if (h > 0 && m > 0) return t('format.hourMin', { h, m });
+  if (h > 0) return t('format.hourOnly', { h });
+  return t('format.minOnly', { m });
 }
 
 /** 남은 시간을 간략하게 "n일 뒤" / "n개월 뒤" / "n년 뒤" 형태로 반환 */
 export function formatRemainingTimeLong(ms: number): string {
-  if (ms <= 0) return '0분';
+  if (ms <= 0) return t('format.zeroMin');
   const totalMin = Math.ceil(ms / 60_000);
   const totalHours = Math.floor(totalMin / 60);
   const totalDays = Math.floor(totalHours / 24);
 
   if (totalDays >= 365) {
     const years = Math.floor(totalDays / 365);
-    return `${years}년`;
+    return t('format.years', { n: years });
   }
   if (totalDays >= 30) {
     const months = Math.floor(totalDays / 30);
-    return `${months}개월`;
+    return t('format.months', { n: months });
   }
   if (totalDays >= 1) {
-    return `${totalDays}일`;
+    return t('format.days', { n: totalDays });
   }
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
-  if (h > 0 && m > 0) return `${h}시간 ${m}분`;
-  if (h > 0) return `${h}시간`;
-  return `${m}분`;
+  if (h > 0 && m > 0) return t('format.hourMin', { h, m });
+  if (h > 0) return t('format.hourOnly', { h });
+  return t('format.minOnly', { m });
 }
 
 /** 정밀한 타이머 표시: h:mm 또는 m:ss 형태 */
@@ -71,6 +74,13 @@ export function msUntilAlarm(hour: number, minute: number): number {
     target.setDate(target.getDate() + 1);
   }
   return target.getTime() - now.getTime();
+}
+
+/** 특정 날짜 알람까지 남은 시간 계산 (ms) */
+export function msUntilSpecificDate(dateStr: string, hour: number, minute: number): number {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const target = new Date(y, m - 1, d, hour, minute, 0, 0);
+  return Math.max(0, target.getTime() - Date.now());
 }
 
 /** 요일 라벨 (한국어, 월=0) */

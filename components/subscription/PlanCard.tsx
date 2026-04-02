@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 interface PlanCardProps {
   title: string;
@@ -22,6 +23,7 @@ export function PlanCard({
   onPress,
 }: PlanCardProps) {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const styles = useMemo(
     () =>
       StyleSheet.create({
@@ -53,7 +55,7 @@ export function PlanCard({
     >
       {recommended && (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>★ 추천</Text>
+          <Text style={styles.badgeText}>{t('subscription.recommended')}</Text>
         </View>
       )}
       <Text style={styles.title}>{title}</Text>

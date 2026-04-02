@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { useThemeColors, typography } from '@/theme';
 import { layout } from '@/theme/spacing';
 import { AdBanner } from '@/components/common/AdBanner';
@@ -10,28 +11,18 @@ import { View, StyleSheet } from 'react-native';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
-const TAB_CONFIG: { name: string; title: string; iconFocused: IconName; iconDefault: IconName }[] =
-  [
-    { name: 'index', title: '홈', iconFocused: 'home', iconDefault: 'home-outline' },
-    {
-      name: 'mixer',
-      title: '믹서',
-      iconFocused: 'musical-notes',
-      iconDefault: 'musical-notes-outline',
-    },
-    { name: 'presets', title: '프리셋', iconFocused: 'albums', iconDefault: 'albums-outline' },
-    { name: 'alarms', title: '알람', iconFocused: 'alarm', iconDefault: 'alarm-outline' },
-    {
-      name: 'settings',
-      title: '설정',
-      iconFocused: 'settings',
-      iconDefault: 'settings-outline',
-    },
-  ];
+const TAB_KEYS = [
+  { name: 'index', key: 'tabs.home', iconFocused: 'home' as IconName, iconDefault: 'home-outline' as IconName },
+  { name: 'mixer', key: 'tabs.mixer', iconFocused: 'musical-notes' as IconName, iconDefault: 'musical-notes-outline' as IconName },
+  { name: 'presets', key: 'tabs.presets', iconFocused: 'albums' as IconName, iconDefault: 'albums-outline' as IconName },
+  { name: 'alarms', key: 'tabs.alarms', iconFocused: 'alarm' as IconName, iconDefault: 'alarm-outline' as IconName },
+  { name: 'settings', key: 'tabs.settings', iconFocused: 'settings' as IconName, iconDefault: 'settings-outline' as IconName },
+];
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
 
   const styles = useMemo(
     () =>
@@ -66,12 +57,12 @@ export default function TabLayout() {
           sceneStyle: { backgroundColor: 'transparent' },
         }}
       >
-        {TAB_CONFIG.map((tab) => (
+        {TAB_KEYS.map((tab) => (
           <Tabs.Screen
             key={tab.name}
             name={tab.name}
             options={{
-              title: tab.title,
+              title: t(tab.key),
               tabBarIcon: ({ focused, color }) => (
                 <Ionicons
                   name={focused ? tab.iconFocused : tab.iconDefault}

@@ -10,6 +10,7 @@ import { useAudio } from '@/hooks/useAudio';
 import { useTimerStore } from '@/stores/useTimerStore';
 import { useThemeColors, typography } from '@/theme';
 import { formatRemainingTime, getCurrentTimeString } from '@/utils/formatTime';
+import { useTranslation } from 'react-i18next';
 
 const SHOW_DURATION = 3000; // 3초 후 다시 어두워짐
 
@@ -18,6 +19,7 @@ export default function PlayingScreen() {
   const { isPlaying, stop, soundCount } = useAudio();
   const timer = useTimerStore();
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
 
   const [clock, setClock] = useState(getCurrentTimeString());
   const [timerText, setTimerText] = useState('');
@@ -106,7 +108,7 @@ export default function PlayingScreen() {
         >
           <Text style={styles.stopIcon}>■</Text>
         </Pressable>
-        <Text style={styles.stopHint}>길게 눌러서 정지</Text>
+        <Text style={styles.stopHint}>{t('playing.longPressToStop')}</Text>
       </Animated.View>
     </Pressable>
   );

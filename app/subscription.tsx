@@ -8,6 +8,7 @@ import { PlanCard } from '@/components/subscription/PlanCard';
 import { Button } from '@/components/ui/Button';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 interface PlanInfo {
   id: string;
@@ -17,17 +18,18 @@ interface PlanInfo {
   recommended?: boolean;
 }
 
-const PLANS: PlanInfo[] = [
-  { id: 'monthly', title: '월간', price: '₩3,900', period: '/월' },
-  { id: 'yearly', title: '연간', price: '₩29,900', period: '/년', recommended: true },
-  { id: 'lifetime', title: '평생', price: '₩79,900', period: '1회 결제' },
-];
-
 export default function SubscriptionScreen() {
   const router = useRouter();
   const { isPremium, packages, purchasing: isPurchasing, purchase, restore } = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState('yearly');
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
+
+  const PLANS: PlanInfo[] = [
+    { id: 'monthly', title: t('subscription.monthly'), price: t('subscription.monthlyPrice'), period: t('subscription.monthlyPeriod') },
+    { id: 'yearly', title: t('subscription.yearly'), price: t('subscription.yearlyPrice'), period: t('subscription.yearlyPeriod'), recommended: true },
+    { id: 'lifetime', title: t('subscription.lifetime'), price: t('subscription.lifetimePrice'), period: t('subscription.lifetimePeriod') },
+  ];
   const styles = useMemo(
     () =>
       StyleSheet.create({
@@ -72,7 +74,7 @@ export default function SubscriptionScreen() {
         <Image source={require('@/assets/images/logo/main_logo.png')} style={{ width: 100, height: 100 }} resizeMode="contain" />
 
         <Text style={styles.title}>Deep Sleep Premium</Text>
-        <Text style={styles.subtitle}>광고 없이 100가지 소리를 마음껏 즐기세요</Text>
+        <Text style={styles.subtitle}>{t('subscription.subtitle')}</Text>
 
         <BenefitList />
 
@@ -93,7 +95,7 @@ export default function SubscriptionScreen() {
 
         {/* Purchase */}
         <Button
-          title={isPurchasing ? '처리 중...' : '구독 시작하기'}
+          title={isPurchasing ? t('subscription.processing') : t('subscription.subscribe')}
           variant="primary"
           onPress={handlePurchase}
           disabled={isPurchasing}
@@ -101,13 +103,12 @@ export default function SubscriptionScreen() {
 
         {/* Restore */}
         <Pressable onPress={restore}>
-          <Text style={styles.restoreText}>이전 구매 복원</Text>
+          <Text style={styles.restoreText}>{t('subscription.restore')}</Text>
         </Pressable>
 
         {/* Legal */}
         <Text style={styles.legal}>
-          구독은 선택한 기간이 끝날 때 자동으로 갱신됩니다. 구독 기간이 끝나기 24시간 전까지
-          취소하지 않으면 자동으로 결제됩니다.
+          {t('subscription.legal')}
         </Text>
       </ScrollView>
     </SafeAreaView>

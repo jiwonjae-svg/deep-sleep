@@ -16,6 +16,7 @@ import { Slider } from '@/components/ui/Slider';
 import { ActiveSoundState, Frequency, SoundConfig } from '@/types';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
+import { useTranslation } from 'react-i18next';
 
 interface SoundDetailSheetProps {
   visible: boolean;
@@ -23,11 +24,13 @@ interface SoundDetailSheetProps {
   sound: SoundConfig | null;
 }
 
-const FREQUENCY_OPTIONS = ['연속', '자주', '가끔', '드물게'];
-const FREQUENCY_VALUES: Frequency[] = ['continuous', 'frequent', 'occasional', 'rare'];
-
 export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetProps) {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
+  const FREQUENCY_OPTIONS = [
+    t('frequency.continuous'), t('frequency.frequent'),
+    t('frequency.occasional'), t('frequency.rare'),
+  ];
   const activeSounds = useAudioStore((s) => s.activeSounds);
   const updateSoundState = useAudioStore((s) => s.updateSoundState);
   const removeSound = useAudioStore((s) => s.removeSound);
@@ -176,6 +179,7 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
   const state = activeSounds.get(sound.id);
   if (!state) return null;
 
+  const FREQUENCY_VALUES: Frequency[] = ['continuous', 'frequent', 'occasional', 'rare'];
   const isContinuous = sound.type === 'continuous';
   const freqIndex = FREQUENCY_VALUES.indexOf(state.frequency);
 
@@ -191,7 +195,7 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
           <ScrollView showsVerticalScrollIndicator={false}>
             {/* Header */}
             <View style={styles.header}>
-              <Text style={styles.name}>{sound.name}</Text>
+              <Text style={styles.name}>{t(`sounds.${sound.id}`, { defaultValue: sound.name })}</Text>
               <Pressable style={styles.closeBtn} onPress={handleClose}>
                 <Text style={styles.closeText}>✕</Text>
               </Pressable>
@@ -199,7 +203,7 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
 
             {/* Volume Range */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>음량 범위</Text>
+              <Text style={styles.sectionTitle}>{t('soundDetail.volumeRange')}</Text>
               <RangeSlider
                 min={state.volumeMin}
                 max={state.volumeMax}
@@ -210,7 +214,7 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
 
             {/* Frequency */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>빈도</Text>
+              <Text style={styles.sectionTitle}>{t('soundDetail.frequency')}</Text>
               <SegmentedControl
                 options={FREQUENCY_OPTIONS}
                 selectedIndex={freqIndex >= 0 ? freqIndex : 0}
@@ -218,14 +222,14 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
                 disabled={isContinuous}
               />
               {isContinuous && (
-                <Text style={styles.hint}>연속 소리는 항상 연속 재생됩니다</Text>
+                <Text style={styles.hint}>{t('soundDetail.continuousHint')}</Text>
               )}
             </View>
 
             {/* Pan (Premium) */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>팬 (좌/우)</Text>
+                <Text style={styles.sectionTitle}>{t('soundDetail.pan')}</Text>
                 {!isPremium && <Text style={styles.proLabel}>Pro</Text>}
               </View>
               <Slider
@@ -252,10 +256,10 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
                   handleClose();
                 }}
               >
-                <Text style={styles.removeText}>제거</Text>
+                <Text style={styles.removeText}>{t('soundDetail.remove')}</Text>
               </Pressable>
               <Pressable style={styles.doneBtn} onPress={handleClose}>
-                <Text style={styles.doneText}>완료</Text>
+                <Text style={styles.doneText}>{t('soundDetail.done')}</Text>
               </Pressable>
             </View>
           </ScrollView>

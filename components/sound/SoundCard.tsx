@@ -3,6 +3,7 @@ import { Text, Pressable, View, StyleSheet } from 'react-native';
 import { useThemeColors } from '@/theme';
 import { spacing } from '@/theme';
 import { SoundConfig } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 interface SoundCardProps {
   sound: SoundConfig;
@@ -25,6 +26,7 @@ export function SoundCard({
   categoryColor,
 }: SoundCardProps) {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
 
   const styles = useMemo(
     () =>
@@ -81,7 +83,7 @@ export function SoundCard({
         {isLocked && !active && <Text style={styles.lockOverlay}>🔒</Text>}
       </View>
       <Text style={styles.label} numberOfLines={2}>
-        {sound.name}
+        {t(`sounds.${sound.id}`, { defaultValue: sound.name })}
       </Text>
     </Pressable>
   );

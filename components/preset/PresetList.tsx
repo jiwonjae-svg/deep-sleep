@@ -3,6 +3,7 @@ import { View, Text, SectionList, StyleSheet } from 'react-native';
 import { Preset } from '@/types';
 import { PresetCard } from './PresetCard';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 interface PresetListProps {
   defaultPresets: Preset[];
@@ -18,6 +19,7 @@ export function PresetList({
   onPresetLongPress,
 }: PresetListProps) {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const styles = useMemo(
     () =>
       StyleSheet.create({
@@ -37,8 +39,8 @@ export function PresetList({
   );
 
   const sections = [
-    { title: '기본 프리셋', data: defaultPresets },
-    ...(customPresets.length > 0 ? [{ title: '내 프리셋', data: customPresets }] : []),
+    { title: t('presets.defaultSection'), data: defaultPresets },
+    ...(customPresets.length > 0 ? [{ title: t('presets.customSection'), data: customPresets }] : []),
   ];
 
   return (

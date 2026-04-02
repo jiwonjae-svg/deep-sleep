@@ -10,47 +10,49 @@ import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
 import * as BillingService from '@/services/BillingService';
 import { spacing, layout } from '@/theme';
+import { useTranslation } from 'react-i18next';
 import { AppLanguage, AudioQuality, VolumeChangeSpeed, ThemeMode, ThemeColor } from '@/types';
-
-const QUALITY_OPTIONS: OptionItem<AudioQuality>[] = [
-  { value: 'low', label: '낮음' },
-  { value: 'medium', label: '보통' },
-  { value: 'high', label: '높음' },
-];
-const QUALITY_LABELS: Record<AudioQuality, string> = { low: '낮음', medium: '보통', high: '높음' };
-
-const SPEED_OPTIONS: OptionItem<VolumeChangeSpeed>[] = [
-  { value: 'slow', label: '느림' },
-  { value: 'medium', label: '보통' },
-  { value: 'fast', label: '빠름' },
-];
-const SPEED_LABELS: Record<VolumeChangeSpeed, string> = { slow: '느림', medium: '보통', fast: '빠름' };
-
-const LANG_OPTIONS: OptionItem<AppLanguage>[] = [
-  { value: 'ko', label: '한국어' },
-  { value: 'en', label: 'English' },
-];
-const LANG_LABELS: Record<AppLanguage, string> = { ko: '한국어', en: 'English' };
-
-const THEME_COLORS: { value: ThemeColor; label: string }[] = [
-  { value: '#456eea', label: '블루' },
-  { value: '#8b5cf6', label: '퍼플' },
-  { value: '#a855f7', label: '바이올렛' },
-  { value: '#6366f1', label: '인디고' },
-  { value: '#ec4899', label: '핑크' },
-  { value: '#f43f5e', label: '로즈' },
-  { value: '#ef4444', label: '레드' },
-  { value: '#f97316', label: '오렌지' },
-  { value: '#eab308', label: '옐로' },
-  { value: '#22c55e', label: '그린' },
-  { value: '#14b8a6', label: '틸' },
-  { value: '#06b6d4', label: '시안' },
-];
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { settings, updateSettings } = useSettingsStore();
   const isPremium = useSubscriptionStore((s) => s.isPremium);
+  const { t } = useTranslation();
+
+  const QUALITY_OPTIONS: OptionItem<AudioQuality>[] = [
+    { value: 'low', label: t('settings.qualityLow') },
+    { value: 'medium', label: t('settings.qualityMedium') },
+    { value: 'high', label: t('settings.qualityHigh') },
+  ];
+  const QUALITY_LABELS: Record<AudioQuality, string> = { low: t('settings.qualityLow'), medium: t('settings.qualityMedium'), high: t('settings.qualityHigh') };
+
+  const SPEED_OPTIONS: OptionItem<VolumeChangeSpeed>[] = [
+    { value: 'slow', label: t('settings.speedSlow') },
+    { value: 'medium', label: t('settings.speedMedium') },
+    { value: 'fast', label: t('settings.speedFast') },
+  ];
+  const SPEED_LABELS: Record<VolumeChangeSpeed, string> = { slow: t('settings.speedSlow'), medium: t('settings.speedMedium'), fast: t('settings.speedFast') };
+
+  const LANG_OPTIONS: OptionItem<AppLanguage>[] = [
+    { value: 'ko', label: '한국어' },
+    { value: 'en', label: 'English' },
+  ];
+  const LANG_LABELS: Record<AppLanguage, string> = { ko: '한국어', en: 'English' };
+
+  const THEME_COLORS: { value: ThemeColor; label: string }[] = [
+    { value: '#456eea', label: t('colors.blue') },
+    { value: '#8b5cf6', label: t('colors.purple') },
+    { value: '#a855f7', label: t('colors.violet') },
+    { value: '#6366f1', label: t('colors.indigo') },
+    { value: '#ec4899', label: t('colors.pink') },
+    { value: '#f43f5e', label: t('colors.rose') },
+    { value: '#ef4444', label: t('colors.red') },
+    { value: '#f97316', label: t('colors.orange') },
+    { value: '#eab308', label: t('colors.yellow') },
+    { value: '#22c55e', label: t('colors.green') },
+    { value: '#14b8a6', label: t('colors.teal') },
+    { value: '#06b6d4', label: t('colors.cyan') },
+  ];
 
   const [qualityModalVisible, setQualityModalVisible] = useState(false);
   const [speedModalVisible, setSpeedModalVisible] = useState(false);
@@ -70,7 +72,7 @@ export default function SettingsScreen() {
             <View style={styles.themeSection}>
               <View style={styles.themeHeader}>
                 <MaterialIcons name="palette" size={20} color="rgba(255,255,255,0.7)" />
-                <Text style={[styles.rowLabel, { flex: 1 }]}>테마 컬러</Text>
+                <Text style={[styles.rowLabel, { flex: 1 }]}>{t('settings.themeColor')}</Text>
                 <Pressable onPress={() => setThemeColorModalVisible(true)}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: settings.themeColor || '#456eea' }} />
@@ -85,7 +87,7 @@ export default function SettingsScreen() {
             {/* Language */}
             <SettingRow
               icon="language"
-              label="언어"
+              label={t('settings.language')}
               rightText={LANG_LABELS[settings.language]}
               onPress={() => setLangModalVisible(true)}
             />
@@ -95,7 +97,7 @@ export default function SettingsScreen() {
             {/* Auto Brightness */}
             <View style={styles.row}>
               <MaterialIcons name="brightness-6" size={20} color="rgba(255,255,255,0.7)" />
-              <Text style={[styles.rowLabel, { flex: 1 }]}>자동 밝기 감소</Text>
+              <Text style={[styles.rowLabel, { flex: 1 }]}>{t('settings.autoDimBrightness')}</Text>
               <Toggle
                 value={settings.autoDimBrightness}
                 onValueChange={(v) => updateSettings({ autoDimBrightness: v })}
@@ -108,14 +110,14 @@ export default function SettingsScreen() {
           <View style={styles.group}>
             <SettingRow
               icon="music-note"
-              label="오디오 품질"
+              label={t('settings.audioQuality')}
               rightText={QUALITY_LABELS[settings.audioQuality]}
               onPress={() => setQualityModalVisible(true)}
             />
             <View style={styles.divider} />
             <SettingRow
               icon="tune"
-              label="음량 변화 속도"
+              label={t('settings.volumeChangeSpeed')}
               rightText={SPEED_LABELS[settings.volumeChangeSpeed]}
               onPress={() => setSpeedModalVisible(true)}
             />
@@ -130,7 +132,7 @@ export default function SettingsScreen() {
                 size={20}
                 color="#FFD700"
               />
-              <Text style={[styles.rowLabel, { flex: 1 }]}>구독 상태</Text>
+              <Text style={[styles.rowLabel, { flex: 1 }]}>{t('settings.subscriptionStatus')}</Text>
               <Pressable
                 style={styles.badge}
                 onPress={() => router.push('/subscription')}
@@ -141,7 +143,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
             <SettingRow
               icon="restore"
-              label="구매 복원"
+              label={t('settings.restorePurchases')}
               onPress={async () => {
                 await BillingService.restorePurchases();
               }}
@@ -151,19 +153,19 @@ export default function SettingsScreen() {
           {/* ────── INFO ────── */}
           <Text style={styles.sectionTitle}>INFO</Text>
           <View style={styles.group}>
-            <SettingRow icon="description" label="개인정보 처리방침" onPress={() => setPrivacyModalVisible(true)} />
+            <SettingRow icon="description" label={t('settings.privacyPolicy')} onPress={() => setPrivacyModalVisible(true)} />
             <View style={styles.divider} />
-            <SettingRow icon="article" label="이용약관" onPress={() => setTermsModalVisible(true)} />
+            <SettingRow icon="article" label={t('settings.termsOfService')} onPress={() => setTermsModalVisible(true)} />
             <View style={styles.divider} />
             <SettingRow
               icon="email"
-              label="문의하기"
+              label={t('settings.contact')}
               onPress={() => Linking.openURL('mailto:support@deepsleep.app')}
             />
             <View style={styles.divider} />
             <View style={styles.row}>
               <MaterialIcons name="info-outline" size={20} color="rgba(255,255,255,0.7)" />
-              <Text style={[styles.rowLabel, { flex: 1 }]}>앱 버전</Text>
+              <Text style={[styles.rowLabel, { flex: 1 }]}>{t('settings.appVersion')}</Text>
               <Text style={styles.rowValue}>v1.0.0</Text>
             </View>
           </View>
@@ -178,7 +180,7 @@ export default function SettingsScreen() {
         {/* Modals */}
         <OptionModal
           visible={qualityModalVisible}
-          title="오디오 품질"
+          title={t('settings.audioQuality')}
           options={QUALITY_OPTIONS}
           selected={settings.audioQuality}
           onSelect={(v) => updateSettings({ audioQuality: v })}
@@ -186,7 +188,7 @@ export default function SettingsScreen() {
         />
         <OptionModal
           visible={speedModalVisible}
-          title="음량 변화 속도"
+          title={t('settings.volumeChangeSpeed')}
           options={SPEED_OPTIONS}
           selected={settings.volumeChangeSpeed}
           onSelect={(v) => updateSettings({ volumeChangeSpeed: v })}
@@ -194,7 +196,7 @@ export default function SettingsScreen() {
         />
         <OptionModal
           visible={langModalVisible}
-          title="언어"
+          title={t('settings.language')}
           options={LANG_OPTIONS}
           selected={settings.language}
           onSelect={(v) => updateSettings({ language: v })}
@@ -261,6 +263,7 @@ function ThemeColorModal({
   onClose: () => void;
 }) {
   const [tempSelected, setTempSelected] = React.useState(selected);
+  const { t: tt } = useTranslation();
   React.useEffect(() => {
     if (visible) setTempSelected(selected);
   }, [visible, selected]);
@@ -276,7 +279,7 @@ function ThemeColorModal({
           borderColor: 'rgba(255,255,255,0.15)',
         }} onPress={(e) => e.stopPropagation()}>
           <Text style={{ fontSize: 18, fontWeight: '700', color: '#ffffff', textAlign: 'center', marginBottom: 20 }}>
-            테마 컬러
+            {tt('settings.themeColor')}
           </Text>
           <ScrollView
             horizontal
@@ -323,11 +326,11 @@ function ThemeColorModal({
             onPress={() => { onSelect(tempSelected); onClose(); }}
           >
             <Text style={{ fontSize: 12, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase', color: '#ffffff' }}>
-              확인
+              {tt('common.ok')}
             </Text>
           </Pressable>
           <Pressable style={{ marginTop: 8, paddingVertical: 10, alignItems: 'center' }} onPress={onClose}>
-            <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>취소</Text>
+            <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>{tt('common.cancel')}</Text>
           </Pressable>
         </Pressable>
       </Pressable>

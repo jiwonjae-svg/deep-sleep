@@ -38,13 +38,25 @@
     "goToMixer": "믹서에서 소리를 추가하세요",
     "timerLabel": "타이머",
     "minuteUnit": "분",
-    "soundUnit": "소리"
+    "soundUnit": "소리",
+    "sleepTimer": "수면 타이머",
+    "presetSelect": "프리셋 선택",
+    "tapToSelect": "탭하여 선택",
+    "masterVolume": "마스터 볼륨",
+    "hourMinLabel": "시간 : 분",
+    "minSecLabel": "분 : 초",
+    "alarmCountdown": "{{time}} 뒤에 알람이 울립니다"
   },
   "mixer": {
     "title": "사운드 믹서",
     "activeCount": "{{count}}/10 활성",
     "premiumRequired": "프리미엄 전용 소리입니다",
-    "maxReached": "최대 10개의 소리만 동시에 재생할 수 있습니다"
+    "maxReached": "최대 10개의 소리만 동시에 재생할 수 있습니다",
+    "dailyLimit": "일일 시도 한도",
+    "dailyLimitMessage": "AI 추천은 하루에 5번까지 사용할 수 있습니다.",
+    "aiError": "AI 추천에 실패했습니다. 다시 시도해주세요.",
+    "savedComplete": "저장 완료",
+    "savedMessage": "\"{{name}}\" 프리셋이 저장되었습니다."
   },
   "presets": {
     "title": "프리셋",
@@ -59,7 +71,9 @@
     "descPlaceholder": "이 프리셋에 대한 간단한 설명",
     "incluedSoundsCount": "포함된 소리 ({{count}})",
     "enterName": "이름을 입력해주세요",
-    "noActiveSounds": "활성화된 소리가 없습니다"
+    "noActiveSounds": "활성화된 소리가 없습니다",
+    "deleteTitle": "프리셋 삭제",
+    "searchPlaceholder": "프리셋 검색..."
   },
   "alarms": {
     "title": "알람",
@@ -82,7 +96,18 @@
     "hard": "어려움",
     "snoozeBtn": "{{min}}분 스누즈",
     "swipeToDismiss": "← 밀어서 해제 →",
-    "days": ["월", "화", "수", "목", "금", "토", "일"]
+    "days": ["월", "화", "수", "목", "금", "토", "일"],
+    "schedule": "일정",
+    "repeatDays": "요일 반복",
+    "specificDate": "특정 날짜",
+    "calendarFormat": "{{year}}년 {{month}}월",
+    "calendarWeekdays": ["일", "월", "화", "수", "목", "금", "토"],
+    "fadeLabels": ["꺼짐", "1분", "3분", "5분"],
+    "snoozeLabels": ["3분", "5분", "10분"],
+    "mathLabels": ["쉬움", "보통", "어려움"],
+    "countdownSuffix": "뒤에\n알람이 울립니다",
+    "searchPlaceholder": "알람 검색...",
+    "deleteAlarmTitle": "알람 삭제"
   },
   "playing": {
     "longPressToStop": "길게 눌러서 정지"
@@ -93,20 +118,24 @@
     "monthly": "월간",
     "yearly": "연간",
     "lifetime": "평생",
-    "monthlyPrice": "₩3,900/월",
-    "yearlyPrice": "₩29,900/년",
-    "lifetimePrice": "₩79,900 (1회 결제)",
     "subscribe": "구독 시작하기",
     "processing": "처리 중...",
     "restore": "이전 구매 복원",
     "legal": "구독은 선택한 기간이 끝날 때 자동으로 갱신됩니다. 구독 기간이 끝나기 24시간 전까지 취소하지 않으면 자동으로 결제됩니다.",
+    "recommended": "★ 추천",
+    "monthlyPrice": "₩3,900",
+    "monthlyPeriod": "/월",
+    "yearlyPrice": "₩29,900",
+    "yearlyPeriod": "/년",
+    "lifetimePrice": "₩79,900",
+    "lifetimePeriod": "1회 결제",
     "benefits": {
-      "allSounds": "모든 소리 잠금 해제",
-      "noAds": "광고 완전 제거",
-      "aiRecommend": "AI 수면 소리 추천",
+      "noAds": "모든 광고 제거",
+      "premiumSounds": "61개 프리미엄 소리",
       "unlimitedPresets": "무제한 프리셋 저장",
-      "highQuality": "고음질 오디오",
-      "prioritySupport": "우선 고객 지원"
+      "aiRecommend": "AI 사운드 추천",
+      "panControl": "팬(Pan) 조절",
+      "sleepStats": "상세 수면 통계"
     }
   },
   "settings": {
@@ -135,7 +164,12 @@
     "qualityHigh": "높음",
     "speedSlow": "느림",
     "speedMedium": "보통",
-    "speedFast": "빠름"
+    "speedFast": "빠름",
+    "themeColor": "테마 컬러",
+    "termsTitle": "이용약관",
+    "privacyTitle": "개인정보 처리방침",
+    "termsContent": "제1조 (목적)\n본 이용약관은 Deep Sleep(이하 \"앱\")이 제공하는 서비스의 이용에 관한 조건과 절차를 규정함을 목적으로 합니다.\n\n제2조 (서비스 이용)\n앱은 사용자에게 수면 사운드 믹싱, 알람, AI 수면 추천 등의 기능을 제공합니다. 사용자는 본 약관에 동의함으로써 서비스를 이용할 수 있습니다.\n\n제3조 (구독 및 결제)\n• 유료 구독(월간, 연간, 평생)을 통해 프리미엄 기능을 이용할 수 있습니다.\n• 구독은 선택한 기간이 종료되기 24시간 전까지 취소하지 않으면 자동으로 갱신됩니다.\n• 결제는 Google Play 계정을 통해 처리됩니다.\n• 구독을 취소하려면 Google Play 스토어 > 구독 메뉴에서 직접 취소해야 합니다.\n\n제4조 (환불 정책)\n환불은 Google Play 스토어의 환불 정책에 따릅니다. 앱 내에서 직접 환불을 처리할 수 없으며, Google Play 고객센터를 통해 환불을 요청할 수 있습니다.\n\n제5조 (개인정보 보호)\n앱은 사용자의 개인정보를 소중히 여기며, 개인정보 처리방침에 따라 처리합니다. 앱이 수집하는 정보는 앱 사용 통계 및 서비스 개선 목적으로만 사용됩니다.\n\n제6조 (서비스 변경 및 중단)\n앱은 서비스의 내용을 변경하거나 일시적으로 중단할 수 있습니다. 서비스 중단 시 사용자에게 사전 공지합니다.\n\n제7조 (면책 조항)\n앱은 사용자의 부주의로 인한 손해, 제3자의 침해 행위로 인한 손해, 천재지변으로 인한 서비스 중단에 대해 책임을 지지 않습니다.\n\n제8조 (준거법 및 관할)\n본 약관은 대한민국 법률에 따라 해석되며, 분쟁 발생 시 서울중앙지방법원을 전속 관할 법원으로 합니다.\n\n시행일: 2026년 3월 1일",
+    "privacyContent": "Deep Sleep(이하 \"앱\")은 사용자의 개인정보를 중요하게 생각하며, 아래와 같이 개인정보를 처리하고 있습니다.\n\n1. 수집하는 개인정보\n앱은 서비스 제공 및 개선을 위해 다음과 같은 정보를 수집할 수 있습니다.\n• 기기 정보: 기기 모델, 운영체제 버전, 앱 버전\n• 사용 통계: 앱 사용 패턴, 기능 사용 빈도 (비식별화된 형태)\n• 구독 정보: 결제 상태 (Google Play를 통해 처리)\n\n2. 개인정보의 이용 목적\n수집된 정보는 다음 목적으로 이용됩니다.\n• 앱 서비스 제공 및 유지\n• 앱 성능 개선 및 버그 수정\n• 구독 상태 관리\n• 사용자 경험 개선을 위한 분석\n\n3. 개인정보의 보관 및 파기\n• 앱 삭제 시 기기에 저장된 모든 데이터가 삭제됩니다.\n• 서버에 저장된 비식별 통계 데이터는 수집일로부터 1년 후 자동 삭제됩니다.\n\n4. 개인정보의 제3자 제공\n앱은 사용자의 개인정보를 제3자에게 제공하지 않습니다. 단, 법률에 따라 요구되는 경우에는 예외로 합니다.\n\n5. 광고\n무료 사용자에게 Google AdMob을 통해 광고가 표시될 수 있습니다. Google의 개인정보 처리방침은 Google의 약관을 따릅니다.\n\n6. 사용자의 권리\n사용자는 언제든지 앱 데이터를 삭제하거나, 앱을 삭제하여 개인정보 처리를 중단할 수 있습니다.\n\n7. 문의\n개인정보 관련 문의는 아래 이메일로 연락 부탁드립니다.\n이메일: support@deepsleep.app\n\n시행일: 2026년 3월 1일"
   },
   "ai": {
     "recommendTitle": "AI 추천",
@@ -143,8 +177,134 @@
     "recommend": "추천 받기",
     "premiumOnly": "프리미엄 전용 기능입니다",
     "rateLimitExceeded": "오늘의 추천 횟수를 모두 사용했습니다",
-    "apply": "적용하기",
+    "apply": "적용",
     "retry": "다시 추천",
-    "saveAsPreset": "프리셋으로 저장"
+    "saveAsPreset": "프리셋 저장",
+    "inputTitle": "AI 사운드 추천",
+    "inputSubtitle": "원하는 분위기나 기분을 설명해주세요",
+    "recommending": "추천 중..."
+  },
+  "soundType": {
+    "continuous": "연속 재생",
+    "intermittent": "간헐적"
+  },
+  "soundDetail": {
+    "volumeRange": "음량 범위",
+    "frequency": "빈도",
+    "pan": "팬 (좌/우)",
+    "continuousHint": "연속 소리는 항상 연속 재생됩니다",
+    "remove": "제거",
+    "done": "완료"
+  },
+  "frequency": {
+    "continuous": "연속",
+    "frequent": "자주",
+    "occasional": "가끔",
+    "rare": "드물게"
+  },
+  "presetEditor": {
+    "editTitle": "프리셋 수정",
+    "saveTitle": "프리셋 저장",
+    "includedSounds": "포함된 소리 ({{count}})",
+    "tapToAdd": "탭하여 소리 추가",
+    "imageSelect": "프리셋 이미지 선택 (선택)",
+    "presetName": "프리셋 이름",
+    "namePlaceholder": "예: 비오는 숲속",
+    "descLabel": "설명 (선택)",
+    "descPlaceholder": "이 프리셋에 대한 간단한 설명",
+    "saveBtn": "저장하기",
+    "soundEdit": "소리 편집",
+    "selectedCount": "{{count}}/10개 선택됨",
+    "soundSettings": "{{name}} 설정",
+    "permissionRequired": "권한 필요",
+    "permissionMessage": "이미지를 선택하려면 사진 라이브러리 접근 권한이 필요합니다."
+  },
+  "timer": {
+    "title": "타이머 설정",
+    "subtitle": "수면 & 집중 시간을 설정하세요",
+    "unlimited": "무제한",
+    "hourMin": "시간:분",
+    "minSec": "분:초",
+    "minuteFormat": "{{min}}분",
+    "customInput": "직접 입력",
+    "customLabel": "직접 설정:",
+    "customTime": "{{hours}}시간 {{minutes}}분",
+    "alarmSync": "알람까지",
+    "alarmRemaining": "{{time}} 남음",
+    "saveTimer": "타이머 저장",
+    "timeSetup": "시간 설정",
+    "hourLabel": "시간",
+    "minuteLabel": "분"
+  },
+  "format": {
+    "years": "{{n}}년",
+    "months": "{{n}}개월",
+    "days": "{{n}}일",
+    "hourMin": "{{h}}시간 {{m}}분",
+    "hourOnly": "{{h}}시간",
+    "minOnly": "{{m}}분",
+    "zeroMin": "0분"
+  },
+  "colors": {
+    "blue": "블루",
+    "purple": "퍼플",
+    "violet": "바이올렛",
+    "indigo": "인디고",
+    "pink": "핑크",
+    "rose": "로즈",
+    "red": "레드",
+    "orange": "오렌지",
+    "yellow": "옐로",
+    "green": "그린",
+    "teal": "틸",
+    "cyan": "시안"
+  },
+  "sounds": {
+    "rain-light": "가벼운 빗소리",
+    "thunder": "천둥번개",
+    "wave-gentle": "잔잔한 파도",
+    "wind-gentle": "부드러운 바람",
+    "birds-morning": "새소리 (아침)",
+    "crickets": "귀뚜라미",
+    "campfire": "모닥불",
+    "fireplace": "벽난로",
+    "cafe-chatter": "카페 잡담",
+    "white-noise": "화이트 노이즈",
+    "rain-car": "차 안 빗소리",
+    "owl": "올빼미",
+    "singing-bowl": "싱잉볼",
+    "jazz-piano": "재즈 피아노",
+    "cat-purr": "고양이 골골송"
+  },
+  "categories": {
+    "rain-water": "비 & 물",
+    "ocean-beach": "바다 & 해변",
+    "wind-weather": "바람 & 날씨",
+    "forest-nature": "숲 & 자연",
+    "fire-warmth": "불 & 따뜻함",
+    "indoor-ambient": "실내 & 일상",
+    "urban-transport": "도시 & 교통",
+    "musical-tonal": "음악 & 톤",
+    "special-environments": "특수 환경",
+    "seasonal-special": "계절 & 특별"
+  },
+  "defaultPresets": {
+    "preset-rain-night": "비 오는 밤",
+    "preset-rain-night-desc": "전형적인 비 오는 밤",
+    "preset-forest-night": "숲속의 밤",
+    "preset-forest-night-desc": "숲속 캠핑",
+    "preset-campfire": "캠프파이어",
+    "preset-campfire-desc": "캠핑장의 밤",
+    "preset-warm-fireplace": "따뜻한 벽난로",
+    "preset-warm-fireplace-desc": "따뜻한 실내에서 겨울 밤",
+    "preset-cafe": "카페",
+    "preset-cafe-desc": "카페 분위기 (수면+집중 겸용)"
+  },
+  "activeSoundsBar": {
+    "stop": "정지",
+    "play": "재생"
+  },
+  "loading": {
+    "preparing": "준비 중..."
   }
 }

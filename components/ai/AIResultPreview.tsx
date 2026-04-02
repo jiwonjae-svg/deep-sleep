@@ -4,6 +4,7 @@ import { AIPresetResult } from '@/types';
 import { getSoundById } from '@/data/sounds';
 import { Button } from '@/components/ui/Button';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 interface AIResultPreviewProps {
   result: AIPresetResult;
@@ -21,6 +22,7 @@ export function AIResultPreview({
   onCancel,
 }: AIResultPreviewProps) {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const styles = useMemo(
     () =>
       StyleSheet.create({
@@ -68,7 +70,7 @@ export function AIResultPreview({
             <View key={s.soundId} style={styles.soundRow}>
               <Text style={styles.emoji}>{meta.iconEmoji}</Text>
               <View style={styles.soundInfo}>
-                <Text style={styles.soundName}>{meta.name}</Text>
+                <Text style={styles.soundName}>{t(`sounds.${meta.id}`, { defaultValue: meta.name })}</Text>
                 <View style={styles.barBg}>
                   <View
                     style={[
@@ -93,12 +95,12 @@ export function AIResultPreview({
       </ScrollView>
 
       <View style={styles.actions}>
-        <Button title="적용" onPress={onApply} />
+        <Button title={t('ai.apply')} onPress={onApply} />
         <View style={styles.secondaryActions}>
-          <Button title="다시 추천" onPress={onRetry} variant="secondary" style={{ flex: 1 }} />
-          <Button title="프리셋 저장" onPress={onSaveAsPreset} variant="secondary" style={{ flex: 1 }} />
+          <Button title={t('ai.retry')} onPress={onRetry} variant="secondary" style={{ flex: 1 }} />
+          <Button title={t('ai.saveAsPreset')} onPress={onSaveAsPreset} variant="secondary" style={{ flex: 1 }} />
         </View>
-        <Button title="취소" onPress={onCancel} variant="ghost" />
+        <Button title={t('common.cancel')} onPress={onCancel} variant="ghost" />
       </View>
     </View>
   );

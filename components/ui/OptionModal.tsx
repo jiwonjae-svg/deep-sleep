@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 export interface OptionItem<T extends string = string> {
   value: T;
@@ -33,6 +34,7 @@ export function OptionModal<T extends string = string>({
   onClose,
 }: OptionModalProps<T>) {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const [tempSelected, setTempSelected] = useState<T>(selected);
 
   // Sync tempSelected when modal opens or selected changes
@@ -134,10 +136,10 @@ export function OptionModal<T extends string = string>({
             })}
           </View>
           <Pressable style={styles.confirmBtn} onPress={handleConfirm}>
-            <Text style={styles.confirmText}>확인</Text>
+            <Text style={styles.confirmText}>{t('common.ok')}</Text>
           </Pressable>
           <Pressable style={styles.cancelBtn} onPress={onClose}>
-            <Text style={styles.cancelText}>취소</Text>
+            <Text style={styles.cancelText}>{t('common.cancel')}</Text>
           </Pressable>
         </Pressable>
       </Pressable>

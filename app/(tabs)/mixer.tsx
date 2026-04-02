@@ -16,6 +16,7 @@ import { SoundCategory, SoundConfig, ActiveSoundState, AIPresetResult } from '@/
 import { getSoundsByCategory, getSoundById } from '@/data/sounds';
 import { categories, getCategoryById } from '@/data/categories';
 import { useThemeColors } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 // Material icon name for each category
 const CATEGORY_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
@@ -53,6 +54,7 @@ const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
 export default function MixerScreen() {
   const router = useRouter();
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const { activeSounds, activeSoundsMap, isPlaying, soundCount, toggleSound, play, stop } = useAudio();
   const { recommend, isLoading: aiLoading, isPremium, canCall } = useAI();
   const isSubscribed = useSubscriptionStore((s) => s.isPremium);
@@ -77,7 +79,7 @@ export default function MixerScreen() {
   const handleAIPress = useCallback(() => {
     if (!isPremium) { router.push('/subscription'); return; }
     if (!canCall) {
-      Alert.alert('일일 시도 한도', 'AI 추천은 하루에 5번까지 사용할 수 있습니다.');
+      Alert.alert(t('mixer.dailyLimit'), t('mixer.dailyLimitMessage'));
       return;
     }
     setAiSheetVisible(true);
@@ -87,7 +89,7 @@ export default function MixerScreen() {
     setAiSheetVisible(false);
     const result = await recommend(input);
     if (result) { setAiResult(result); setAiResultVisible(true); }
-    else Alert.alert('오류', 'AI 추천에 실패했습니다. 다시 시도해주세요.');
+    else Alert.alert(t('common.error'), t('mixer.aiError'));
   }, [recommend]);
 
   const handleAIApply = useCallback(() => {
@@ -119,7 +121,7 @@ export default function MixerScreen() {
     });
     setAiResultVisible(false);
     setAiResult(null);
-    Alert.alert('저장 완료', `"${aiResult.preset_name}" 프리셋이 저장되었습니다.`);
+    Alert.alert(t('mixer.savedComplete'), t('mixer.savedMessage', { name: aiResult.preset_name }));
   }, [aiResult]);
 
   const handleSoundToggle = useCallback(
@@ -146,7 +148,7 @@ export default function MixerScreen() {
         <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
           {/* Status Header */}
           <Text style={styles.statusLabel}>
-            사운드 믹서 {soundCount}/10 활성
+            {t('mixer.title')} {soundCount}/10 {t('mixer.activeCount', { count: soundCount }).split('/')[1]?.replace(/\d+\s*/, '') || ''}
           </Text>
 
           {/* Active Sounds Chip List */}
@@ -173,7 +175,7 @@ export default function MixerScreen() {
           <View style={styles.aiRow}>
             <Pressable style={styles.aiBtn} onPress={handleAIPress}>
               <MaterialIcons name="auto-awesome" size={18} color={themeColors.accent1} />
-              <Text style={styles.aiBtnText}>AI 추천</Text>
+              <Text style={styles.aiBtnText}>{t('ai.recommendTitle')}</Text>
               {!isPremium && (
                 <MaterialIcons name="lock" size={14} color="rgba(255,255,255,0.4)" />
               )}
@@ -217,7 +219,7 @@ export default function MixerScreen() {
                     />
                   </View>
                   <Text style={[styles.categoryLabel, isSelected && styles.categoryLabelActive]}>
-                    {cat.nameEn?.split(' ')[0]?.toUpperCase() ?? cat.name}
+                    {t(`categories.${cat.id}`, { defaultValue: cat.nameEn?.split(' ')[0]?.toUpperCase() ?? cat.name })}
                   </Text>
                 </Pressable>
               );
@@ -258,7 +260,7 @@ export default function MixerScreen() {
                         style={[styles.trackName, isLocked && { color: 'rgba(255,255,255,0.5)' }]}
                         numberOfLines={1}
                       >
-                        {sound.name}
+                        {t(`sounds.${sound.id}`, { defaultValue: sound.name })}
                       </Text>
                       {isLocked && (
                         <View style={[styles.premiumBadge, { backgroundColor: themeColors.accent1 }]}>
@@ -270,7 +272,7 @@ export default function MixerScreen() {
                       style={[styles.trackDesc, isLocked && { color: 'rgba(255,255,255,0.2)' }]}
                       numberOfLines={1}
                     >
-                      {sound.type === 'continuous' ? '연속 재생' : '간헐적'}
+                      {sound.type === 'continuous' ? t('soundType.continuous') : t('soundType.intermittent')}
                     </Text>
                   </View>
                   <View style={styles.trackActions}>

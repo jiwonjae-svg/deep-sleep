@@ -8,6 +8,7 @@ import { useAudio } from '@/hooks/useAudio';
 import { Preset } from '@/types';
 import { getSoundById } from '@/data/sounds';
 import { useThemeColors, spacing, layout } from '@/theme';
+import { useTranslation } from 'react-i18next';
 import * as AdService from '@/services/AdService';
 
 const PRESET_IMAGES: Record<string, ImageSourcePropType> = {
@@ -21,6 +22,7 @@ const PRESET_IMAGES: Record<string, ImageSourcePropType> = {
 export default function PresetsScreen() {
   const router = useRouter();
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const { applyPreset, soundCount } = useAudio();
   const { defaultPresets, customPresets, deletePreset } = usePresetStore();
   const allPresets = useMemo(
@@ -52,9 +54,9 @@ export default function PresetsScreen() {
 
   const handleDeletePreset = useCallback(
     (preset: Preset) => {
-      Alert.alert('프리셋 삭제', `"${preset.name}"을 삭제하시겠습니까?`, [
-        { text: '취소', style: 'cancel' },
-        { text: '삭제', style: 'destructive', onPress: () => deletePreset(preset.id) },
+      Alert.alert(t('presets.deleteTitle'), t('presets.deleteConfirm', { name: preset.name }), [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('common.delete'), style: 'destructive', onPress: () => deletePreset(preset.id) },
       ]);
     },
     [deletePreset],
@@ -78,7 +80,7 @@ export default function PresetsScreen() {
                 style={styles.searchInput}
                 value={searchText}
                 onChangeText={setSearchText}
-                placeholder="프리셋 검색..."
+                placeholder={t('presets.searchPlaceholder')}
                 placeholderTextColor="rgba(255,255,255,0.4)"
                 autoFocus
               />
@@ -107,7 +109,10 @@ export default function PresetsScreen() {
             const img = defaultImg ?? customImg;
             const soundNames = preset.sounds
               .slice(0, 4)
-              .map((s) => getSoundById(s.soundId)?.name ?? s.soundId);
+              .map((s) => {
+                const snd = getSoundById(s.soundId);
+                return snd ? t(`sounds.${snd.id}`, { defaultValue: snd.name }) : s.soundId;
+              });
             const extra = preset.sounds.length - 4;
 
             return (
@@ -141,10 +146,10 @@ export default function PresetsScreen() {
                 )}
                 {/* Glass content overlay */}
                 <View style={styles.cardContent}>
-                  <Text style={styles.cardName}>{preset.name}</Text>
-                  {!!preset.description && (
+                  <Text style={styles.cardName}>{preset.isDefault ? t(`defaultPresets.${preset.id}`, { defaultValue: preset.name }) : preset.name}</Text>
+                  {!!(preset.isDefault ? t(`defaultPresets.${preset.id}-desc`, { defaultValue: preset.description }) : preset.description) && (
                     <Text style={styles.cardDesc} numberOfLines={2}>
-                      {preset.description}
+                      {preset.isDefault ? t(`defaultPresets.${preset.id}-desc`, { defaultValue: preset.description }) : preset.description}
                     </Text>
                   )}
                   <View style={styles.chipRow}>

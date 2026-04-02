@@ -17,7 +17,8 @@ import { Slider } from '@/components/ui/Slider';
 import { TimerModal } from '@/components/ui/TimerModal';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useThemeColors, spacing, layout } from '@/theme';
-import { formatRemainingTimeLong, formatTimerPrecise, msUntilAlarm } from '@/utils/formatTime';
+import { useTranslation } from 'react-i18next';
+import { formatRemainingTimeLong, formatTimerPrecise, msUntilAlarm, msUntilSpecificDate } from '@/utils/formatTime';
 import { Preset } from '@/types';
 
 // 프리셋 ID → 이미지 매핑
@@ -31,6 +32,7 @@ const PRESET_IMAGES: Record<string, ImageSourcePropType> = {
 
 export default function HomeScreen() {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const {
     isPlaying,
     masterVolume,
@@ -81,7 +83,7 @@ export default function HomeScreen() {
   const timerPrecise = formatTimerPrecise(timerRemaining);
   const isUnlimited = timer.isActive && timer.durationMinutes >= 99999;
   const timerUnitLabel = timerRemaining > 0 && !isUnlimited
-    ? (timerRemaining >= 3600000 ? '시간 : 분' : '분 : 초')
+    ? (timerRemaining >= 3600000 ? t('home.hourMinLabel') : t('home.minSecLabel'))
     : '';
 
   // Progress for circular ring (0 to 1)
@@ -95,7 +97,10 @@ export default function HomeScreen() {
   const nextAlarm = alarms
     .filter((a) => a.enabled)
     .reduce<{ alarm: typeof alarms[0]; ms: number } | null>((best, a) => {
-      const ms = msUntilAlarm(a.time.hour, a.time.minute);
+      const ms = a.specificDate
+        ? msUntilSpecificDate(a.specificDate, a.time.hour, a.time.minute)
+        : msUntilAlarm(a.time.hour, a.time.minute);
+      if (ms <= 0) return best;
       if (!best || ms < best.ms) return { alarm: a, ms };
       return best;
     }, null);
@@ -105,14 +110,16 @@ export default function HomeScreen() {
     if (!nextAlarm) { setAlarmMs(0); return; }
     setAlarmMs(nextAlarm.ms);
     const id = setInterval(() => {
-      const ms = msUntilAlarm(nextAlarm.alarm.time.hour, nextAlarm.alarm.time.minute);
+      const ms = nextAlarm.alarm.specificDate
+        ? msUntilSpecificDate(nextAlarm.alarm.specificDate, nextAlarm.alarm.time.hour, nextAlarm.alarm.time.minute)
+        : msUntilAlarm(nextAlarm.alarm.time.hour, nextAlarm.alarm.time.minute);
       setAlarmMs(ms);
     }, 60_000);
     return () => clearInterval(id);
   }, [nextAlarm?.alarm?.id]);
 
   const alarmCountdownText = nextAlarm
-    ? `${formatRemainingTimeLong(alarmMs || nextAlarm.ms)} 뒤에 알람이 울립니다`
+    ? t('home.alarmCountdown', { time: formatRemainingTimeLong(alarmMs || nextAlarm.ms) })
     : null;
 
   // Colon blink animation
@@ -234,7 +241,7 @@ export default function HomeScreen() {
               {timerUnitLabel ? (
                 <Text style={styles.timerLabel}>{timerUnitLabel}</Text>
               ) : (
-                <Text style={styles.timerLabel}>수면 타이머</Text>
+                <Text style={styles.timerLabel}>{t('home.sleepTimer')}</Text>
               )}
             </View>
           </View>
@@ -252,10 +259,10 @@ export default function HomeScreen() {
             onPress={() => setPresetPickerVisible(true)}
           >
             <Text style={styles.nowPlayingName} numberOfLines={1}>
-              {currentPreset?.name ?? '프리셋 선택'}
+              {currentPreset ? (currentPreset.isDefault ? t(`defaultPresets.${currentPreset.id}`, { defaultValue: currentPreset.name }) : currentPreset.name) : t('home.presetSelect')}
             </Text>
             <Text style={styles.nowPlayingDesc} numberOfLines={1}>
-              {currentPreset?.description ?? '탭하여 선택'}
+              {currentPreset ? (currentPreset.isDefault ? t(`defaultPresets.${currentPreset.id}-desc`, { defaultValue: currentPreset.description }) : currentPreset.description) : t('home.tapToSelect')}
             </Text>
           </Pressable>
           <Animated.View style={{ transform: [{ scale }] }}>
@@ -277,7 +284,7 @@ export default function HomeScreen() {
 
         {/* Master Volume — glass panel */}
         <View style={styles.volumePanel}>
-          <Text style={styles.volumeLabel}>마스터 볼륨</Text>
+          <Text style={styles.volumeLabel}>{t('home.masterVolume')}</Text>
           <View style={styles.volumeRow}>
             <MaterialIcons name="volume-down" size={20} color="rgba(255,255,255,0.7)" />
             <View style={{ flex: 1 }}>
@@ -305,7 +312,7 @@ export default function HomeScreen() {
         onClose={() => setPresetPickerVisible(false)}
         maxHeightPct={0.6}
       >
-        <Text style={styles.pickerTitle}>프리셋 선택</Text>
+        <Text style={styles.pickerTitle}>{t('home.presetSelect')}</Text>
         <FlatList
           data={allPresets}
           keyExtractor={(item) => item.id}
@@ -331,9 +338,9 @@ export default function HomeScreen() {
                 <View style={[styles.pickerItemImage, { backgroundColor: 'rgba(255,255,255,0.08)' }]} />
               )}
               <View style={{ flex: 1 }}>
-                <Text style={styles.pickerItemName}>{item.name}</Text>
+                <Text style={styles.pickerItemName}>{item.isDefault ? t(`defaultPresets.${item.id}`, { defaultValue: item.name }) : item.name}</Text>
                 <Text style={styles.pickerItemDesc} numberOfLines={1}>
-                  {item.description}
+                  {item.isDefault ? t(`defaultPresets.${item.id}-desc`, { defaultValue: item.description }) : item.description}
                 </Text>
               </View>
               {index === selectedPresetIndex && (

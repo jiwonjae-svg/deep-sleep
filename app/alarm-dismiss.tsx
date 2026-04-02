@@ -13,6 +13,7 @@ import { MathProblemView } from '@/components/alarm/MathProblem';
 import { Button } from '@/components/ui/Button';
 import { generateMathProblem } from '@/utils/mathProblem';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
+import { useTranslation } from 'react-i18next';
 import { MathDifficulty } from '@/types';
 
 export default function AlarmDismissScreen() {
@@ -21,6 +22,7 @@ export default function AlarmDismissScreen() {
   const { snooze } = useAlarm();
   const alarms = useAlarmStore((s) => s.alarms);
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
 
   const alarm = alarms.find((a) => a.id === params.alarmId) ?? alarms[0];
 
@@ -110,7 +112,7 @@ export default function AlarmDismissScreen() {
       ) : (
         <GestureDetector gesture={pan}>
           <Animated.View style={[styles.swipeArea, { transform: [{ translateX }] }]}>
-            <Text style={styles.swipeText}>← 밀어서 해제 →</Text>
+            <Text style={styles.swipeText}>{t('alarms.swipeToDismiss')}</Text>
           </Animated.View>
         </GestureDetector>
       )}
@@ -118,7 +120,7 @@ export default function AlarmDismissScreen() {
       {/* Snooze */}
       <View style={styles.snoozeArea}>
         <Button
-          title={`${alarm?.snoozeMinutes ?? 5}분 스누즈`}
+          title={t('alarms.snoozeBtn', { min: alarm?.snoozeMinutes ?? 5 })}
           variant="secondary"
           onPress={async () => {
             if (alarm) {

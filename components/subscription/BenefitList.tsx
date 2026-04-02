@@ -2,18 +2,19 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useThemeColors, typography, spacing } from '@/theme';
-
-const BENEFITS = [
-  '모든 광고 제거',
-  '61개 프리미엄 소리',
-  '무제한 프리셋 저장',
-  'AI 사운드 추천',
-  '팬(Pan) 조절',
-  '상세 수면 통계',
-];
+import { useTranslation } from 'react-i18next';
 
 export function BenefitList() {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
+  const BENEFITS = [
+    t('subscription.benefits.noAds'),
+    t('subscription.benefits.premiumSounds'),
+    t('subscription.benefits.unlimitedPresets'),
+    t('subscription.benefits.aiRecommend'),
+    t('subscription.benefits.panControl'),
+    t('subscription.benefits.sleepStats'),
+  ];
   const styles = useMemo(
     () =>
       StyleSheet.create({

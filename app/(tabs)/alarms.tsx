@@ -6,15 +6,16 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useAlarm } from '@/hooks/useAlarm';
 import { Toggle } from '@/components/ui/Toggle';
 import { useThemeColors, spacing, layout } from '@/theme';
-import { msUntilAlarm, formatRemainingTimeLong } from '@/utils/formatTime';
+import { useTranslation } from 'react-i18next';
+import { msUntilAlarm, msUntilSpecificDate, formatRemainingTimeLong } from '@/utils/formatTime';
 import { Alarm } from '@/types';
-
-const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
 
 export default function AlarmsScreen() {
   const router = useRouter();
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const { alarms, toggleAlarm } = useAlarm();
+  const DAY_LABELS = t('alarms.days', { returnObjects: true }) as string[];
 
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -32,12 +33,15 @@ export default function AlarmsScreen() {
     const active = alarms.filter((a) => a.enabled);
     if (active.length === 0) return null;
     const best = active.reduce<{ ms: number; label: string } | null>((acc, a) => {
-      const ms = msUntilAlarm(a.time.hour, a.time.minute);
+      const ms = a.specificDate
+        ? msUntilSpecificDate(a.specificDate, a.time.hour, a.time.minute)
+        : msUntilAlarm(a.time.hour, a.time.minute);
+      if (ms <= 0) return acc;
       if (!acc || ms < acc.ms) return { ms, label: formatRemainingTimeLong(ms) };
       return acc;
     }, null);
-    return best ? `${best.label} 뒤에\n알람이 울립니다` : null;
-  }, [alarms]);
+    return best ? `${best.label} ${t('alarms.countdownSuffix')}` : null;
+  }, [alarms, t]);
 
   const [nextAlarmText, setNextAlarmText] = useState(computeNextAlarm);
   useEffect(() => {
@@ -117,7 +121,7 @@ export default function AlarmsScreen() {
                 style={styles.searchInput}
                 value={searchText}
                 onChangeText={setSearchText}
-                placeholder="알람 검색..."
+                placeholder={t('alarms.searchPlaceholder')}
                 placeholderTextColor="rgba(255,255,255,0.4)"
                 autoFocus
               />
@@ -142,8 +146,8 @@ export default function AlarmsScreen() {
               style={styles.emptyImage}
               resizeMode="contain"
             />
-            <Text style={styles.emptyText}>설정된 알람이 없습니다</Text>
-            <Text style={styles.emptyHint}>우하단 + 버튼으로 알람을 추가해주세요</Text>
+            <Text style={styles.emptyText}>{t('alarms.empty')}</Text>
+            <Text style={styles.emptyHint}>{t('alarms.emptyHint')}</Text>
           </View>
         ) : (
           <FlatList

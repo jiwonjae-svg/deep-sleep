@@ -38,13 +38,25 @@
     "goToMixer": "Add sounds from the mixer",
     "timerLabel": "Timer",
     "minuteUnit": "min",
-    "soundUnit": "sounds"
+    "soundUnit": "sounds",
+    "sleepTimer": "Sleep Timer",
+    "presetSelect": "Select Preset",
+    "tapToSelect": "Tap to select",
+    "masterVolume": "Master Volume",
+    "hourMinLabel": "hour : min",
+    "minSecLabel": "min : sec",
+    "alarmCountdown": "Alarm in {{time}}"
   },
   "mixer": {
     "title": "Sound Mixer",
     "activeCount": "{{count}}/10 active",
     "premiumRequired": "This sound requires Premium",
-    "maxReached": "You can play up to 10 sounds simultaneously"
+    "maxReached": "You can play up to 10 sounds simultaneously",
+    "dailyLimit": "Daily Limit",
+    "dailyLimitMessage": "AI recommendations are limited to 5 per day.",
+    "aiError": "AI recommendation failed. Please try again.",
+    "savedComplete": "Saved",
+    "savedMessage": "\"{{name}}\" preset has been saved."
   },
   "presets": {
     "title": "Presets",
@@ -59,7 +71,9 @@
     "descPlaceholder": "A brief description of this preset",
     "incluedSoundsCount": "Included sounds ({{count}})",
     "enterName": "Please enter a name",
-    "noActiveSounds": "No active sounds"
+    "noActiveSounds": "No active sounds",
+    "deleteTitle": "Delete Preset",
+    "searchPlaceholder": "Search presets..."
   },
   "alarms": {
     "title": "Alarms",
@@ -82,7 +96,18 @@
     "hard": "Hard",
     "snoozeBtn": "{{min}}m Snooze",
     "swipeToDismiss": "← Swipe to dismiss →",
-    "days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    "days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    "schedule": "Schedule",
+    "repeatDays": "Repeat Days",
+    "specificDate": "Specific Date",
+    "calendarFormat": "{{month}} {{year}}",
+    "calendarWeekdays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    "fadeLabels": ["Off", "1min", "3min", "5min"],
+    "snoozeLabels": ["3min", "5min", "10min"],
+    "mathLabels": ["Easy", "Medium", "Hard"],
+    "countdownSuffix": "until\nalarm rings",
+    "searchPlaceholder": "Search alarms...",
+    "deleteAlarmTitle": "Delete Alarm"
   },
   "playing": {
     "longPressToStop": "Long press to stop"
@@ -93,20 +118,24 @@
     "monthly": "Monthly",
     "yearly": "Yearly",
     "lifetime": "Lifetime",
-    "monthlyPrice": "$2.99/mo",
-    "yearlyPrice": "$19.99/yr",
-    "lifetimePrice": "$49.99 (one-time)",
     "subscribe": "Subscribe Now",
     "processing": "Processing...",
     "restore": "Restore Purchases",
     "legal": "Subscriptions auto-renew at the end of each period. You will be charged unless you cancel at least 24 hours before the renewal date.",
+    "recommended": "★ Best",
+    "monthlyPrice": "$2.99",
+    "monthlyPeriod": "/mo",
+    "yearlyPrice": "$19.99",
+    "yearlyPeriod": "/yr",
+    "lifetimePrice": "$49.99",
+    "lifetimePeriod": "one-time",
     "benefits": {
-      "allSounds": "Unlock all sounds",
       "noAds": "Remove all ads",
-      "aiRecommend": "AI sleep sound recommendations",
+      "premiumSounds": "61 premium sounds",
       "unlimitedPresets": "Unlimited preset saves",
-      "highQuality": "High quality audio",
-      "prioritySupport": "Priority support"
+      "aiRecommend": "AI sound recommendations",
+      "panControl": "Pan control",
+      "sleepStats": "Detailed sleep stats"
     }
   },
   "settings": {
@@ -135,7 +164,12 @@
     "qualityHigh": "High",
     "speedSlow": "Slow",
     "speedMedium": "Medium",
-    "speedFast": "Fast"
+    "speedFast": "Fast",
+    "themeColor": "Theme Color",
+    "termsTitle": "Terms of Service",
+    "privacyTitle": "Privacy Policy",
+    "termsContent": "Article 1 (Purpose)\nThese Terms of Service set forth the conditions and procedures for using the services provided by Deep Sleep (hereinafter \"App\").\n\nArticle 2 (Use of Services)\nThe App provides users with features such as sleep sound mixing, alarms, and AI sleep recommendations. By agreeing to these terms, users may use the services.\n\nArticle 3 (Subscriptions and Payments)\n• Premium features are available through paid subscriptions (monthly, yearly, lifetime).\n• Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period.\n• Payments are processed through your Google Play account.\n• To cancel a subscription, go to Google Play Store > Subscriptions.\n\nArticle 4 (Refund Policy)\nRefunds are subject to Google Play Store's refund policy. Refunds cannot be processed within the app; please contact Google Play Customer Support.\n\nArticle 5 (Privacy)\nThe App values your privacy and processes personal information in accordance with its Privacy Policy. Information collected is used solely for usage statistics and service improvement.\n\nArticle 6 (Service Changes and Interruptions)\nThe App may modify or temporarily suspend services. Users will be notified in advance of any service interruptions.\n\nArticle 7 (Disclaimer)\nThe App is not liable for damages caused by user negligence, third-party infringement, or service interruptions due to force majeure.\n\nArticle 8 (Governing Law and Jurisdiction)\nThese terms are governed by the laws of the Republic of Korea. Any disputes shall be under the exclusive jurisdiction of the Seoul Central District Court.\n\nEffective Date: March 1, 2026",
+    "privacyContent": "Deep Sleep (hereinafter \"App\") takes your privacy seriously and processes personal information as follows.\n\n1. Personal Information Collected\nThe App may collect the following information to provide and improve services:\n• Device information: device model, OS version, app version\n• Usage statistics: app usage patterns, feature usage frequency (in de-identified form)\n• Subscription information: payment status (processed through Google Play)\n\n2. Purpose of Use\nCollected information is used for the following purposes:\n• Providing and maintaining app services\n• Improving app performance and fixing bugs\n• Managing subscription status\n• Analysis for improving user experience\n\n3. Retention and Disposal\n• All data stored on the device is deleted when the app is uninstalled.\n• De-identified statistical data stored on servers is automatically deleted one year after collection.\n\n4. Third-Party Disclosure\nThe App does not provide personal information to third parties, except as required by law.\n\n5. Advertising\nAds may be displayed to free users through Google AdMob. Google's privacy policy applies to Google's terms.\n\n6. User Rights\nUsers may delete app data or uninstall the app at any time to stop personal information processing.\n\n7. Contact\nFor privacy-related inquiries, please contact us at the email below.\nEmail: support@deepsleep.app\n\nEffective Date: March 1, 2026"
   },
   "ai": {
     "recommendTitle": "AI Recommendation",
@@ -145,6 +179,132 @@
     "rateLimitExceeded": "Daily recommendation limit reached",
     "apply": "Apply",
     "retry": "Try Again",
-    "saveAsPreset": "Save as Preset"
+    "saveAsPreset": "Save as Preset",
+    "inputTitle": "AI Sound Recommendation",
+    "inputSubtitle": "Describe the mood or atmosphere you want",
+    "recommending": "Recommending..."
+  },
+  "soundType": {
+    "continuous": "Continuous",
+    "intermittent": "Intermittent"
+  },
+  "soundDetail": {
+    "volumeRange": "Volume Range",
+    "frequency": "Frequency",
+    "pan": "Pan (L/R)",
+    "continuousHint": "Continuous sounds always play continuously",
+    "remove": "Remove",
+    "done": "Done"
+  },
+  "frequency": {
+    "continuous": "Continuous",
+    "frequent": "Frequent",
+    "occasional": "Occasional",
+    "rare": "Rare"
+  },
+  "presetEditor": {
+    "editTitle": "Edit Preset",
+    "saveTitle": "Save Preset",
+    "includedSounds": "Included sounds ({{count}})",
+    "tapToAdd": "Tap to add sounds",
+    "imageSelect": "Select preset image (optional)",
+    "presetName": "Preset Name",
+    "namePlaceholder": "e.g., Rainy Forest",
+    "descLabel": "Description (optional)",
+    "descPlaceholder": "A brief description of this preset",
+    "saveBtn": "Save",
+    "soundEdit": "Edit Sounds",
+    "selectedCount": "{{count}}/10 selected",
+    "soundSettings": "{{name}} Settings",
+    "permissionRequired": "Permission Required",
+    "permissionMessage": "Photo library access is required to select an image."
+  },
+  "timer": {
+    "title": "Timer Settings",
+    "subtitle": "Set your sleep & focus time",
+    "unlimited": "Unlimited",
+    "hourMin": "hour:min",
+    "minSec": "min:sec",
+    "minuteFormat": "{{min}}min",
+    "customInput": "Custom",
+    "customLabel": "Custom:",
+    "customTime": "{{hours}}h {{minutes}}m",
+    "alarmSync": "Until alarm",
+    "alarmRemaining": "{{time}} left",
+    "saveTimer": "Save Timer",
+    "timeSetup": "Set Time",
+    "hourLabel": "Hours",
+    "minuteLabel": "Minutes"
+  },
+  "format": {
+    "years": "{{n}}yr",
+    "months": "{{n}}mo",
+    "days": "{{n}}d",
+    "hourMin": "{{h}}h {{m}}m",
+    "hourOnly": "{{h}}h",
+    "minOnly": "{{m}}m",
+    "zeroMin": "0m"
+  },
+  "colors": {
+    "blue": "Blue",
+    "purple": "Purple",
+    "violet": "Violet",
+    "indigo": "Indigo",
+    "pink": "Pink",
+    "rose": "Rose",
+    "red": "Red",
+    "orange": "Orange",
+    "yellow": "Yellow",
+    "green": "Green",
+    "teal": "Teal",
+    "cyan": "Cyan"
+  },
+  "sounds": {
+    "rain-light": "Light Rain",
+    "thunder": "Thunder",
+    "wave-gentle": "Gentle Waves",
+    "wind-gentle": "Gentle Wind",
+    "birds-morning": "Morning Birds",
+    "crickets": "Crickets",
+    "campfire": "Campfire",
+    "fireplace": "Fireplace",
+    "cafe-chatter": "Café Chatter",
+    "white-noise": "White Noise",
+    "rain-car": "Rain on Car",
+    "owl": "Owl",
+    "singing-bowl": "Singing Bowl",
+    "jazz-piano": "Jazz Piano",
+    "cat-purr": "Cat Purring"
+  },
+  "categories": {
+    "rain-water": "Rain & Water",
+    "ocean-beach": "Ocean & Beach",
+    "wind-weather": "Wind & Weather",
+    "forest-nature": "Forest & Nature",
+    "fire-warmth": "Fire & Warmth",
+    "indoor-ambient": "Indoor & Ambient",
+    "urban-transport": "Urban & Transport",
+    "musical-tonal": "Musical & Tonal",
+    "special-environments": "Special",
+    "seasonal-special": "Seasonal"
+  },
+  "defaultPresets": {
+    "preset-rain-night": "Rainy Night",
+    "preset-rain-night-desc": "Classic rainy night",
+    "preset-forest-night": "Forest Night",
+    "preset-forest-night-desc": "Forest camping",
+    "preset-campfire": "Campfire",
+    "preset-campfire-desc": "Night at the campsite",
+    "preset-warm-fireplace": "Warm Fireplace",
+    "preset-warm-fireplace-desc": "Cozy winter night indoors",
+    "preset-cafe": "Café",
+    "preset-cafe-desc": "Café ambience (sleep & focus)"
+  },
+  "activeSoundsBar": {
+    "stop": "Stop",
+    "play": "Play"
+  },
+  "loading": {
+    "preparing": "Loading..."
   }
 }

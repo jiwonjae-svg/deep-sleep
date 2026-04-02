@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { useThemeColors, typography, spacing } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 interface AIRecommendButtonProps {
   isPremium: boolean;
@@ -9,6 +10,7 @@ interface AIRecommendButtonProps {
 
 export function AIRecommendButton({ isPremium, onPress }: AIRecommendButtonProps) {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const styles = useMemo(
     () =>
       StyleSheet.create({
@@ -36,7 +38,7 @@ export function AIRecommendButton({ isPremium, onPress }: AIRecommendButtonProps
       style={({ pressed }) => [styles.btn, { opacity: pressed ? 0.8 : 1 }]}
     >
       <Text style={styles.icon}>✨</Text>
-      <Text style={styles.label}>AI 추천</Text>
+      <Text style={styles.label}>{t('ai.recommendTitle')}</Text>
       {!isPremium && <Text style={styles.lock}>🔒</Text>}
     </Pressable>
   );

@@ -1,8 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useThemeColors, typography, spacing } from '@/theme';
-
-const LABELS = ['월', '화', '수', '목', '금', '토', '일'];
+import { useTranslation } from 'react-i18next';
 
 interface DaySelectorProps {
   days: boolean[];
@@ -11,6 +10,8 @@ interface DaySelectorProps {
 
 export function DaySelector({ days, onChange }: DaySelectorProps) {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
+  const LABELS = t('alarms.days', { returnObjects: true }) as string[];
   const styles = useMemo(
     () =>
       StyleSheet.create({

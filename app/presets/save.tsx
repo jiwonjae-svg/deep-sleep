@@ -13,6 +13,7 @@ import { Slider } from '@/components/ui/Slider';
 import { getSoundById, getSoundsByCategory, sounds as allSounds } from '@/data/sounds';
 import { categories } from '@/data/categories';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
+import { useTranslation } from 'react-i18next';
 import { ActiveSoundState, SoundCategory, SoundConfig } from '@/types';
 
 // Same icon mappings as mixer page
@@ -64,6 +65,7 @@ export default function PresetSaveScreen() {
   const [description, setDescription] = useState(existingPreset?.description ?? '');
   const [imageUri, setImageUri] = useState<string | null>(existingPreset?.imageUri ?? null);
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const isSubscribed = useSubscriptionStore((s) => s.isPremium);
 
   const initialSounds = isEditing && existingPreset
@@ -76,7 +78,10 @@ export default function PresetSaveScreen() {
   const [editorCategory, setEditorCategory] = useState<SoundCategory>('rain-water');
   const [detailSoundId, setDetailSoundId] = useState<string | null>(null);
 
-  const FREQ_OPTIONS = ['연속', '자주', '가끔', '드물게'];
+  const FREQ_OPTIONS = [
+    t('frequency.continuous'), t('frequency.frequent'),
+    t('frequency.occasional'), t('frequency.rare'),
+  ];
   const FREQ_VALUES: ('continuous' | 'frequent' | 'occasional' | 'rare')[] = ['continuous', 'frequent', 'occasional', 'rare'];
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -99,7 +104,7 @@ export default function PresetSaveScreen() {
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('권한 필요', '이미지를 선택하려면 사진 라이브러리 접근 권한이 필요합니다.');
+      Alert.alert(t('presetEditor.permissionRequired'), t('presetEditor.permissionMessage'));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -116,11 +121,11 @@ export default function PresetSaveScreen() {
   const handleSave = () => {
     const trimmed = name.trim();
     if (!trimmed) {
-      Alert.alert('이름을 입력해주세요');
+      Alert.alert(t('presets.enterName'));
       return;
     }
     if (soundsList.length === 0) {
-      Alert.alert('활성화된 소리가 없습니다');
+      Alert.alert(t('presets.noActiveSounds'));
       return;
     }
 
@@ -156,7 +161,7 @@ export default function PresetSaveScreen() {
       <Pressable style={StyleSheet.absoluteFill} onPress={() => animateClose(() => router.back())} />
       <Animated.View style={[styles.dialog, { transform: [{ scale: scaleAnim }] }]}>
         <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <Text style={styles.title}>{isEditing ? '프리셋 수정' : '프리셋 저장'}</Text>
+          <Text style={styles.title}>{isEditing ? t('presetEditor.editTitle') : t('presetEditor.saveTitle')}</Text>
 
           {/* Preview - tappable to edit sounds */}
           <Pressable
@@ -167,7 +172,7 @@ export default function PresetSaveScreen() {
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={styles.previewLabel}>포함된 소리 ({soundsList.length})</Text>
+              <Text style={styles.previewLabel}>{t('presetEditor.includedSounds', { count: soundsList.length })}</Text>
               <MaterialIcons name="edit" size={14} color="rgba(255,255,255,0.4)" />
             </View>
             <View style={styles.soundRow}>
@@ -175,12 +180,12 @@ export default function PresetSaveScreen() {
                 const soundInfo = getSoundById(s.soundId);
                 return (
                   <View key={s.soundId} style={styles.soundChip}>
-                    <Text style={styles.soundChipText}>{soundInfo?.name ?? s.soundId}</Text>
+                    <Text style={styles.soundChipText}>{soundInfo ? t(`sounds.${soundInfo.id}`, { defaultValue: soundInfo.name }) : s.soundId}</Text>
                   </View>
                 );
               })}
               {soundsList.length === 0 && (
-                <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>탭하여 소리 추가</Text>
+                <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{t('presetEditor.tapToAdd')}</Text>
               )}
             </View>
           </Pressable>
@@ -192,28 +197,28 @@ export default function PresetSaveScreen() {
             ) : (
               <>
                 <Ionicons name="image-outline" size={36} color="rgba(255,255,255,0.4)" />
-                <Text style={styles.imagePlaceholderText}>프리셋 이미지 선택 (선택)</Text>
+                <Text style={styles.imagePlaceholderText}>{t('presetEditor.imageSelect')}</Text>
               </>
             )}
           </Pressable>
 
           {/* Name input */}
-          <Text style={styles.inputLabel}>프리셋 이름</Text>
+          <Text style={styles.inputLabel}>{t('presetEditor.presetName')}</Text>
           <TextInput
             style={styles.input}
             value={name}
             onChangeText={setName}
-            placeholder="예: 비오는 숲속"
+            placeholder={t('presetEditor.namePlaceholder')}
             placeholderTextColor="rgba(255,255,255,0.4)"
           />
 
           {/* Description input */}
-          <Text style={styles.inputLabel}>설명 (선택)</Text>
+          <Text style={styles.inputLabel}>{t('presetEditor.descLabel')}</Text>
           <TextInput
             style={[styles.input, styles.inputMultiline]}
             value={description}
             onChangeText={setDescription}
-            placeholder="이 프리셋에 대한 간단한 설명"
+            placeholder={t('presetEditor.descPlaceholder')}
             placeholderTextColor="rgba(255,255,255,0.4)"
             maxLength={100}
             multiline
@@ -223,13 +228,13 @@ export default function PresetSaveScreen() {
           {/* Buttons */}
           <View style={styles.buttonGroup}>
             <Button
-              title="저장하기"
+              title={t('presetEditor.saveBtn')}
               variant="primary"
               onPress={handleSave}
               disabled={name.trim().length === 0}
             />
             <Button
-              title="취소"
+              title={t('common.cancel')}
               variant="ghost"
               onPress={() => animateClose(() => router.back())}
             />
@@ -256,8 +261,8 @@ export default function PresetSaveScreen() {
           }}>
             {/* Header */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20 }}>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: '#ffffff' }}>소리 편집</Text>
-              <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{tempSounds.length}/10개 선택됨</Text>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: '#ffffff' }}>{t('presetEditor.soundEdit')}</Text>
+              <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{t('presetEditor.selectedCount', { count: tempSounds.length })}</Text>
             </View>
 
             {/* Active sound chips */}
@@ -283,7 +288,7 @@ export default function PresetSaveScreen() {
                     >
                       <MaterialIcons name={SOUND_ICONS[s.soundId] ?? 'music-note'} size={12} color="#ffffff" />
                       <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: '#ffffff' }}>
-                        {soundInfo?.name ?? s.soundId}
+                        {soundInfo ? t(`sounds.${soundInfo.id}`, { defaultValue: soundInfo.name }) : s.soundId}
                       </Text>
                       <MaterialIcons name="close" size={12} color="rgba(255,255,255,0.5)" />
                     </Pressable>
@@ -329,7 +334,7 @@ export default function PresetSaveScreen() {
                       textTransform: 'uppercase',
                       color: isSel ? '#ffffff' : 'rgba(255,255,255,0.5)',
                     }}>
-                      {cat.nameEn?.split(' ')[0]?.toUpperCase() ?? cat.name}
+                      {t(`categories.${cat.id}`, { defaultValue: cat.nameEn?.split(' ')[0]?.toUpperCase() ?? cat.name })}
                     </Text>
                   </Pressable>
                 );
@@ -390,7 +395,7 @@ export default function PresetSaveScreen() {
                     <View style={{ flex: 1, minWidth: 0 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                         <Text style={{ fontSize: 14, fontWeight: '700', color: isLocked ? 'rgba(255,255,255,0.5)' : '#ffffff', letterSpacing: -0.3 }} numberOfLines={1}>
-                          {sound.name}
+                          {t(`sounds.${sound.id}`, { defaultValue: sound.name })}
                         </Text>
                         {isLocked && (
                           <View style={{ backgroundColor: themeColors.accent1, borderRadius: 9999, paddingVertical: 2, paddingHorizontal: 6 }}>
@@ -399,7 +404,7 @@ export default function PresetSaveScreen() {
                         )}
                       </View>
                       <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }} numberOfLines={1}>
-                        {sound.type === 'continuous' ? '연속 재생' : '간헐적'}
+                        {sound.type === 'continuous' ? t('soundType.continuous') : t('soundType.intermittent')}
                       </Text>
                     </View>
                     {/* Action */}
@@ -430,7 +435,7 @@ export default function PresetSaveScreen() {
               }}
             />
 
-            {/* Sound Detail Editing */}
+            {/* Sound Detail Modal */}
             {detailSoundId && (() => {
               const detailSound = getSoundById(detailSoundId);
               const detailState = tempSounds.find((s) => s.soundId === detailSoundId);
@@ -441,39 +446,69 @@ export default function PresetSaveScreen() {
                 setTempSounds((prev) => prev.map((s) => s.soundId === detailSoundId ? { ...s, ...updates } : s));
               };
               return (
-                <View style={{ marginHorizontal: 16, marginBottom: 12, padding: 16, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', gap: 12 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#ffffff' }}>{detailSound.name} 설정</Text>
-                    <Pressable onPress={() => setDetailSoundId(null)}>
-                      <MaterialIcons name="close" size={18} color="rgba(255,255,255,0.5)" />
+                <Modal visible transparent animationType="fade" onRequestClose={() => setDetailSoundId(null)}>
+                  <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 24 }} onPress={() => setDetailSoundId(null)}>
+                    <Pressable style={{ width: '100%', backgroundColor: 'rgba(17,21,31,0.97)', borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', gap: 16 }} onPress={(e) => e.stopPropagation()}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 16, fontWeight: '700', color: '#ffffff' }}>{t('presetEditor.soundSettings', { name: t(`sounds.${detailSound.id}`, { defaultValue: detailSound.name }) })}</Text>
+                        <Pressable onPress={() => setDetailSoundId(null)}>
+                          <MaterialIcons name="close" size={20} color="rgba(255,255,255,0.5)" />
+                        </Pressable>
+                      </View>
+                      <View>
+                        <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>{t('soundDetail.volumeRange')}</Text>
+                        <RangeSlider
+                          min={detailState.volumeMin}
+                          max={detailState.volumeMax}
+                          onMinChange={(v) => updateDetail({ volumeMin: v })}
+                          onMaxChange={(v) => updateDetail({ volumeMax: v })}
+                        />
+                      </View>
+                      <View>
+                        <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>{t('soundDetail.frequency')}</Text>
+                        <SegmentedControl
+                          options={FREQ_OPTIONS}
+                          selectedIndex={freqIdx >= 0 ? freqIdx : 0}
+                          onSelect={(i) => updateDetail({ frequency: FREQ_VALUES[i] })}
+                          disabled={isContinuous}
+                        />
+                        {isContinuous && (
+                          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{t('soundDetail.continuousHint')}</Text>
+                        )}
+                      </View>
+                      <View>
+                        <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>{t('soundDetail.pan')}</Text>
+                        <Slider
+                          value={Math.round((detailState.pan + 1) * 50)}
+                          onValueChange={(v) => updateDetail({ pan: v / 50 - 1 })}
+                          showLabel={false}
+                        />
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
+                          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>L</Text>
+                          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>C</Text>
+                          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>R</Text>
+                        </View>
+                      </View>
+                      <View style={{ flexDirection: 'row', gap: 12, marginTop: 8 }}>
+                        <Pressable
+                          style={{ flex: 1, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' }}
+                          onPress={() => {
+                            setTempSounds((prev) => prev.filter((s) => s.soundId !== detailSoundId));
+                            setDetailSoundId(null);
+                          }}
+                        >
+                          <Text style={{ fontSize: 12, fontWeight: '700', color: '#ef4444' }}>{t('soundDetail.remove')}</Text>
+                        </Pressable>
+                        <Pressable
+                          style={{ flex: 1, height: 48, borderRadius: 24, backgroundColor: themeColors.accent1, alignItems: 'center', justifyContent: 'center' }}
+                          onPress={() => setDetailSoundId(null)}
+                        >
+                          <Text style={{ fontSize: 12, fontWeight: '700', color: '#ffffff' }}>{t('soundDetail.done')}</Text>
+                        </Pressable>
+                      </View>
                     </Pressable>
-                  </View>
-                  <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}>음량 범위</Text>
-                  <RangeSlider
-                    min={detailState.volumeMin}
-                    max={detailState.volumeMax}
-                    onMinChange={(v) => updateDetail({ volumeMin: v })}
-                    onMaxChange={(v) => updateDetail({ volumeMax: v })}
-                  />
-                  <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}>빈도</Text>
-                  <SegmentedControl
-                    options={FREQ_OPTIONS}
-                    selectedIndex={freqIdx >= 0 ? freqIdx : 0}
-                    onSelect={(i) => updateDetail({ frequency: FREQ_VALUES[i] })}
-                    disabled={isContinuous}
-                  />
-                  <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}>팬 (좌/우)</Text>
-                  <Slider
-                    value={Math.round((detailState.pan + 1) * 50)}
-                    onValueChange={(v) => updateDetail({ pan: v / 50 - 1 })}
-                    showLabel={false}
-                  />
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>L</Text>
-                    <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>C</Text>
-                    <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>R</Text>
-                  </View>
-                </View>
+                  </Pressable>
+                </Modal>
               );
             })()}
 
@@ -491,13 +526,13 @@ export default function PresetSaveScreen() {
                   setSoundEditorVisible(false);
                 }}
               >
-                <Text style={{ fontSize: 12, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase', color: '#ffffff' }}>저장</Text>
+                <Text style={{ fontSize: 12, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase', color: '#ffffff' }}>{t('common.save')}</Text>
               </Pressable>
               <Pressable
                 style={{ paddingVertical: 10, alignItems: 'center' }}
                 onPress={() => setSoundEditorVisible(false)}
               >
-                <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>취소</Text>
+                <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>{t('common.cancel')}</Text>
               </Pressable>
             </View>
           </View>

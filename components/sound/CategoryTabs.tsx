@@ -5,6 +5,7 @@ import { getSoundsByCategory } from '@/data/sounds';
 import { SoundCategory } from '@/types';
 import { useThemeColors } from '@/theme';
 import { spacing } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 interface CategoryTabsProps {
   selectedCategory: SoundCategory;
@@ -13,6 +14,7 @@ interface CategoryTabsProps {
 
 export function CategoryTabs({ selectedCategory, onSelect }: CategoryTabsProps) {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
 
   const visibleCategories = useMemo(
     () => categories.filter((cat) => getSoundsByCategory(cat.id).length > 0),
@@ -47,7 +49,7 @@ export function CategoryTabs({ selectedCategory, onSelect }: CategoryTabsProps) 
               ]}
               numberOfLines={1}
             >
-              {cat.name}
+              {t(`categories.${cat.id}`, { defaultValue: cat.name })}
             </Text>
           </Pressable>
         );

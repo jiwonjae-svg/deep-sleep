@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import i18n from '@/i18n';
 import { AppSettings } from '@/types';
 
 const STORAGE_KEY = '@settings';
@@ -47,6 +48,9 @@ export const useSettingsStore = create<SettingsStoreState & SettingsStoreActions
   updateSettings: async (partial) => {
     const next = { ...get().settings, ...partial };
     set({ settings: next });
+    if (partial.language && partial.language !== i18n.language) {
+      await i18n.changeLanguage(partial.language);
+    }
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   },
 }));

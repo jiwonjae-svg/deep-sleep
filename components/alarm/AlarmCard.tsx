@@ -3,6 +3,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Toggle } from '@/components/ui/Toggle';
 import { Alarm } from '@/types';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 interface AlarmCardProps {
   alarm: Alarm;
@@ -10,10 +11,10 @@ interface AlarmCardProps {
   onPress: () => void;
 }
 
-const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
-
 export function AlarmCard({ alarm, onToggle, onPress }: AlarmCardProps) {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
+  const DAY_LABELS = t('alarms.days', { returnObjects: true }) as string[];
   const timeStr = `${String(alarm.time.hour).padStart(2, '0')}:${String(alarm.time.minute).padStart(2, '0')}`;
 
   const styles = useMemo(

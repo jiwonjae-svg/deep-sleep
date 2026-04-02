@@ -1,9 +1,11 @@
 import React, { useMemo } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, Image } from 'react-native';
 import { useThemeColors, typography, spacing } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 export function LoadingScreen() {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const styles = useMemo(
     () =>
       StyleSheet.create({
@@ -23,7 +25,7 @@ export function LoadingScreen() {
   return (
     <View style={styles.container}>
       <Image source={require('@/assets/images/logo/main_logo.png')} style={styles.logo} resizeMode="contain" />
-      <Text style={styles.text}>준비 중...</Text>
+      <Text style={styles.text}>{t('loading.preparing')}</Text>
       <ActivityIndicator color={themeColors.accent1} size="small" />
     </View>
   );

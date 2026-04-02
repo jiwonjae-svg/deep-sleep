@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { getSoundById } from '@/data/sounds';
 import { useThemeColors } from '@/theme';
+import { useTranslation } from 'react-i18next';
 import { spacing } from '@/theme';
 
 interface ActiveSoundsBarProps {
@@ -12,6 +13,7 @@ interface ActiveSoundsBarProps {
 
 export function ActiveSoundsBar({ onSoundPress, onPlayPress }: ActiveSoundsBarProps) {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const activeSounds = useAudioStore((s) => s.activeSounds);
   const isPlaying = useAudioStore((s) => s.isPlaying);
   const soundIds = Array.from(activeSounds.keys());
@@ -99,7 +101,7 @@ export function ActiveSoundsBar({ onSoundPress, onPlayPress }: ActiveSoundsBarPr
       </ScrollView>
       <Pressable style={styles.playBtn} onPress={onPlayPress}>
         <Text style={styles.playIcon}>{isPlaying ? '■' : '▶'}</Text>
-        <Text style={styles.playLabel}>{isPlaying ? '정지' : '재생'}</Text>
+        <Text style={styles.playLabel}>{isPlaying ? t('activeSoundsBar.stop') : t('activeSoundsBar.play')}</Text>
       </Pressable>
     </View>
   );

@@ -3,6 +3,7 @@ import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
+import { useTranslation } from 'react-i18next';
 import { AI_MAX_INPUT_LENGTH } from '@/utils/constants';
 
 interface AIInputSheetProps {
@@ -15,6 +16,7 @@ interface AIInputSheetProps {
 export function AIInputSheet({ visible, onClose, onSubmit, isLoading }: AIInputSheetProps) {
   const [text, setText] = useState('');
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const remaining = AI_MAX_INPUT_LENGTH - text.length;
 
   const styles = useMemo(
@@ -40,12 +42,12 @@ export function AIInputSheet({ visible, onClose, onSubmit, isLoading }: AIInputS
 
   return (
     <BottomSheet visible={visible} onClose={onClose} maxHeightPct={0.5}>
-      <Text style={styles.title}>✨ AI 사운드 추천</Text>
-      <Text style={styles.subtitle}>원하는 분위기나 기분을 설명해주세요</Text>
+      <Text style={styles.title}>✨ {t('ai.inputTitle')}</Text>
+      <Text style={styles.subtitle}>{t('ai.inputSubtitle')}</Text>
 
       <TextInput
         style={styles.input}
-        placeholder="오늘 기분이 어떤가요?"
+        placeholder={t('ai.inputPlaceholder')}
         placeholderTextColor={themeColors.textMuted}
         value={text}
         onChangeText={(t) => setText(t.slice(0, AI_MAX_INPUT_LENGTH))}
@@ -59,7 +61,7 @@ export function AIInputSheet({ visible, onClose, onSubmit, isLoading }: AIInputS
       </Text>
 
       <Button
-        title={isLoading ? '추천 중...' : '추천받기'}
+        title={isLoading ? t('ai.recommending') : t('ai.recommend')}
         onPress={() => onSubmit(text)}
         disabled={text.trim().length === 0}
         loading={isLoading}

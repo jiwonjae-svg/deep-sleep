@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, Modal, StyleSheet, TextInput } from 
 import { MaterialIcons } from '@expo/vector-icons';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useThemeColors } from '@/theme';
+import { useTranslation } from 'react-i18next';
 import { useAlarmStore } from '@/stores/useAlarmStore';
 import { msUntilAlarm, formatRemainingTime } from '@/utils/formatTime';
 
@@ -16,6 +17,7 @@ interface TimerModalProps {
 
 export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
 
   const [selectedQuick, setSelectedQuick] = useState<number>(45);
   const [useAlarmSync, setUseAlarmSync] = useState(false);
@@ -76,10 +78,10 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
   }, [useUnlimited, totalMinutes]);
 
   const displayLabel = useMemo(() => {
-    if (useUnlimited) return '무제한';
+    if (useUnlimited) return t('timer.unlimited');
     const h = Math.floor(totalMinutes / 60);
-    if (h > 0) return '시간:분';
-    return '분:초';
+    if (h > 0) return t('timer.hourMin');
+    return t('timer.minSec');
   }, [useUnlimited, totalMinutes]);
 
   const hasTime = useUnlimited || totalMinutes > 0;
@@ -282,8 +284,8 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
   return (
     <BottomSheet visible={visible} onClose={onClose} maxHeightPct={0.6}>
       <ScrollView showsVerticalScrollIndicator={true} indicatorStyle="white" nestedScrollEnabled>
-      <Text style={styles.headline}>타이머 설정</Text>
-      <Text style={styles.subtitle}>수면 & 집중 시간을 설정하세요</Text>
+      <Text style={styles.headline}>{t('timer.title')}</Text>
+      <Text style={styles.subtitle}>{t('timer.subtitle')}</Text>
 
       {/* Circular dial */}
       <View style={[styles.dialOuter, { borderColor: themeColors.accent1 + '55' }]}>
@@ -319,7 +321,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
               onPress={() => selectQuick(min)}
             >
               <Text style={[styles.chipText, { color: isSelected ? '#ffffff' : themeColors.textSecondary }]}>
-                {min}분
+                {min}{t('home.minuteUnit')}
               </Text>
             </Pressable>
           );
@@ -341,7 +343,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
         >
           <MaterialIcons name="edit" size={16} color={useCustom ? '#ffffff' : themeColors.textSecondary} />
           <Text style={[styles.chipText, { color: useCustom ? '#ffffff' : themeColors.textSecondary }]}>
-            직접 입력
+            {t('timer.customInput')}
           </Text>
         </Pressable>
         <Pressable
@@ -357,7 +359,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
         >
           <MaterialIcons name="all-inclusive" size={18} color={useUnlimited ? '#ffffff' : themeColors.textSecondary} />
           <Text style={[styles.chipText, { color: useUnlimited ? '#ffffff' : themeColors.textSecondary }]}>
-            무제한
+            {t('timer.unlimited')}
           </Text>
         </Pressable>
       </View>
@@ -366,8 +368,8 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
       {useCustom && (
         <Pressable style={styles.customInputRow} onPress={selectCustom}>
           <MaterialIcons name="access-time" size={18} color={themeColors.accent1} />
-          <Text style={styles.customLabel}>직접 설정:</Text>
-          <Text style={styles.customTime}>{customHours}시간 {customMinutes}분</Text>
+          <Text style={styles.customLabel}>{t('timer.customLabel')}</Text>
+          <Text style={styles.customTime}>{t('timer.customTime', { hours: customHours, minutes: customMinutes })}</Text>
           <MaterialIcons name="edit" size={16} color={themeColors.textMuted} />
         </Pressable>
       )}
@@ -382,8 +384,8 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
           onPress={() => { setUseAlarmSync((v) => !v); setUseCustom(false); setUseUnlimited(false); }}
         >
           <View>
-            <Text style={styles.alarmLabel}>알람까지</Text>
-            <Text style={styles.alarmTime}>{formatRemainingTime(nextAlarmMs)} 남음</Text>
+            <Text style={styles.alarmLabel}>{t('timer.alarmSync')}</Text>
+            <Text style={styles.alarmTime}>{t('timer.alarmRemaining', { time: formatRemainingTime(nextAlarmMs) })}</Text>
           </View>
           <View
             style={{
@@ -408,7 +410,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
         onPress={handleSave}
       >
         <Text style={[styles.saveBtnText, { color: hasTime ? '#ffffff' : themeColors.textMuted }]}>
-          타이머 저장
+          {t('timer.saveTimer')}
         </Text>
       </Pressable>
       </ScrollView>
@@ -442,7 +444,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
             onPress={(e) => e.stopPropagation()}
           >
             <Text style={{ fontSize: 18, fontWeight: '700', color: themeColors.textPrimary, textAlign: 'center', marginBottom: 24 }}>
-              시간 설정
+              {t('timer.timeSetup')}
             </Text>
 
             {/* Hour/Minute Picker */}
@@ -482,7 +484,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
                 <Pressable onPress={() => { setEditingHours(false); setEditingMinutes(false); setTempHours((h) => Math.max(0, h - 1)); }} style={{ padding: 8 }}>
                   <MaterialIcons name="keyboard-arrow-down" size={32} color={themeColors.textSecondary} />
                 </Pressable>
-                <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, color: themeColors.textMuted, textTransform: 'uppercase' }}>시간</Text>
+                <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, color: themeColors.textMuted, textTransform: 'uppercase' }}>{t('timer.hourLabel')}</Text>
               </View>
 
               <Text style={{ fontSize: 40, fontWeight: '700', color: themeColors.textMuted }}>:</Text>
@@ -522,7 +524,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
                 <Pressable onPress={() => { setEditingHours(false); setEditingMinutes(false); setTempMinutes((m) => (m - 5 + 60) % 60); }} style={{ padding: 8 }}>
                   <MaterialIcons name="keyboard-arrow-down" size={32} color={themeColors.textSecondary} />
                 </Pressable>
-                <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, color: themeColors.textMuted, textTransform: 'uppercase' }}>분</Text>
+                <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, color: themeColors.textMuted, textTransform: 'uppercase' }}>{t('timer.minuteLabel')}</Text>
               </View>
             </View>
 
@@ -544,14 +546,14 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
                   textTransform: 'uppercase',
                   color: (tempHours > 0 || tempMinutes > 0) ? '#ffffff' : themeColors.textMuted,
                 }}>
-                  저장
+                  {t('common.save')}
                 </Text>
               </Pressable>
               <Pressable
                 style={{ paddingVertical: 12, alignItems: 'center' }}
                 onPress={handleCustomPickerCancel}
               >
-                <Text style={{ fontSize: 14, color: themeColors.textMuted }}>취소</Text>
+                <Text style={{ fontSize: 14, color: themeColors.textMuted }}>{t('common.cancel')}</Text>
               </Pressable>
             </View>
           </Pressable>

@@ -14,6 +14,7 @@ import { OnboardingSlide } from '@/components/onboarding/OnboardingSlide';
 import { Button } from '@/components/ui/Button';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
+import { useTranslation } from 'react-i18next';
 import { STORAGE_KEYS } from '@/utils/constants';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -23,31 +24,20 @@ interface Slide {
   description: string;
 }
 
-const slides: Slide[] = [
-  {
-    title: 'Deep Sleep에 오신 것을 환영합니다',
-    description: '100가지 자연의 소리로 완벽한 수면 환경을 만들어보세요.',
-  },
-  {
-    title: '나만의 사운드 믹스',
-    description: '최대 10개의 소리를 동시에 조합하고 볼륨을 세밀하게 조절하세요.',
-  },
-  {
-    title: '스마트 알람',
-    description: '자연스러운 페이드인 알람과 수학 문제 해제로 상쾌한 아침을 시작하세요.',
-  },
-  {
-    title: '편안한 잠자리',
-    description: '타이머 설정 후 수면 모드에서 방해 없이 숙면하세요.',
-  },
-];
-
 export default function OnboardingScreen() {
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const { requestNotification } = usePermissions();
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
+
+  const slides: Slide[] = [
+    { title: t('onboarding.slide1Title'), description: t('onboarding.slide1Desc') },
+    { title: t('onboarding.slide2Title'), description: t('onboarding.slide2Desc') },
+    { title: t('onboarding.slide3Title'), description: t('onboarding.slide3Desc') },
+    { title: t('onboarding.slide4Title'), description: t('onboarding.slide4Desc') },
+  ];
   const styles = useMemo(
     () =>
       StyleSheet.create({
@@ -128,12 +118,12 @@ export default function OnboardingScreen() {
       <View style={styles.footer}>
         {!isLast && (
           <Pressable onPress={handleSkip}>
-            <Text style={styles.skipText}>건너뛰기</Text>
+            <Text style={styles.skipText}>{t('common.skip')}</Text>
           </Pressable>
         )}
         <View style={{ flex: 1 }} />
         <Button
-          title={isLast ? '시작하기' : '다음'}
+          title={isLast ? t('common.start') : t('common.next')}
           variant="primary"
           onPress={handleNext}
         />
