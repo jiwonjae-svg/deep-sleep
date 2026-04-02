@@ -70,7 +70,7 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
       StyleSheet.create({
         overlay: {
           flex: 1,
-          backgroundColor: themeColors.overlay,
+          backgroundColor: 'rgba(0,0,0,0.6)',
           justifyContent: 'center',
           alignItems: 'center',
           padding: layout.screenPaddingH,
@@ -81,6 +81,13 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
           backgroundColor: themeColors.bgSecondary,
           borderRadius: layout.borderRadiusLg,
           padding: layout.screenPaddingH,
+          borderWidth: 1,
+          borderColor: themeColors.glassBorder,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.4,
+          shadowRadius: 24,
+          elevation: 10,
         },
         header: {
           flexDirection: 'row',
@@ -245,7 +252,7 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
                   handleClose();
                 }}
               >
-                <Text style={styles.removeText}>🗑️ 제거</Text>
+                <Text style={styles.removeText}>제거</Text>
               </Pressable>
               <Pressable style={styles.doneBtn} onPress={handleClose}>
                 <Text style={styles.doneText}>완료</Text>

@@ -74,14 +74,16 @@ function ThemedApp() {
           name="presets/save"
           options={{
             animation: 'fade',
-            contentStyle: { backgroundColor: '#0b0f19' },
+            presentation: 'transparentModal',
+            contentStyle: { backgroundColor: 'transparent' },
           }}
         />
         <Stack.Screen
           name="alarms/edit"
           options={{
             animation: 'fade',
-            contentStyle: { backgroundColor: '#0b0f19' },
+            presentation: 'transparentModal',
+            contentStyle: { backgroundColor: 'transparent' },
           }}
         />
       </Stack>

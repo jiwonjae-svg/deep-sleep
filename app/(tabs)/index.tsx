@@ -2,9 +2,9 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet, Image, FlatList, ImageSourcePropType } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import Svg, { Circle } from 'react-native-svg';
 import Animated, {
   useSharedValue,
-  useAnimatedStyle,
   withRepeat,
   withTiming,
   Easing,
@@ -17,7 +17,7 @@ import { Slider } from '@/components/ui/Slider';
 import { TimerModal } from '@/components/ui/TimerModal';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useThemeColors, spacing, layout } from '@/theme';
-import { formatRemainingTime, msUntilAlarm } from '@/utils/formatTime';
+import { formatRemainingTimeLong, formatTimerPrecise, msUntilAlarm } from '@/utils/formatTime';
 import { Preset } from '@/types';
 
 // 프리셋 ID → 이미지 매핑
@@ -78,7 +78,18 @@ export default function HomeScreen() {
     return () => clearInterval(id);
   }, [timer.isActive, isPlaying]);
 
-  const timerText = timerRemaining > 0 ? formatRemainingTime(timerRemaining) : '00:00';
+  const timerPrecise = formatTimerPrecise(timerRemaining);
+  const isUnlimited = timer.isActive && timer.durationMinutes >= 99999;
+  const timerUnitLabel = timerRemaining > 0 && !isUnlimited
+    ? (timerRemaining >= 3600000 ? '시간 : 분' : '분 : 초')
+    : '';
+
+  // Progress for circular ring (0 to 1)
+  const timerProgress = useMemo(() => {
+    if (!timer.isActive || isUnlimited || timer.durationMinutes <= 0) return 0;
+    const totalMs = timer.durationMinutes * 60_000;
+    return Math.max(0, Math.min(1, 1 - timerRemaining / totalMs));
+  }, [timer.isActive, isUnlimited, timer.durationMinutes, timerRemaining]);
 
   // Next alarm
   const nextAlarm = alarms
@@ -89,9 +100,34 @@ export default function HomeScreen() {
       return best;
     }, null);
 
+  const [alarmMs, setAlarmMs] = useState(0);
+  useEffect(() => {
+    if (!nextAlarm) { setAlarmMs(0); return; }
+    setAlarmMs(nextAlarm.ms);
+    const id = setInterval(() => {
+      const ms = msUntilAlarm(nextAlarm.alarm.time.hour, nextAlarm.alarm.time.minute);
+      setAlarmMs(ms);
+    }, 60_000);
+    return () => clearInterval(id);
+  }, [nextAlarm?.alarm?.id]);
+
   const alarmCountdownText = nextAlarm
-    ? `${formatRemainingTime(nextAlarm.ms)} 뒤에 알람이 울립니다`
+    ? `${formatRemainingTimeLong(alarmMs || nextAlarm.ms)} 뒤에 알람이 울립니다`
     : null;
+
+  // Colon blink animation
+  const colonOpacity = useSharedValue(1);
+  useEffect(() => {
+    if (isPlaying && timerRemaining > 0) {
+      colonOpacity.value = withRepeat(
+        withTiming(0, { duration: 500, easing: Easing.inOut(Easing.ease) }),
+        -1,
+        true,
+      );
+    } else {
+      colonOpacity.value = withTiming(1, { duration: 200 });
+    }
+  }, [isPlaying, timerRemaining > 0]);
 
   // Pulse animation
   const scale = useSharedValue(1);
@@ -106,9 +142,6 @@ export default function HomeScreen() {
       scale.value = withTiming(1, { duration: 200 });
     }
   }, [isPlaying]);
-  const playBtnAnimStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
 
   // Background fade
   const bgOpacity = useSharedValue(0);
@@ -118,7 +151,6 @@ export default function HomeScreen() {
       easing: Easing.inOut(Easing.ease),
     });
   }, [currentPresetImage]);
-  const bgAnimStyle = useAnimatedStyle(() => ({ opacity: bgOpacity.value }));
 
   const handlePlayToggle = () => {
     if (isPlaying) {
@@ -132,23 +164,19 @@ export default function HomeScreen() {
   const handlePresetSelect = useCallback(
     (preset: Preset, index: number) => {
       setSelectedPresetIndex(index);
-      applyPreset(preset);
       setPresetPickerVisible(false);
-      if (!isPlaying) play();
     },
-    [applyPreset, isPlaying, play],
+    [],
   );
 
   const handleTimerStart = (minutes: number) => {
-    if (currentPreset) applyPreset(currentPreset);
     startTimer(minutes);
-    play();
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Background: preset image — center-crop, no margins */}
-      <Animated.View style={[StyleSheet.absoluteFill, bgAnimStyle]} pointerEvents="none">
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: bgOpacity }]} pointerEvents="none">
         {currentPresetImage != null && (
           <>
             <Image
@@ -162,10 +190,54 @@ export default function HomeScreen() {
       </Animated.View>
 
       <View style={styles.content}>
-        {/* Timer Display — glass pill */}
-        <Pressable style={styles.timerDisplay} onPress={() => setTimerModalVisible(true)}>
-          <Text style={styles.timerTime}>{timerText}</Text>
-          <Text style={styles.timerLabel}>수면 타이머</Text>
+        {/* Timer Display — circular progress ring */}
+        <Pressable style={styles.timerContainer} onPress={() => setTimerModalVisible(true)}>
+          <View style={styles.ringWrapper}>
+            <Svg width={200} height={200} style={{ position: 'absolute' }}>
+              {/* Background ring */}
+              <Circle
+                cx={100}
+                cy={100}
+                r={88}
+                stroke="rgba(255,255,255,0.08)"
+                strokeWidth={8}
+                fill="none"
+              />
+              {/* Progress ring */}
+              {timerProgress > 0 && (
+                <Circle
+                  cx={100}
+                  cy={100}
+                  r={88}
+                  stroke={themeColors.accent1}
+                  strokeWidth={8}
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 88}`}
+                  strokeDashoffset={`${2 * Math.PI * 88 * (1 - timerProgress)}`}
+                  rotation={-90}
+                  origin="100,100"
+                />
+              )}
+            </Svg>
+            {/* Timer content inside ring */}
+            <View style={styles.ringContent}>
+              {isUnlimited ? (
+                <Text style={styles.timerTime}>∞</Text>
+              ) : (
+                <View style={styles.timerRow}>
+                  <Text style={styles.timerTime}>{timerPrecise.left}</Text>
+                  <Animated.Text style={[styles.timerColon, { opacity: colonOpacity }]}>:</Animated.Text>
+                  <Text style={styles.timerTime}>{timerPrecise.right}</Text>
+                </View>
+              )}
+              {timerUnitLabel ? (
+                <Text style={styles.timerLabel}>{timerUnitLabel}</Text>
+              ) : (
+                <Text style={styles.timerLabel}>수면 타이머</Text>
+              )}
+            </View>
+          </View>
           {alarmCountdownText && (
             <Text style={styles.alarmHint}>{alarmCountdownText}</Text>
           )}
@@ -186,11 +258,11 @@ export default function HomeScreen() {
               {currentPreset?.description ?? '탭하여 선택'}
             </Text>
           </Pressable>
-          <Animated.View style={playBtnAnimStyle}>
+          <Animated.View style={{ transform: [{ scale }] }}>
             <Pressable
               style={[
                 styles.playBtn,
-                { backgroundColor: soundCount > 0 || currentPreset ? themeColors.accent1 : themeColors.bgTertiary },
+                { backgroundColor: soundCount > 0 || currentPreset ? themeColors.accent1 : themeColors.bgTertiary, shadowColor: themeColors.accent1 },
               ]}
               onPress={handlePlayToggle}
             >
@@ -239,6 +311,8 @@ export default function HomeScreen() {
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={true}
           indicatorStyle="white"
+          nestedScrollEnabled={true}
+          style={{ flex: 1 }}
           renderItem={({ item, index }) => (
             <Pressable
               style={[
@@ -263,7 +337,7 @@ export default function HomeScreen() {
                 </Text>
               </View>
               {index === selectedPresetIndex && (
-                <MaterialIcons name="check-circle" size={20} color={themeColors.accent1} />
+                <MaterialIcons name="check-circle" size={20} color="#ffffff" />
               )}
             </Pressable>
           )}
@@ -288,22 +362,44 @@ const styles = StyleSheet.create({
     paddingBottom: layout.tabBarHeight + 16,
     gap: spacing.lg,
   },
-  timerDisplay: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 40,
-    paddingVertical: 20,
-    paddingHorizontal: 40,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+  timerContainer: {
     alignItems: 'center',
     alignSelf: 'center',
     gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
+  ringWrapper: {
+    width: 200,
+    height: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ringContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  timerRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
   },
   timerTime: {
-    fontSize: 56,
+    fontSize: 44,
     fontWeight: '800',
     color: '#ffffff',
     letterSpacing: -2,
+  },
+  timerColon: {
+    fontSize: 44,
+    fontWeight: '800',
+    color: '#ffffff',
+    marginHorizontal: 2,
   },
   timerLabel: {
     fontSize: 10,
@@ -313,13 +409,13 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
   },
   alarmHint: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     letterSpacing: 1,
-    textTransform: 'uppercase',
     color: 'rgba(255,255,255,0.4)',
     textAlign: 'center',
-    marginTop: 4,
+    marginTop: 12,
+    paddingVertical: 8,
   },
   nowPlayingCard: {
     backgroundColor: 'rgba(255,255,255,0.08)',

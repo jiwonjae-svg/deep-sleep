@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useThemeColors, typography, spacing } from '@/theme';
 
 const BENEFITS = [
@@ -18,7 +19,6 @@ export function BenefitList() {
       StyleSheet.create({
         container: { gap: spacing.md },
         row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-        check: { fontSize: 16 },
         text: { ...typography.bodyMedium, color: themeColors.textPrimary },
       }),
     [themeColors],
@@ -28,7 +28,7 @@ export function BenefitList() {
     <View style={styles.container}>
       {BENEFITS.map((b, i) => (
         <View key={i} style={styles.row}>
-          <Text style={styles.check}>✅</Text>
+          <MaterialIcons name="check-circle" size={18} color="#4ade80" />
           <Text style={styles.text}>{b}</Text>
         </View>
       ))}

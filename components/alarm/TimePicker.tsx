@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, Pressable, TextInput, StyleSheet } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useThemeColors, typography, spacing } from '@/theme';
 
 interface TimePickerProps {
@@ -72,7 +73,7 @@ export function TimePicker({ hour, minute, onHourChange, onMinuteChange }: TimeP
       {/* Hour */}
       <View style={styles.column}>
         <Pressable onPress={() => onHourChange((hour + 1) % 24)} style={styles.arrow}>
-          <Text style={styles.arrowText}>▲</Text>
+          <MaterialIcons name="keyboard-arrow-up" size={32} color={themeColors.textSecondary} />
         </Pressable>
         {editingHour ? (
           <TextInput
@@ -92,7 +93,7 @@ export function TimePicker({ hour, minute, onHourChange, onMinuteChange }: TimeP
           </Pressable>
         )}
         <Pressable onPress={() => onHourChange((hour - 1 + 24) % 24)} style={styles.arrow}>
-          <Text style={styles.arrowText}>▼</Text>
+          <MaterialIcons name="keyboard-arrow-down" size={32} color={themeColors.textSecondary} />
         </Pressable>
       </View>
 
@@ -101,7 +102,7 @@ export function TimePicker({ hour, minute, onHourChange, onMinuteChange }: TimeP
       {/* Minute */}
       <View style={styles.column}>
         <Pressable onPress={() => onMinuteChange((minute + 1) % 60)} style={styles.arrow}>
-          <Text style={styles.arrowText}>▲</Text>
+          <MaterialIcons name="keyboard-arrow-up" size={32} color={themeColors.textSecondary} />
         </Pressable>
         {editingMinute ? (
           <TextInput
@@ -121,7 +122,7 @@ export function TimePicker({ hour, minute, onHourChange, onMinuteChange }: TimeP
           </Pressable>
         )}
         <Pressable onPress={() => onMinuteChange((minute - 1 + 60) % 60)} style={styles.arrow}>
-          <Text style={styles.arrowText}>▼</Text>
+          <MaterialIcons name="keyboard-arrow-down" size={32} color={themeColors.textSecondary} />
         </Pressable>
       </View>
     </View>

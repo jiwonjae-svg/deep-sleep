@@ -38,7 +38,9 @@ export default function TabLayout() {
       StyleSheet.create({
         container: { flex: 1, backgroundColor: themeColors.bgPrimary },
         tabBar: {
-          backgroundColor: 'rgba(11,15,25,0.8)',
+          backgroundColor: themeColors.bgPrimary === '#0b0f19'
+            ? 'rgba(11,15,25,0.8)'
+            : 'rgba(245,245,247,0.92)',
           borderTopWidth: 1,
           borderTopColor: themeColors.glassBorder,
           paddingTop: 8,
@@ -59,7 +61,7 @@ export default function TabLayout() {
             paddingBottom: 8 + insets.bottom,
           },
           tabBarActiveTintColor: themeColors.accent1,
-          tabBarInactiveTintColor: 'rgba(255,255,255,0.5)',
+          tabBarInactiveTintColor: themeColors.textMuted,
           tabBarLabelStyle: styles.tabLabel,
           sceneStyle: { backgroundColor: 'transparent' },
         }}

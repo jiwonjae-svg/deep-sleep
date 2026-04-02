@@ -1,12 +1,12 @@
-import React, { useMemo } from 'react';
-import { View, Text, Pressable, FlatList, StyleSheet, Image } from 'react-native';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { View, Text, Pressable, FlatList, StyleSheet, Image, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAlarm } from '@/hooks/useAlarm';
 import { Toggle } from '@/components/ui/Toggle';
 import { useThemeColors, spacing, layout } from '@/theme';
-import { msUntilAlarm, formatRemainingTime } from '@/utils/formatTime';
+import { msUntilAlarm, formatRemainingTimeLong } from '@/utils/formatTime';
 import { Alarm } from '@/types';
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
@@ -16,16 +16,35 @@ export default function AlarmsScreen() {
   const themeColors = useThemeColors();
   const { alarms, toggleAlarm } = useAlarm();
 
-  const nextAlarmText = useMemo(() => {
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const filteredAlarms = useMemo(() => {
+    if (!searchText.trim()) return alarms;
+    const q = searchText.trim().toLowerCase();
+    return alarms.filter(
+      (a) =>
+        (a.label ?? '').toLowerCase().includes(q) ||
+        `${String(a.time.hour).padStart(2, '0')}:${String(a.time.minute).padStart(2, '0')}`.includes(q),
+    );
+  }, [alarms, searchText]);
+
+  const computeNextAlarm = useCallback(() => {
     const active = alarms.filter((a) => a.enabled);
     if (active.length === 0) return null;
     const best = active.reduce<{ ms: number; label: string } | null>((acc, a) => {
       const ms = msUntilAlarm(a.time.hour, a.time.minute);
-      if (!acc || ms < acc.ms) return { ms, label: formatRemainingTime(ms) };
+      if (!acc || ms < acc.ms) return { ms, label: formatRemainingTimeLong(ms) };
       return acc;
     }, null);
-    return best ? `${best.label} 뒤에 알람이 울립니다` : null;
+    return best ? `${best.label} 뒤에\n알람이 울립니다` : null;
   }, [alarms]);
+
+  const [nextAlarmText, setNextAlarmText] = useState(computeNextAlarm);
+  useEffect(() => {
+    setNextAlarmText(computeNextAlarm());
+    const id = setInterval(() => setNextAlarmText(computeNextAlarm()), 30_000);
+    return () => clearInterval(id);
+  }, [computeNextAlarm]);
 
   const renderAlarmItem = ({ item }: { item: Alarm }) => {
     const timeStr = `${String(item.time.hour).padStart(2, '0')}:${String(item.time.minute).padStart(2, '0')}`;
@@ -55,18 +74,24 @@ export default function AlarmsScreen() {
             </Text>
           )}
           <View style={styles.daysRow}>
-            {item.days.map((active, i) => (
-              <Text
-                key={i}
-                style={[
-                  styles.dayText,
-                  active && styles.dayTextActive,
-                  !item.enabled && { opacity: 0.5 },
-                ]}
-              >
-                {DAY_LABELS[i]}
+            {item.specificDate ? (
+              <Text style={[styles.dayText, styles.dayTextActive, !item.enabled && { opacity: 0.5 }]}>
+                {item.specificDate}
               </Text>
-            ))}
+            ) : (
+              item.days.map((active, i) => (
+                <Text
+                  key={i}
+                  style={[
+                    styles.dayText,
+                    active && styles.dayTextActive,
+                    !item.enabled && { opacity: 0.5 },
+                  ]}
+                >
+                  {DAY_LABELS[i]}
+                </Text>
+              ))
+            )}
           </View>
         </View>
 
@@ -83,12 +108,31 @@ export default function AlarmsScreen() {
           <Text style={styles.countdown}>{nextAlarmText}</Text>
         )}
 
-        {/* Search button */}
+        {/* Search */}
         <View style={styles.searchRow}>
-          <View style={{ flex: 1 }} />
-          <Pressable style={styles.searchBtn}>
-            <MaterialIcons name="search" size={20} color="rgba(255,255,255,0.8)" />
-          </Pressable>
+          {searchVisible ? (
+            <View style={styles.searchBar}>
+              <MaterialIcons name="search" size={18} color="rgba(255,255,255,0.5)" />
+              <TextInput
+                style={styles.searchInput}
+                value={searchText}
+                onChangeText={setSearchText}
+                placeholder="알람 검색..."
+                placeholderTextColor="rgba(255,255,255,0.4)"
+                autoFocus
+              />
+              <Pressable onPress={() => { setSearchVisible(false); setSearchText(''); }}>
+                <MaterialIcons name="close" size={18} color="rgba(255,255,255,0.5)" />
+              </Pressable>
+            </View>
+          ) : (
+            <>
+              <View style={{ flex: 1 }} />
+              <Pressable style={styles.searchBtn} onPress={() => setSearchVisible(true)}>
+                <MaterialIcons name="search" size={20} color="rgba(255,255,255,0.8)" />
+              </Pressable>
+            </>
+          )}
         </View>
 
         {alarms.length === 0 ? (
@@ -103,7 +147,7 @@ export default function AlarmsScreen() {
           </View>
         ) : (
           <FlatList
-            data={alarms}
+            data={filteredAlarms}
             keyExtractor={(item) => item.id}
             renderItem={renderAlarmItem}
             contentContainerStyle={styles.list}
@@ -113,7 +157,7 @@ export default function AlarmsScreen() {
 
         {/* FAB */}
         <Pressable
-          style={styles.fab}
+          style={[styles.fab, { backgroundColor: themeColors.accent1, shadowColor: themeColors.accent1 }]}
           onPress={() => router.push('/alarms/edit')}
         >
           <MaterialIcons name="add" size={28} color="#ffffff" />
@@ -125,13 +169,14 @@ export default function AlarmsScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   countdown: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     color: 'rgba(255,255,255,0.9)',
     textAlign: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 8,
+    paddingHorizontal: 32,
+    paddingTop: 48,
+    paddingBottom: 32,
+    lineHeight: 32,
     letterSpacing: 1,
     textTransform: 'uppercase',
     textShadowColor: 'rgba(69,110,234,0.4)',
@@ -152,6 +197,24 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  searchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 14,
+    height: 40,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#ffffff',
+    padding: 0,
   },
   list: {
     paddingHorizontal: 24,

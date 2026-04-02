@@ -3,7 +3,6 @@ import { View, Pressable, StyleSheet, BackHandler, useWindowDimensions } from 'r
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
-  useAnimatedStyle,
   withTiming,
   runOnJS,
 } from 'react-native-reanimated';
@@ -37,20 +36,20 @@ export function BottomSheet({
           bottom: 0,
           left: 0,
           right: 0,
-          backgroundColor: '#11151f',
+          backgroundColor: themeColors.bgSecondary,
           borderTopLeftRadius: layout.borderRadiusLg,
           borderTopRightRadius: layout.borderRadiusLg,
           paddingHorizontal: layout.screenPaddingH,
           paddingBottom: 32,
           borderWidth: 1,
           borderBottomWidth: 0,
-          borderColor: 'rgba(255,255,255,0.15)',
+          borderColor: themeColors.glassBorder,
         },
         handleBar: {
           width: 40,
           height: 4,
           borderRadius: 2,
-          backgroundColor: 'rgba(255,255,255,0.3)',
+          backgroundColor: themeColors.textMuted,
           alignSelf: 'center',
           marginTop: 12,
           marginBottom: 20,
@@ -102,30 +101,22 @@ export function BottomSheet({
       }
     });
 
-  const sheetStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  const overlayStyle = useAnimatedStyle(() => ({
-    opacity: overlayOpacity.value,
-  }));
-
   if (!mounted && !visible) return null;
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {/* Overlay */}
-      <Animated.View style={[styles.overlay, overlayStyle]}>
+      <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
       </Animated.View>
 
       {/* Sheet */}
-      <GestureDetector gesture={pan}>
-        <Animated.View style={[styles.sheet, { maxHeight }, sheetStyle]}>
+      <Animated.View style={[styles.sheet, { maxHeight, transform: [{ translateY }] }]}>
+        <GestureDetector gesture={pan}>
           <View style={styles.handleBar} />
-          {children}
-        </Animated.View>
-      </GestureDetector>
+        </GestureDetector>
+        {children}
+      </Animated.View>
     </View>
   );
 }

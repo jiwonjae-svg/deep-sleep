@@ -14,8 +14,8 @@ export function DaySelector({ days, onChange }: DaySelectorProps) {
   const styles = useMemo(
     () =>
       StyleSheet.create({
-        container: { flexDirection: 'row', gap: spacing.sm, justifyContent: 'center' },
-        btn: { width: 40, height: 40, borderRadius: 20, backgroundColor: themeColors.glassLight, alignItems: 'center', justifyContent: 'center' },
+        container: { flexDirection: 'row', gap: 6, justifyContent: 'center' },
+        btn: { flex: 1, maxWidth: 40, aspectRatio: 1, borderRadius: 20, backgroundColor: themeColors.glassLight, alignItems: 'center', justifyContent: 'center' },
         btnActive: { backgroundColor: themeColors.accent1 },
         label: { ...typography.buttonSmall, color: themeColors.textSecondary },
         labelActive: { color: '#ffffff' },

@@ -3,7 +3,7 @@ import { View, StyleSheet, LayoutChangeEvent, Text } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
-  useAnimatedStyle,
+  useDerivedValue,
   runOnJS,
 } from 'react-native-reanimated';
 import { useThemeColors, typography } from '@/theme';
@@ -113,18 +113,9 @@ export function RangeSlider({
     })
     .hitSlop({ top: 16, bottom: 16, left: 8, right: 8 });
 
-  const activeStyle = useAnimatedStyle(() => ({
-    left: minX.value,
-    width: maxX.value - minX.value,
-  }));
-
-  const minHandleStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: minX.value - 12 }],
-  }));
-
-  const maxHandleStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: maxX.value - 12 }],
-  }));
+  const activeWidth = useDerivedValue(() => maxX.value - minX.value);
+  const minHandlePos = useDerivedValue(() => minX.value - 12);
+  const maxHandlePos = useDerivedValue(() => maxX.value - 12);
 
   return (
     <View>
@@ -133,16 +124,16 @@ export function RangeSlider({
         <View style={[styles.track, { backgroundColor: resolvedTrackColor }]} />
 
         {/* Active range */}
-        <Animated.View style={[styles.activeTrack, { backgroundColor: resolvedActiveColor }, activeStyle]} />
+        <Animated.View style={[styles.activeTrack, { backgroundColor: resolvedActiveColor, left: minX, width: activeWidth }]} />
 
         {/* Min handle */}
         <GestureDetector gesture={minPan}>
-          <Animated.View style={[styles.handle, { backgroundColor: resolvedActiveColor }, minHandleStyle]} />
+          <Animated.View style={[styles.handle, { backgroundColor: resolvedActiveColor, transform: [{ translateX: minHandlePos }] }]} />
         </GestureDetector>
 
         {/* Max handle */}
         <GestureDetector gesture={maxPan}>
-          <Animated.View style={[styles.handle, { backgroundColor: resolvedActiveColor }, maxHandleStyle]} />
+          <Animated.View style={[styles.handle, { backgroundColor: resolvedActiveColor, transform: [{ translateX: maxHandlePos }] }]} />
         </GestureDetector>
       </View>
 

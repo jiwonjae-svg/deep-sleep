@@ -7,6 +7,7 @@ const ThemeContext = createContext<AppColors>(colors);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const themeMode = useSettingsStore((s) => s.settings.themeMode);
+  const themeColor = useSettingsStore((s) => s.settings.themeColor);
   const systemScheme = useColorScheme();
 
   const themeColors = useMemo<AppColors>(() => {
@@ -16,8 +17,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           ? 'light'
           : 'dark'
         : themeMode;
-    return effective === 'light' ? (lightColors as unknown as AppColors) : colors;
-  }, [themeMode, systemScheme]);
+    const base = effective === 'light' ? (lightColors as unknown as AppColors) : colors;
+    // Apply custom theme color as accent1
+    if (themeColor && themeColor !== colors.accent1) {
+      return { ...base, accent1: themeColor, textAccent: themeColor, info: themeColor } as AppColors;
+    }
+    return base;
+  }, [themeMode, themeColor, systemScheme]);
 
   return <ThemeContext.Provider value={themeColors}>{children}</ThemeContext.Provider>;
 }

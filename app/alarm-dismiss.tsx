@@ -1,17 +1,15 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, Vibration } from 'react-native';
+import { View, Text, StyleSheet, Vibration, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
-  useAnimatedStyle,
   withSpring,
   runOnJS,
 } from 'react-native-reanimated';
 import { useAlarm } from '@/hooks/useAlarm';
 import { useAlarmStore } from '@/stores/useAlarmStore';
 import { MathProblemView } from '@/components/alarm/MathProblem';
-import { MascotImage } from '@/components/common/MascotImage';
 import { Button } from '@/components/ui/Button';
 import { generateMathProblem } from '@/utils/mathProblem';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
@@ -81,9 +79,7 @@ export default function AlarmDismissScreen() {
       }
     });
 
-  const swipeStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
+
 
   const handleWrong = () => {
     Vibration.vibrate(300);
@@ -97,8 +93,8 @@ export default function AlarmDismissScreen() {
       {/* Time */}
       <Text style={styles.time}>{timeStr}</Text>
 
-      {/* Mascot */}
-      <MascotImage pose="alarm" size={150} />
+      {/* Alarm icon */}
+      <Image source={require('@/assets/images/logo/main_logo.png')} style={{ width: 120, height: 120 }} resizeMode="contain" />
 
       {alarm?.label && <Text style={styles.label}>{alarm.label}</Text>}
 
@@ -113,7 +109,7 @@ export default function AlarmDismissScreen() {
         </View>
       ) : (
         <GestureDetector gesture={pan}>
-          <Animated.View style={[styles.swipeArea, swipeStyle]}>
+          <Animated.View style={[styles.swipeArea, { transform: [{ translateX }] }]}>
             <Text style={styles.swipeText}>← 밀어서 해제 →</Text>
           </Animated.View>
         </GestureDetector>

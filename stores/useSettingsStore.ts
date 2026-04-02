@@ -6,6 +6,7 @@ const STORAGE_KEY = '@settings';
 
 const DEFAULT_SETTINGS: AppSettings = {
   themeMode: 'dark',
+  themeColor: '#456eea',
   language: 'ko',
   autoSleepScreen: true,
   autoDimBrightness: true,

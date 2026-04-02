@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { MascotImage } from './MascotImage';
+import { View, Text, ActivityIndicator, StyleSheet, Image } from 'react-native';
 import { useThemeColors, typography, spacing } from '@/theme';
 
 export function LoadingScreen() {
@@ -15,6 +14,7 @@ export function LoadingScreen() {
           justifyContent: 'center',
           gap: spacing.base,
         },
+        logo: { width: 100, height: 100 },
         text: { ...typography.body, color: themeColors.textSecondary },
       }),
     [themeColors],
@@ -22,8 +22,8 @@ export function LoadingScreen() {
 
   return (
     <View style={styles.container}>
-      <MascotImage pose="standby" size={120} />
-      <Text style={styles.text}>잠곰이가 준비 중...</Text>
+      <Image source={require('@/assets/images/logo/main_logo.png')} style={styles.logo} resizeMode="contain" />
+      <Text style={styles.text}>준비 중...</Text>
       <ActivityIndicator color={themeColors.accent1} size="small" />
     </View>
   );

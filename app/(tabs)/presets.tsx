@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Alert, ScrollView, Image, ImageSourcePropType } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Alert, ScrollView, Image, ImageSourcePropType, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -27,6 +27,18 @@ export default function PresetsScreen() {
     () => [...defaultPresets, ...customPresets],
     [defaultPresets, customPresets],
   );
+
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const filteredPresets = useMemo(() => {
+    if (!searchText.trim()) return allPresets;
+    const q = searchText.trim().toLowerCase();
+    return allPresets.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.description ?? '').toLowerCase().includes(q),
+    );
+  }, [allPresets, searchText]);
 
   const handlePresetPress = useCallback(
     async (preset: Preset) => {
@@ -59,10 +71,29 @@ export default function PresetsScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Top bar with search */}
         <View style={styles.topBar}>
-          <View style={{ flex: 1 }} />
-          <Pressable style={styles.searchBtn}>
-            <MaterialIcons name="search" size={24} color="#ffffff" />
-          </Pressable>
+          {searchVisible ? (
+            <View style={styles.searchBar}>
+              <MaterialIcons name="search" size={20} color="rgba(255,255,255,0.5)" />
+              <TextInput
+                style={styles.searchInput}
+                value={searchText}
+                onChangeText={setSearchText}
+                placeholder="프리셋 검색..."
+                placeholderTextColor="rgba(255,255,255,0.4)"
+                autoFocus
+              />
+              <Pressable onPress={() => { setSearchVisible(false); setSearchText(''); }}>
+                <MaterialIcons name="close" size={20} color="rgba(255,255,255,0.5)" />
+              </Pressable>
+            </View>
+          ) : (
+            <>
+              <View style={{ flex: 1 }} />
+              <Pressable style={styles.searchBtn} onPress={() => setSearchVisible(true)}>
+                <MaterialIcons name="search" size={24} color="#ffffff" />
+              </Pressable>
+            </>
+          )}
         </View>
 
         <ScrollView
@@ -70,7 +101,7 @@ export default function PresetsScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {allPresets.map((preset) => {
+          {filteredPresets.map((preset) => {
             const defaultImg = PRESET_IMAGES[preset.id];
             const customImg = preset.imageUri ? { uri: preset.imageUri } : null;
             const img = defaultImg ?? customImg;
@@ -135,7 +166,7 @@ export default function PresetsScreen() {
         {/* FAB */}
         {soundCount > 0 && (
           <Pressable
-            style={styles.fab}
+            style={[styles.fab, { backgroundColor: themeColors.accent1, shadowColor: themeColors.accent1 }]}
             onPress={() => router.push('/presets/save')}
           >
             <MaterialIcons name="add" size={28} color="#ffffff" />
@@ -163,6 +194,24 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  searchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 16,
+    height: 48,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#ffffff',
+    padding: 0,
   },
   scroll: { flex: 1 },
   scrollContent: {

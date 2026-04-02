@@ -3,9 +3,7 @@ import { View, Text, Pressable, StyleSheet, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, {
   useSharedValue,
-  useAnimatedStyle,
   withTiming,
-  withDelay,
   Easing,
 } from 'react-native-reanimated';
 import { useAudio } from '@/hooks/useAudio';
@@ -85,13 +83,11 @@ export default function PlayingScreen() {
     router.back();
   };
 
-  const animStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
-
   return (
     <Pressable style={styles.container} onPress={handleTap}>
       <StatusBar hidden />
 
-      <Animated.View style={[styles.content, animStyle]}>
+      <Animated.View style={[styles.content, { opacity }]}>
         {/* Clock */}
         <Text style={styles.clock}>{clock}</Text>
 
@@ -102,7 +98,7 @@ export default function PlayingScreen() {
       </Animated.View>
 
       {/* Stop button (always at bottom) */}
-      <Animated.View style={[styles.stopArea, animStyle]}>
+      <Animated.View style={[styles.stopArea, { opacity }]}>
         <Pressable
           style={styles.stopBtn}
           onLongPress={handleLongPress}

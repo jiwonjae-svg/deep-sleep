@@ -3,7 +3,6 @@ import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, Image
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MascotImage } from '@/components/common/MascotImage';
 import { BenefitList } from '@/components/subscription/BenefitList';
 import { PlanCard } from '@/components/subscription/PlanCard';
 import { Button } from '@/components/ui/Button';
@@ -70,7 +69,7 @@ export default function SubscriptionScreen() {
           style={styles.banner}
           resizeMode="contain"
         />
-        <MascotImage pose="crown" size={140} />
+        <Image source={require('@/assets/images/logo/main_logo.png')} style={{ width: 100, height: 100 }} resizeMode="contain" />
 
         <Text style={styles.title}>Deep Sleep Premium</Text>
         <Text style={styles.subtitle}>광고 없이 100가지 소리를 마음껏 즐기세요</Text>

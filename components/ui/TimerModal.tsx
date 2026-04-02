@@ -1,5 +1,6 @@
-﻿import React, { useState, useMemo, useCallback } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+﻿import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { View, Text, Pressable, ScrollView, Modal, StyleSheet, TextInput } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useThemeColors } from '@/theme';
 import { useAlarmStore } from '@/stores/useAlarmStore';
@@ -18,10 +19,25 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
 
   const [selectedQuick, setSelectedQuick] = useState<number>(45);
   const [useAlarmSync, setUseAlarmSync] = useState(false);
+  const [useCustom, setUseCustom] = useState(false);
+  const [useUnlimited, setUseUnlimited] = useState(false);
+  const [customHours, setCustomHours] = useState(0);
+  const [customMinutes, setCustomMinutes] = useState(30);
+
+  // Custom time picker modal state
+  const [customPickerVisible, setCustomPickerVisible] = useState(false);
+  const [tempHours, setTempHours] = useState(0);
+  const [tempMinutes, setTempMinutes] = useState(30);
+  const [editingHours, setEditingHours] = useState(false);
+  const [editingMinutes, setEditingMinutes] = useState(false);
+  const [hoursText, setHoursText] = useState('');
+  const [minutesText, setMinutesText] = useState('');
+  // Store previous state before opening custom picker
+  const [prevState, setPrevState] = useState<{ quick: number; alarm: boolean; unlimited: boolean } | null>(null);
 
   const alarms = useAlarmStore((s) => s.alarms);
 
-  const nextAlarmMs = useMemo(() => {
+  const calcNextAlarmMs = useCallback(() => {
     const active = alarms.filter((a) => a.enabled);
     if (active.length === 0) return null;
     return active.reduce<number | null>((best, a) => {
@@ -30,24 +46,101 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
     }, null);
   }, [alarms]);
 
+  const [nextAlarmMs, setNextAlarmMs] = useState(calcNextAlarmMs);
+
+  // Update nextAlarmMs in real-time when alarm sync is active
+  useEffect(() => {
+    setNextAlarmMs(calcNextAlarmMs());
+    if (!useAlarmSync) return;
+    const id = setInterval(() => {
+      setNextAlarmMs(calcNextAlarmMs());
+    }, 60_000);
+    return () => clearInterval(id);
+  }, [useAlarmSync, calcNextAlarmMs]);
+
   const totalMinutes = useMemo(() => {
+    if (useUnlimited) return 0; // 0 = unlimited
+    if (useCustom) {
+      return customHours * 60 + customMinutes;
+    }
     if (useAlarmSync && nextAlarmMs !== null) return Math.max(1, Math.ceil(nextAlarmMs / 60_000));
     return selectedQuick;
-  }, [useAlarmSync, nextAlarmMs, selectedQuick]);
+  }, [useUnlimited, useCustom, customHours, customMinutes, useAlarmSync, nextAlarmMs, selectedQuick]);
 
-  const hasTime = totalMinutes > 0;
+  const displayStr = useMemo(() => {
+    if (useUnlimited) return '∞';
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}`;
+    return `${m}:00`;
+  }, [useUnlimited, totalMinutes]);
 
-  const handleStart = useCallback(() => {
+  const displayLabel = useMemo(() => {
+    if (useUnlimited) return '무제한';
+    const h = Math.floor(totalMinutes / 60);
+    if (h > 0) return '시간:분';
+    return '분:초';
+  }, [useUnlimited, totalMinutes]);
+
+  const hasTime = useUnlimited || totalMinutes > 0;
+
+  const handleSave = useCallback(() => {
     if (!hasTime) return;
-    onStart(totalMinutes);
+    // For unlimited, pass a very large number (24*60 = 1440 min = 24h)
+    onStart(useUnlimited ? 99999 : totalMinutes);
     onClose();
-  }, [hasTime, totalMinutes, onStart, onClose]);
+  }, [hasTime, useUnlimited, totalMinutes, onStart, onClose]);
 
-  const displayH = Math.floor(totalMinutes / 60);
-  const displayM = totalMinutes % 60;
-  const displayStr = displayH > 0
-    ? `${displayH}:${String(displayM).padStart(2, '0')}`
-    : `${displayM}:00`;
+  const selectQuick = (min: number) => {
+    setSelectedQuick(min);
+    setUseAlarmSync(false);
+    setUseCustom(false);
+    setUseUnlimited(false);
+  };
+
+  const selectCustom = () => {
+    setPrevState({ quick: selectedQuick, alarm: useAlarmSync, unlimited: useUnlimited });
+    setTempHours(customHours);
+    setTempMinutes(customMinutes);
+    setCustomPickerVisible(true);
+  };
+
+  const handleCustomPickerSave = () => {
+    if (tempHours === 0 && tempMinutes === 0) {
+      // Revert to previous state
+      if (prevState) {
+        setSelectedQuick(prevState.quick);
+        setUseAlarmSync(prevState.alarm);
+        setUseUnlimited(prevState.unlimited);
+        setUseCustom(false);
+      }
+    } else {
+      setCustomHours(tempHours);
+      setCustomMinutes(tempMinutes);
+      setUseCustom(true);
+      setUseAlarmSync(false);
+      setUseUnlimited(false);
+    }
+    setCustomPickerVisible(false);
+    setPrevState(null);
+  };
+
+  const handleCustomPickerCancel = () => {
+    // If we weren't already in custom mode, revert
+    if (!useCustom && prevState) {
+      setSelectedQuick(prevState.quick);
+      setUseAlarmSync(prevState.alarm);
+      setUseUnlimited(prevState.unlimited);
+    }
+    setCustomPickerVisible(false);
+    setPrevState(null);
+  };
+
+  const selectUnlimited = () => {
+    setUseUnlimited(true);
+    setUseCustom(false);
+    setUseAlarmSync(false);
+  };
 
   const styles = useMemo(
     () =>
@@ -55,7 +148,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
         headline: {
           fontSize: 26,
           fontWeight: '700',
-          color: '#ffffff',
+          color: themeColors.textPrimary,
           marginBottom: 4,
         },
         subtitle: {
@@ -63,7 +156,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
           fontWeight: '700',
           letterSpacing: 3,
           textTransform: 'uppercase',
-          color: 'rgba(255,255,255,0.5)',
+          color: themeColors.textMuted,
           marginBottom: 32,
         },
         dialOuter: {
@@ -71,7 +164,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
           height: 216,
           borderRadius: 108,
           borderWidth: 10,
-          borderColor: 'rgba(255,255,255,0.08)',
+          borderColor: themeColors.glassLight,
           alignItems: 'center',
           justifyContent: 'center',
           alignSelf: 'center',
@@ -80,7 +173,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
         dialTime: {
           fontSize: 44,
           fontWeight: '800',
-          color: '#ffffff',
+          color: themeColors.textPrimary,
           letterSpacing: -1,
         },
         dialLabel: {
@@ -88,13 +181,13 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
           fontWeight: '700',
           letterSpacing: 3,
           textTransform: 'uppercase',
-          color: 'rgba(255,255,255,0.5)',
+          color: themeColors.textMuted,
           marginTop: 4,
         },
         chipsRow: {
           flexDirection: 'row',
           gap: 10,
-          marginBottom: 20,
+          marginBottom: 12,
         },
         chip: {
           flex: 1,
@@ -108,28 +201,65 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
           fontWeight: '700',
           letterSpacing: 1,
         },
+        specialChipsRow: {
+          flexDirection: 'row',
+          gap: 10,
+          marginBottom: 20,
+        },
+        specialChip: {
+          flex: 1,
+          height: 44,
+          borderRadius: 9999,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 6,
+        },
+        customInputRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          marginBottom: 20,
+          backgroundColor: themeColors.glassLight,
+          borderRadius: 24,
+          paddingVertical: 12,
+          paddingHorizontal: 16,
+          borderWidth: 1,
+          borderColor: themeColors.glassBorder,
+        },
+        customLabel: {
+          fontSize: 14,
+          fontWeight: '700',
+          color: themeColors.textPrimary,
+        },
+        customTime: {
+          fontSize: 14,
+          fontWeight: '700',
+          color: themeColors.accent1,
+        },
         alarmRow: {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          backgroundColor: 'rgba(255,255,255,0.08)',
+          backgroundColor: themeColors.glassLight,
           borderRadius: 32,
           paddingHorizontal: 16,
           paddingVertical: 14,
           marginBottom: 24,
           borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.15)',
+          borderColor: themeColors.glassBorder,
         },
         alarmLabel: {
           fontSize: 13,
           fontWeight: '600',
-          color: '#ffffff',
+          color: themeColors.textPrimary,
         },
         alarmTime: {
           fontSize: 12,
           color: themeColors.accent1,
         },
-        startBtn: {
+        saveBtn: {
           borderRadius: 9999,
           paddingVertical: 18,
           alignItems: 'center',
@@ -139,7 +269,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
           shadowRadius: 15,
           elevation: 4,
         },
-        startBtnText: {
+        saveBtnText: {
           fontSize: 12,
           fontWeight: '700',
           letterSpacing: 2.5,
@@ -150,11 +280,12 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
   );
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} maxHeightPct={0.85}>
+    <BottomSheet visible={visible} onClose={onClose} maxHeightPct={0.6}>
+      <ScrollView showsVerticalScrollIndicator={true} indicatorStyle="white" nestedScrollEnabled>
       <Text style={styles.headline}>타이머 설정</Text>
       <Text style={styles.subtitle}>수면 & 집중 시간을 설정하세요</Text>
 
-      {/* Circular dial (decorative) */}
+      {/* Circular dial */}
       <View style={[styles.dialOuter, { borderColor: themeColors.accent1 + '55' }]}>
         <View
           style={{
@@ -163,37 +294,83 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
             height: 196,
             borderRadius: 98,
             borderWidth: 10,
-            borderColor: 'rgba(255,255,255,0.08)',
+            borderColor: themeColors.glassLight,
           }}
         />
         <Text style={styles.dialTime}>{displayStr}</Text>
-        <Text style={styles.dialLabel}>시간:분</Text>
+        <Text style={styles.dialLabel}>{displayLabel}</Text>
       </View>
 
       {/* Quick preset chips */}
       <View style={styles.chipsRow}>
         {QUICK_MINUTES.map((min) => {
-          const isSelected = !useAlarmSync && selectedQuick === min;
+          const isSelected = !useAlarmSync && !useCustom && !useUnlimited && selectedQuick === min;
           return (
             <Pressable
               key={min}
               style={[
                 styles.chip,
                 {
-                  backgroundColor: isSelected ? themeColors.accent1 : 'rgba(255,255,255,0.08)',
+                  backgroundColor: isSelected ? themeColors.accent1 : themeColors.glassLight,
                   borderWidth: 1,
-                  borderColor: isSelected ? themeColors.accent1 : 'rgba(255,255,255,0.15)',
+                  borderColor: isSelected ? themeColors.accent1 : themeColors.glassBorder,
                 },
               ]}
-              onPress={() => { setSelectedQuick(min); setUseAlarmSync(false); }}
+              onPress={() => selectQuick(min)}
             >
-              <Text style={[styles.chipText, { color: isSelected ? '#ffffff' : 'rgba(255,255,255,0.7)' }]}>
+              <Text style={[styles.chipText, { color: isSelected ? '#ffffff' : themeColors.textSecondary }]}>
                 {min}분
               </Text>
             </Pressable>
           );
         })}
       </View>
+
+      {/* Custom input & Unlimited chips */}
+      <View style={styles.specialChipsRow}>
+        <Pressable
+          style={[
+            styles.specialChip,
+            {
+              backgroundColor: useCustom ? themeColors.accent1 : themeColors.glassLight,
+              borderWidth: 1,
+              borderColor: useCustom ? themeColors.accent1 : themeColors.glassBorder,
+            },
+          ]}
+          onPress={selectCustom}
+        >
+          <MaterialIcons name="edit" size={16} color={useCustom ? '#ffffff' : themeColors.textSecondary} />
+          <Text style={[styles.chipText, { color: useCustom ? '#ffffff' : themeColors.textSecondary }]}>
+            직접 입력
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[
+            styles.specialChip,
+            {
+              backgroundColor: useUnlimited ? themeColors.accent1 : themeColors.glassLight,
+              borderWidth: 1,
+              borderColor: useUnlimited ? themeColors.accent1 : themeColors.glassBorder,
+            },
+          ]}
+          onPress={selectUnlimited}
+        >
+          <MaterialIcons name="all-inclusive" size={18} color={useUnlimited ? '#ffffff' : themeColors.textSecondary} />
+          <Text style={[styles.chipText, { color: useUnlimited ? '#ffffff' : themeColors.textSecondary }]}>
+            무제한
+          </Text>
+        </Pressable>
+      </View>
+
+      {/* Custom time display (when custom is selected) */}
+      {useCustom && (
+        <Pressable style={styles.customInputRow} onPress={selectCustom}>
+          <MaterialIcons name="access-time" size={18} color={themeColors.accent1} />
+          <Text style={styles.customLabel}>직접 설정:</Text>
+          <Text style={styles.customTime}>{customHours}시간 {customMinutes}분</Text>
+          <MaterialIcons name="edit" size={16} color={themeColors.textMuted} />
+        </Pressable>
+      )}
 
       {/* Alarm sync option */}
       {nextAlarmMs !== null && (
@@ -202,7 +379,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
             styles.alarmRow,
             useAlarmSync && { borderWidth: 1, borderColor: themeColors.accent1 },
           ]}
-          onPress={() => setUseAlarmSync((v) => !v)}
+          onPress={() => { setUseAlarmSync((v) => !v); setUseCustom(false); setUseUnlimited(false); }}
         >
           <View>
             <Text style={styles.alarmLabel}>알람까지</Text>
@@ -214,7 +391,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
               height: 22,
               borderRadius: 11,
               borderWidth: 2,
-              borderColor: useAlarmSync ? themeColors.accent1 : 'rgba(255,255,255,0.15)',
+              borderColor: useAlarmSync ? themeColors.accent1 : themeColors.glassBorder,
               backgroundColor: useAlarmSync ? themeColors.accent1 : 'transparent',
               alignItems: 'center',
               justifyContent: 'center',
@@ -225,15 +402,161 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
         </Pressable>
       )}
 
-      {/* Start button */}
+      {/* Save button (not start) */}
       <Pressable
-        style={[styles.startBtn, { backgroundColor: hasTime ? themeColors.accent1 : 'rgba(255,255,255,0.08)' }]}
-        onPress={handleStart}
+        style={[styles.saveBtn, { backgroundColor: hasTime ? themeColors.accent1 : themeColors.glassLight }]}
+        onPress={handleSave}
       >
-        <Text style={[styles.startBtnText, { color: hasTime ? '#ffffff' : 'rgba(255,255,255,0.4)' }]}>
-          타이머 시작
+        <Text style={[styles.saveBtnText, { color: hasTime ? '#ffffff' : themeColors.textMuted }]}>
+          타이머 저장
         </Text>
       </Pressable>
+      </ScrollView>
+
+      {/* Custom Time Picker Modal */}
+      <Modal
+        visible={customPickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCustomPickerCancel}
+      >
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 24,
+          }}
+          onPress={handleCustomPickerCancel}
+        >
+          <Pressable
+            style={{
+              width: '100%',
+              backgroundColor: themeColors.bgSecondary,
+              borderRadius: 24,
+              padding: 24,
+              borderWidth: 1,
+              borderColor: themeColors.glassBorder,
+            }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text style={{ fontSize: 18, fontWeight: '700', color: themeColors.textPrimary, textAlign: 'center', marginBottom: 24 }}>
+              시간 설정
+            </Text>
+
+            {/* Hour/Minute Picker */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+              {/* Hours */}
+              <View style={{ alignItems: 'center' }}>
+                <Pressable onPress={() => { setEditingHours(false); setEditingMinutes(false); setTempHours((h) => Math.min(23, h + 1)); }} style={{ padding: 8 }}>
+                  <MaterialIcons name="keyboard-arrow-up" size={32} color={themeColors.textSecondary} />
+                </Pressable>
+                {editingHours ? (
+                  <TextInput
+                    style={{ fontSize: 48, fontWeight: '800', color: themeColors.textPrimary, fontVariant: ['tabular-nums'], textAlign: 'center', minWidth: 72, padding: 0, borderBottomWidth: 2, borderBottomColor: themeColors.accent1 }}
+                    value={hoursText}
+                    onChangeText={(t) => setHoursText(t.replace(/[^0-9]/g, '').slice(0, 2))}
+                    onBlur={() => {
+                      const val = parseInt(hoursText, 10);
+                      if (!isNaN(val) && val >= 0 && val <= 23) setTempHours(val);
+                      setEditingHours(false);
+                    }}
+                    onSubmitEditing={() => {
+                      const val = parseInt(hoursText, 10);
+                      if (!isNaN(val) && val >= 0 && val <= 23) setTempHours(val);
+                      setEditingHours(false);
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    autoFocus
+                    selectTextOnFocus
+                  />
+                ) : (
+                  <Pressable onPress={() => { setHoursText(String(tempHours).padStart(2, '0')); setEditingHours(true); setEditingMinutes(false); }}>
+                    <Text style={{ fontSize: 48, fontWeight: '800', color: themeColors.textPrimary, fontVariant: ['tabular-nums'] }}>
+                      {String(tempHours).padStart(2, '0')}
+                    </Text>
+                  </Pressable>
+                )}
+                <Pressable onPress={() => { setEditingHours(false); setEditingMinutes(false); setTempHours((h) => Math.max(0, h - 1)); }} style={{ padding: 8 }}>
+                  <MaterialIcons name="keyboard-arrow-down" size={32} color={themeColors.textSecondary} />
+                </Pressable>
+                <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, color: themeColors.textMuted, textTransform: 'uppercase' }}>시간</Text>
+              </View>
+
+              <Text style={{ fontSize: 40, fontWeight: '700', color: themeColors.textMuted }}>:</Text>
+
+              {/* Minutes */}
+              <View style={{ alignItems: 'center' }}>
+                <Pressable onPress={() => { setEditingHours(false); setEditingMinutes(false); setTempMinutes((m) => (m + 5) % 60); }} style={{ padding: 8 }}>
+                  <MaterialIcons name="keyboard-arrow-up" size={32} color={themeColors.textSecondary} />
+                </Pressable>
+                {editingMinutes ? (
+                  <TextInput
+                    style={{ fontSize: 48, fontWeight: '800', color: themeColors.textPrimary, fontVariant: ['tabular-nums'], textAlign: 'center', minWidth: 72, padding: 0, borderBottomWidth: 2, borderBottomColor: themeColors.accent1 }}
+                    value={minutesText}
+                    onChangeText={(t) => setMinutesText(t.replace(/[^0-9]/g, '').slice(0, 2))}
+                    onBlur={() => {
+                      const val = parseInt(minutesText, 10);
+                      if (!isNaN(val) && val >= 0 && val <= 59) setTempMinutes(val);
+                      setEditingMinutes(false);
+                    }}
+                    onSubmitEditing={() => {
+                      const val = parseInt(minutesText, 10);
+                      if (!isNaN(val) && val >= 0 && val <= 59) setTempMinutes(val);
+                      setEditingMinutes(false);
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    autoFocus
+                    selectTextOnFocus
+                  />
+                ) : (
+                  <Pressable onPress={() => { setMinutesText(String(tempMinutes).padStart(2, '0')); setEditingMinutes(true); setEditingHours(false); }}>
+                    <Text style={{ fontSize: 48, fontWeight: '800', color: themeColors.textPrimary, fontVariant: ['tabular-nums'] }}>
+                      {String(tempMinutes).padStart(2, '0')}
+                    </Text>
+                  </Pressable>
+                )}
+                <Pressable onPress={() => { setEditingHours(false); setEditingMinutes(false); setTempMinutes((m) => (m - 5 + 60) % 60); }} style={{ padding: 8 }}>
+                  <MaterialIcons name="keyboard-arrow-down" size={32} color={themeColors.textSecondary} />
+                </Pressable>
+                <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, color: themeColors.textMuted, textTransform: 'uppercase' }}>분</Text>
+              </View>
+            </View>
+
+            {/* Save / Cancel */}
+            <View style={{ gap: 12, marginTop: 24 }}>
+              <Pressable
+                style={{
+                  backgroundColor: (tempHours > 0 || tempMinutes > 0) ? themeColors.accent1 : themeColors.glassLight,
+                  borderRadius: 9999,
+                  paddingVertical: 16,
+                  alignItems: 'center',
+                }}
+                onPress={handleCustomPickerSave}
+              >
+                <Text style={{
+                  fontSize: 12,
+                  fontWeight: '700',
+                  letterSpacing: 2,
+                  textTransform: 'uppercase',
+                  color: (tempHours > 0 || tempMinutes > 0) ? '#ffffff' : themeColors.textMuted,
+                }}>
+                  저장
+                </Text>
+              </Pressable>
+              <Pressable
+                style={{ paddingVertical: 12, alignItems: 'center' }}
+                onPress={handleCustomPickerCancel}
+              >
+                <Text style={{ fontSize: 14, color: themeColors.textMuted }}>취소</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </BottomSheet>
   );
 }

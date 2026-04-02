@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,9 +9,10 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Animated,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useAlarm } from '@/hooks/useAlarm';
 import { useAlarmStore } from '@/stores/useAlarmStore';
 import { TimePicker } from '@/components/alarm/TimePicker';
@@ -31,17 +32,125 @@ const SNOOZE_VALUES = [3, 5, 10];
 const MATH_LABELS = ['쉬움', '보통', '어려움'];
 const MATH_VALUES: MathDifficulty[] = ['easy', 'medium', 'hard'];
 
+const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+
+function SimpleCalendar({ selectedDate, onSelectDate }: { selectedDate: string; onSelectDate: (d: string) => void }) {
+  const today = new Date();
+  const themeColors = useThemeColors();
+  const [viewYear, setViewYear] = useState(() => {
+    if (selectedDate) { const [y] = selectedDate.split('-'); return parseInt(y, 10) || today.getFullYear(); }
+    return today.getFullYear();
+  });
+  const [viewMonth, setViewMonth] = useState(() => {
+    if (selectedDate) { const parts = selectedDate.split('-'); return parseInt(parts[1], 10) - 1 || today.getMonth(); }
+    return today.getMonth();
+  });
+
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+  const goToPrevMonth = () => {
+    if (viewMonth === 0) { setViewYear(viewYear - 1); setViewMonth(11); }
+    else setViewMonth(viewMonth - 1);
+  };
+  const goToNextMonth = () => {
+    if (viewMonth === 11) { setViewYear(viewYear + 1); setViewMonth(0); }
+    else setViewMonth(viewMonth + 1);
+  };
+
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  return (
+    <View style={calStyles.container}>
+      <View style={calStyles.header}>
+        <Pressable onPress={goToPrevMonth} style={calStyles.navBtn}>
+          <MaterialIcons name="chevron-left" size={24} color="rgba(255,255,255,0.7)" />
+        </Pressable>
+        <Text style={calStyles.monthLabel}>{viewYear}년 {viewMonth + 1}월</Text>
+        <Pressable onPress={goToNextMonth} style={calStyles.navBtn}>
+          <MaterialIcons name="chevron-right" size={24} color="rgba(255,255,255,0.7)" />
+        </Pressable>
+      </View>
+      <View style={calStyles.weekRow}>
+        {WEEKDAY_LABELS.map((d) => (
+          <Text key={d} style={calStyles.weekDay}>{d}</Text>
+        ))}
+      </View>
+      <View style={calStyles.grid}>
+        {cells.map((day, i) => {
+          if (day === null) return <View key={`e${i}`} style={calStyles.cell} />;
+          const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const isSelected = dateStr === selectedDate;
+          const isToday = dateStr === todayStr;
+          const isPast = dateStr < todayStr;
+          return (
+            <Pressable
+              key={dateStr}
+              style={calStyles.cell}
+              onPress={() => !isPast && onSelectDate(dateStr)}
+              disabled={isPast}
+            >
+              <View style={[calStyles.cellCircle, isSelected && [calStyles.cellCircleSelected, { backgroundColor: themeColors.accent1 }], isToday && !isSelected && calStyles.cellCircleToday]}>
+                <Text style={[calStyles.cellText, isSelected && calStyles.cellTextSelected, isPast && calStyles.cellTextPast]}>
+                  {day}
+                </Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+const calStyles = StyleSheet.create({
+  container: { marginBottom: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  navBtn: { padding: 4 },
+  monthLabel: { fontSize: 14, fontWeight: '700', color: '#ffffff' },
+  weekRow: { flexDirection: 'row', marginBottom: 4 },
+  weekDay: { flex: 1, textAlign: 'center', fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.4)', letterSpacing: 1, textTransform: 'uppercase' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap' },
+  cell: { width: '14.285%', aspectRatio: 1, alignItems: 'center', justifyContent: 'center' },
+  cellCircle: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  cellCircleSelected: { backgroundColor: '#456eea' },
+  cellCircleToday: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
+  cellText: { fontSize: 13, fontWeight: '600', color: '#ffffff' },
+  cellTextSelected: { color: '#ffffff', fontWeight: '800' },
+  cellTextPast: { color: 'rgba(255,255,255,0.2)' },
+});
+
 export default function AlarmEditScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
+  const themeColors = useThemeColors();
   const { addAlarm, updateAlarm, deleteAlarm } = useAlarm();
   const alarms = useAlarmStore((s) => s.alarms);
-  const themeColors = useThemeColors();
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.92)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+      Animated.spring(scaleAnim, { toValue: 1, tension: 220, friction: 22, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  const animateClose = useCallback((cb: () => void) => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 0.92, duration: 150, useNativeDriver: true }),
+    ]).start(cb);
+  }, [fadeAnim, scaleAnim]);
 
   const existingAlarm = params.id ? alarms.find((a) => a.id === params.id) : undefined;
   const isNew = !existingAlarm;
 
-  // State
   const [hour, setHour] = useState(existingAlarm?.time.hour ?? 7);
   const [minute, setMinute] = useState(existingAlarm?.time.minute ?? 0);
   const [days, setDays] = useState<boolean[]>(
@@ -59,27 +168,6 @@ export default function AlarmEditScreen() {
   const [mathDismiss, setMathDismiss] = useState(existingAlarm?.mathDismiss ?? false);
   const [mathIdx, setMathIdx] = useState(
     MATH_VALUES.indexOf((existingAlarm?.mathDifficulty as MathDifficulty) ?? 'easy'),
-  );
-
-  const styles = useMemo(
-    () =>
-      StyleSheet.create({
-        container: { flex: 1, backgroundColor: themeColors.bgPrimary },
-        header: { paddingHorizontal: layout.screenPaddingH, height: layout.headerHeight, justifyContent: 'center' },
-        title: { ...typography.h1, color: themeColors.textPrimary },
-        content: { paddingHorizontal: layout.screenPaddingH, gap: spacing.md, paddingBottom: spacing['4xl'] },
-        sectionTitle: { ...typography.bodyMedium, color: themeColors.textSecondary, marginTop: spacing.sm },
-        hint: { ...typography.caption, color: themeColors.textMuted },
-        input: { backgroundColor: themeColors.bgSecondary, borderRadius: layout.borderRadiusSm, borderWidth: 1, borderColor: themeColors.glassBorder, padding: layout.cardPadding, ...typography.body, color: themeColors.textPrimary },
-        toggleRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm },
-        buttonGroup: { gap: spacing.md, marginTop: spacing.xl },
-        modeRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm },
-        modeBtn: { flex: 1, paddingVertical: 10, borderRadius: layout.borderRadiusSm, backgroundColor: themeColors.bgSecondary, alignItems: 'center', borderWidth: 1, borderColor: themeColors.glassBorder },
-        modeBtnActive: { backgroundColor: themeColors.accent1, borderColor: themeColors.accent1 },
-        modeBtnText: { ...typography.bodyMedium, color: themeColors.textSecondary },
-        modeBtnTextActive: { color: themeColors.white },
-      }),
-    [themeColors],
   );
 
   const handleSave = async () => {
@@ -104,7 +192,7 @@ export default function AlarmEditScreen() {
     } else {
       await updateAlarm(existingAlarm.id, alarmData);
     }
-    router.back();
+    animateClose(() => router.back());
   };
 
   const handleDelete = () => {
@@ -116,23 +204,23 @@ export default function AlarmEditScreen() {
         style: 'destructive',
         onPress: async () => {
           await deleteAlarm(existingAlarm.id);
-          router.back();
+          animateClose(() => router.back());
         },
       },
     ]);
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <View style={styles.header}>
+    <Animated.View style={[{ flex: 1 }, { opacity: fadeAnim }]}>
+    <KeyboardAvoidingView
+      style={styles.overlay}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <Pressable style={StyleSheet.absoluteFill} onPress={() => animateClose(() => router.back())} />
+      <Animated.View style={[styles.dialog, { transform: [{ scale: scaleAnim }] }]}>
+        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>{isNew ? '알람 추가' : '알람 편집'}</Text>
-        </View>
 
-        <ScrollView contentContainerStyle={styles.content}>
           {/* Time picker */}
           <TimePicker hour={hour} minute={minute} onHourChange={setHour} onMinuteChange={setMinute} />
 
@@ -140,37 +228,23 @@ export default function AlarmEditScreen() {
           <Text style={styles.sectionTitle}>일정</Text>
           <View style={styles.modeRow}>
             <Pressable
-              style={[styles.modeBtn, !useSpecificDate && styles.modeBtnActive]}
+              style={[styles.modeBtn, !useSpecificDate && styles.modeBtnActive, !useSpecificDate && { backgroundColor: themeColors.accent1, borderColor: themeColors.accent1 }]}
               onPress={() => setUseSpecificDate(false)}
             >
               <Text style={[styles.modeBtnText, !useSpecificDate && styles.modeBtnTextActive]}>요일 반복</Text>
             </Pressable>
             <Pressable
-              style={[styles.modeBtn, useSpecificDate && styles.modeBtnActive]}
+              style={[styles.modeBtn, useSpecificDate && styles.modeBtnActive, useSpecificDate && { backgroundColor: themeColors.accent1, borderColor: themeColors.accent1 }]}
               onPress={() => setUseSpecificDate(true)}
             >
               <Text style={[styles.modeBtnText, useSpecificDate && styles.modeBtnTextActive]}>특정 날짜</Text>
             </Pressable>
           </View>
 
-          {/* Days or Date */}
           {useSpecificDate ? (
-            <>
-              <TextInput
-                style={styles.input}
-                value={specificDate}
-                onChangeText={setSpecificDate}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={themeColors.textMuted}
-                keyboardType="number-pad"
-                maxLength={10}
-              />
-              <Text style={styles.hint}>예: 2025-01-31</Text>
-            </>
+            <SimpleCalendar selectedDate={specificDate} onSelectDate={setSpecificDate} />
           ) : (
-            <>
-              <DaySelector days={days} onChange={setDays} />
-            </>
+            <DaySelector days={days} onChange={setDays} />
           )}
 
           {/* Label */}
@@ -180,7 +254,7 @@ export default function AlarmEditScreen() {
             value={label}
             onChangeText={setLabel}
             placeholder="알람 이름"
-            placeholderTextColor={themeColors.textMuted}
+            placeholderTextColor="rgba(255,255,255,0.4)"
             maxLength={30}
           />
 
@@ -223,15 +297,84 @@ export default function AlarmEditScreen() {
           {/* Buttons */}
           <View style={styles.buttonGroup}>
             <Button title="저장" variant="primary" onPress={handleSave} />
-            <Button title="취소" variant="ghost" onPress={() => router.back()} />
+            <Button title="취소" variant="ghost" onPress={() => animateClose(() => router.back())} />
             {!isNew && (
               <Button title="삭제" variant="ghost" onPress={handleDelete} />
             )}
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </Animated.View>
+    </KeyboardAvoidingView>
+    </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  dialog: {
+    width: '100%',
+    maxHeight: '90%',
+    backgroundColor: 'rgba(17,21,31,0.92)',
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  hint: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.4)',
+  },
+  input: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    padding: 12,
+    fontSize: 14,
+    color: '#ffffff',
+  },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  buttonGroup: { gap: 12, marginTop: 20 },
+  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+  modeBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  modeBtnActive: { backgroundColor: '#456eea', borderColor: '#456eea' },
+  modeBtnText: { fontSize: 14, fontWeight: '700', color: 'rgba(255,255,255,0.7)' },
+  modeBtnTextActive: { color: '#ffffff' },
+});
 
 

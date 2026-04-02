@@ -85,9 +85,11 @@ export type AudioQuality = 'low' | 'medium' | 'high';
 export type VolumeChangeSpeed = 'slow' | 'medium' | 'fast';
 export type AppLanguage = 'ko' | 'en';
 export type ThemeMode = 'dark' | 'light' | 'system';
+export type ThemeColor = '#456eea' | '#8b5cf6' | '#ec4899' | '#f97316' | '#22c55e' | '#06b6d4' | '#ef4444' | '#14b8a6' | '#a855f7' | '#eab308' | '#6366f1' | '#f43f5e';
 
 export interface AppSettings {
   themeMode: ThemeMode;
+  themeColor: ThemeColor;
   language: AppLanguage;
   autoSleepScreen: boolean;
   autoDimBrightness: boolean;

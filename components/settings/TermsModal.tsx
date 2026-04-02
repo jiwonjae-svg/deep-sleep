@@ -13,6 +13,7 @@ import { useThemeColors, typography, spacing, layout } from '@/theme';
 interface TermsModalProps {
   visible: boolean;
   onClose: () => void;
+  mode?: 'terms' | 'privacy';
 }
 
 const TERMS_CONTENT = `제1조 (목적)
@@ -44,7 +45,41 @@ const TERMS_CONTENT = `제1조 (목적)
 
 시행일: 2026년 3월 1일`;
 
-export function TermsModal({ visible, onClose }: TermsModalProps) {
+const PRIVACY_CONTENT = `Deep Sleep(이하 "앱")은 사용자의 개인정보를 중요하게 생각하며, 아래와 같이 개인정보를 처리하고 있습니다.
+
+1. 수집하는 개인정보
+앱은 서비스 제공 및 개선을 위해 다음과 같은 정보를 수집할 수 있습니다.
+• 기기 정보: 기기 모델, 운영체제 버전, 앱 버전
+• 사용 통계: 앱 사용 패턴, 기능 사용 빈도 (비식별화된 형태)
+• 구독 정보: 결제 상태 (Google Play를 통해 처리)
+
+2. 개인정보의 이용 목적
+수집된 정보는 다음 목적으로 이용됩니다.
+• 앱 서비스 제공 및 유지
+• 앱 성능 개선 및 버그 수정
+• 구독 상태 관리
+• 사용자 경험 개선을 위한 분석
+
+3. 개인정보의 보관 및 파기
+• 앱 삭제 시 기기에 저장된 모든 데이터가 삭제됩니다.
+• 서버에 저장된 비식별 통계 데이터는 수집일로부터 1년 후 자동 삭제됩니다.
+
+4. 개인정보의 제3자 제공
+앱은 사용자의 개인정보를 제3자에게 제공하지 않습니다. 단, 법률에 따라 요구되는 경우에는 예외로 합니다.
+
+5. 광고
+무료 사용자에게 Google AdMob을 통해 광고가 표시될 수 있습니다. Google의 개인정보 처리방침은 Google의 약관을 따릅니다.
+
+6. 사용자의 권리
+사용자는 언제든지 앱 데이터를 삭제하거나, 앱을 삭제하여 개인정보 처리를 중단할 수 있습니다.
+
+7. 문의
+개인정보 관련 문의는 아래 이메일로 연락 부탁드립니다.
+이메일: support@deepsleep.app
+
+시행일: 2026년 3월 1일`;
+
+export function TermsModal({ visible, onClose, mode = 'terms' }: TermsModalProps) {
   const themeColors = useThemeColors();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.92)).current;
@@ -132,7 +167,7 @@ export function TermsModal({ visible, onClose }: TermsModalProps) {
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
         <Animated.View style={[styles.sheet, { transform: [{ scale: scaleAnim }], opacity: fadeAnim }]}>
           <View style={styles.header}>
-            <Text style={styles.title}>이용약관</Text>
+            <Text style={styles.title}>{mode === 'privacy' ? '개인정보 처리방침' : '이용약관'}</Text>
             <Pressable onPress={handleClose} style={styles.closeBtn}>
               <Text style={styles.closeText}>✕</Text>
             </Pressable>
@@ -142,7 +177,7 @@ export function TermsModal({ visible, onClose }: TermsModalProps) {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.content}>{TERMS_CONTENT}</Text>
+            <Text style={styles.content}>{mode === 'privacy' ? PRIVACY_CONTENT : TERMS_CONTENT}</Text>
           </ScrollView>
           <Pressable style={styles.confirmBtn} onPress={handleClose}>
             <Text style={styles.confirmText}>확인</Text>

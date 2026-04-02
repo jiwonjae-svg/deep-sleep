@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Linking } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, Linking, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -10,7 +10,7 @@ import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
 import * as BillingService from '@/services/BillingService';
 import { spacing, layout } from '@/theme';
-import { AppLanguage, AudioQuality, VolumeChangeSpeed, ThemeMode } from '@/types';
+import { AppLanguage, AudioQuality, VolumeChangeSpeed, ThemeMode, ThemeColor } from '@/types';
 
 const QUALITY_OPTIONS: OptionItem<AudioQuality>[] = [
   { value: 'low', label: '낮음' },
@@ -32,10 +32,19 @@ const LANG_OPTIONS: OptionItem<AppLanguage>[] = [
 ];
 const LANG_LABELS: Record<AppLanguage, string> = { ko: '한국어', en: 'English' };
 
-const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
-  { value: 'dark', label: '다크 모드' },
-  { value: 'light', label: '라이트 모드' },
-  { value: 'system', label: '시스템 설정' },
+const THEME_COLORS: { value: ThemeColor; label: string }[] = [
+  { value: '#456eea', label: '블루' },
+  { value: '#8b5cf6', label: '퍼플' },
+  { value: '#a855f7', label: '바이올렛' },
+  { value: '#6366f1', label: '인디고' },
+  { value: '#ec4899', label: '핑크' },
+  { value: '#f43f5e', label: '로즈' },
+  { value: '#ef4444', label: '레드' },
+  { value: '#f97316', label: '오렌지' },
+  { value: '#eab308', label: '옐로' },
+  { value: '#22c55e', label: '그린' },
+  { value: '#14b8a6', label: '틸' },
+  { value: '#06b6d4', label: '시안' },
 ];
 
 export default function SettingsScreen() {
@@ -47,6 +56,8 @@ export default function SettingsScreen() {
   const [speedModalVisible, setSpeedModalVisible] = useState(false);
   const [langModalVisible, setLangModalVisible] = useState(false);
   const [termsModalVisible, setTermsModalVisible] = useState(false);
+  const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
+  const [themeColorModalVisible, setThemeColorModalVisible] = useState(false);
 
   return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -55,32 +66,17 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>GENERAL</Text>
           <View style={styles.group}>
 
-            {/* Theme Radio Group */}
+            {/* Theme Color */}
             <View style={styles.themeSection}>
               <View style={styles.themeHeader}>
                 <MaterialIcons name="palette" size={20} color="rgba(255,255,255,0.7)" />
-                <Text style={styles.rowLabel}>테마</Text>
-              </View>
-              <View style={styles.radioGroup}>
-                {THEME_OPTIONS.map((opt) => {
-                  const selected = settings.themeMode === opt.value;
-                  return (
-                    <Pressable
-                      key={opt.value}
-                      style={[styles.radioOption, selected && styles.radioOptionActive]}
-                      onPress={() => updateSettings({ themeMode: opt.value })}
-                    >
-                      <Text style={[styles.radioLabel, selected && styles.radioLabelActive]}>
-                        {opt.label}
-                      </Text>
-                      {selected ? (
-                        <MaterialIcons name="check-circle" size={20} color="#ffffff" />
-                      ) : (
-                        <View style={styles.radioCircle} />
-                      )}
-                    </Pressable>
-                  );
-                })}
+                <Text style={[styles.rowLabel, { flex: 1 }]}>테마 컬러</Text>
+                <Pressable onPress={() => setThemeColorModalVisible(true)}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: settings.themeColor || '#456eea' }} />
+                    <MaterialIcons name="chevron-right" size={20} color="rgba(255,255,255,0.3)" />
+                  </View>
+                </Pressable>
               </View>
             </View>
 
@@ -155,7 +151,7 @@ export default function SettingsScreen() {
           {/* ────── INFO ────── */}
           <Text style={styles.sectionTitle}>INFO</Text>
           <View style={styles.group}>
-            <SettingRow icon="description" label="개인정보 처리방침" onPress={() => {}} />
+            <SettingRow icon="description" label="개인정보 처리방침" onPress={() => setPrivacyModalVisible(true)} />
             <View style={styles.divider} />
             <SettingRow icon="article" label="이용약관" onPress={() => setTermsModalVisible(true)} />
             <View style={styles.divider} />
@@ -208,6 +204,18 @@ export default function SettingsScreen() {
           visible={termsModalVisible}
           onClose={() => setTermsModalVisible(false)}
         />
+        <TermsModal
+          visible={privacyModalVisible}
+          onClose={() => setPrivacyModalVisible(false)}
+          mode="privacy"
+        />
+        <ThemeColorModal
+          visible={themeColorModalVisible}
+          colors={THEME_COLORS}
+          selected={settings.themeColor || '#456eea'}
+          onSelect={(v) => updateSettings({ themeColor: v as any })}
+          onClose={() => setThemeColorModalVisible(false)}
+        />
       </SafeAreaView>
   );
 }
@@ -236,6 +244,94 @@ function SettingRow({
         )}
       </View>
     </Pressable>
+  );
+}
+
+function ThemeColorModal({
+  visible,
+  colors: colorOptions,
+  selected,
+  onSelect,
+  onClose,
+}: {
+  visible: boolean;
+  colors: { value: string; label: string }[];
+  selected: string;
+  onSelect: (v: string) => void;
+  onClose: () => void;
+}) {
+  const [tempSelected, setTempSelected] = React.useState(selected);
+  React.useEffect(() => {
+    if (visible) setTempSelected(selected);
+  }, [visible, selected]);
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', paddingHorizontal: 24 }} onPress={onClose}>
+        <Pressable style={{
+          backgroundColor: 'rgba(17,21,31,0.95)',
+          borderRadius: 24,
+          padding: 24,
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.15)',
+        }} onPress={(e) => e.stopPropagation()}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: '#ffffff', textAlign: 'center', marginBottom: 20 }}>
+            테마 컬러
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 16, paddingHorizontal: 4 }}
+          >
+            {colorOptions.map((c) => {
+              const isSel = c.value === tempSelected;
+              return (
+                <Pressable
+                  key={c.value}
+                  onPress={() => setTempSelected(c.value)}
+                  style={{ alignItems: 'center', gap: 6 }}
+                >
+                  <View style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                    backgroundColor: c.value,
+                    borderWidth: isSel ? 3 : 0,
+                    borderColor: '#ffffff',
+                  }}>
+                    {isSel && (
+                      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                        <MaterialIcons name="check" size={22} color="#ffffff" />
+                      </View>
+                    )}
+                  </View>
+                  <Text style={{ fontSize: 10, fontWeight: '600', color: isSel ? '#ffffff' : 'rgba(255,255,255,0.5)' }}>
+                    {c.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+          <Pressable
+            style={{
+              marginTop: 24,
+              backgroundColor: tempSelected,
+              borderRadius: 9999,
+              paddingVertical: 14,
+              alignItems: 'center',
+            }}
+            onPress={() => { onSelect(tempSelected); onClose(); }}
+          >
+            <Text style={{ fontSize: 12, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase', color: '#ffffff' }}>
+              확인
+            </Text>
+          </Pressable>
+          <Pressable style={{ marginTop: 8, paddingVertical: 10, alignItems: 'center' }} onPress={onClose}>
+            <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>취소</Text>
+          </Pressable>
+        </Pressable>
+      </Pressable>
+    </Modal>
   );
 }
 

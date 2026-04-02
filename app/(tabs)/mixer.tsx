@@ -149,6 +149,26 @@ export default function MixerScreen() {
             사운드 믹서 {soundCount}/10 활성
           </Text>
 
+          {/* Active Sounds Chip List */}
+          {soundCount > 0 && (
+            <View style={styles.activeChipsRow}>
+              {Array.from(activeSoundsMap.entries()).map(([id]) => {
+                const soundInfo = getSoundById(id);
+                return (
+                  <Pressable
+                    key={id}
+                    style={styles.activeChip}
+                    onPress={() => toggleSound(id)}
+                  >
+                    <MaterialIcons name={SOUND_ICONS[id] ?? 'music-note'} size={12} color="#ffffff" />
+                    <Text style={styles.activeChipText}>{soundInfo?.name ?? id}</Text>
+                    <MaterialIcons name="close" size={12} color="rgba(255,255,255,0.5)" />
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
+
           {/* AI Recommendation Button */}
           <View style={styles.aiRow}>
             <Pressable style={styles.aiBtn} onPress={handleAIPress}>
@@ -179,7 +199,15 @@ export default function MixerScreen() {
                   <View
                     style={[
                       styles.categoryIcon,
-                      isSelected && styles.categoryIconActive,
+                      isSelected && {
+                        backgroundColor: themeColors.accent1,
+                        borderColor: themeColors.accent1,
+                        shadowColor: themeColors.accent1,
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.4,
+                        shadowRadius: 20,
+                        elevation: 6,
+                      },
                     ]}
                   >
                     <MaterialIcons
@@ -233,7 +261,7 @@ export default function MixerScreen() {
                         {sound.name}
                       </Text>
                       {isLocked && (
-                        <View style={styles.premiumBadge}>
+                        <View style={[styles.premiumBadge, { backgroundColor: themeColors.accent1 }]}>
                           <Text style={styles.premiumBadgeText}>PREMIUM</Text>
                         </View>
                       )}
@@ -328,7 +356,33 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
     marginTop: 16,
+    marginBottom: 8,
+  },
+  activeChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 24,
     marginBottom: 12,
+  },
+  activeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 9999,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.20)',
+  },
+  activeChipText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: '#ffffff',
   },
   // AI button
   aiRow: {
