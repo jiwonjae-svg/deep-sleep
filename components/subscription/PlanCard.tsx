@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useEffect, useRef, useMemo } from 'react';
+import { View, Text, Pressable, StyleSheet, Animated } from 'react-native';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { useTranslation } from 'react-i18next';
 
@@ -24,20 +24,36 @@ export function PlanCard({
 }: PlanCardProps) {
   const themeColors = useThemeColors();
   const { t } = useTranslation();
+  const selectionAnim = useRef(new Animated.Value(selected ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(selectionAnim, {
+      toValue: selected ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [selected]);
+
+  const animatedBorderColor = selectionAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [themeColors.glassBorder, themeColors.accent1],
+  });
+  const animatedBgColor = selectionAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [themeColors.glassLight, themeColors.glassMedium],
+  });
+
   const styles = useMemo(
     () =>
       StyleSheet.create({
         card: {
           flex: 1,
-          backgroundColor: themeColors.glassLight,
           borderRadius: layout.borderRadiusMd,
           padding: spacing.md,
           alignItems: 'center',
-          borderWidth: 1,
-          borderColor: themeColors.glassBorder,
+          borderWidth: 2,
           gap: spacing.xs,
         },
-        cardSelected: { borderColor: themeColors.accent1, borderWidth: 2, backgroundColor: themeColors.glassMedium },
         badge: { backgroundColor: themeColors.accent3, borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 2, marginBottom: spacing.xs },
         badgeText: { ...typography.overline, color: '#000000' },
         title: { ...typography.bodyMedium, color: themeColors.textPrimary },
@@ -49,19 +65,20 @@ export function PlanCard({
   );
 
   return (
-    <Pressable
-      onPress={onPress}
-      style={[styles.card, selected && styles.cardSelected]}
-    >
-      {recommended && (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{t('subscription.recommended')}</Text>
-        </View>
-      )}
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.price}>{price}</Text>
-      <Text style={styles.period}>{period}</Text>
-      {subtext && <Text style={styles.subtext}>{subtext}</Text>}
+    <Pressable onPress={onPress}>
+      <Animated.View
+        style={[styles.card, { borderColor: animatedBorderColor, backgroundColor: animatedBgColor }]}
+      >
+        {recommended && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{t('subscription.recommended')}</Text>
+          </View>
+        )}
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.price}>{price}</Text>
+        <Text style={styles.period}>{period}</Text>
+        {subtext && <Text style={styles.subtext}>{subtext}</Text>}
+      </Animated.View>
     </Pressable>
   );
 }

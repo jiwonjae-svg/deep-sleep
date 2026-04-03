@@ -1,11 +1,12 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, Image } from 'react-native';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BenefitList } from '@/components/subscription/BenefitList';
 import { PlanCard } from '@/components/subscription/PlanCard';
 import { Button } from '@/components/ui/Button';
+import { GradientBackground } from '@/components/ui/GradientBackground';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +25,11 @@ export default function SubscriptionScreen() {
   const [selectedPlan, setSelectedPlan] = useState('yearly');
   const themeColors = useThemeColors();
   const { t } = useTranslation();
+  const titleOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(titleOpacity, { toValue: 1, duration: 600, useNativeDriver: true }).start();
+  }, []);
 
   const PLANS: PlanInfo[] = [
     { id: 'monthly', title: t('subscription.monthly'), price: t('subscription.monthlyPrice'), period: t('subscription.monthlyPeriod') },
@@ -33,11 +39,10 @@ export default function SubscriptionScreen() {
   const styles = useMemo(
     () =>
       StyleSheet.create({
-        container: { flex: 1, backgroundColor: themeColors.bgPrimary },
+        container: { flex: 1 },
         closeBtn: { position: 'absolute', top: 56, right: layout.screenPaddingH, width: 44, height: 44, alignItems: 'center', justifyContent: 'center', zIndex: 10 },
         content: { alignItems: 'center', padding: layout.screenPaddingH, paddingTop: spacing['2xl'], gap: spacing.lg },
-        banner: { width: '100%', height: 100, marginBottom: spacing.sm },
-        title: { ...typography.display, color: themeColors.textPrimary },
+        title: { ...typography.display, color: themeColors.textPrimary, textAlign: 'center' },
         subtitle: { ...typography.body, color: themeColors.textSecondary, textAlign: 'center' },
         plans: { width: '100%', gap: spacing.md },
         restoreText: { ...typography.bodyMedium, color: themeColors.accent1, textDecorationLine: 'underline' },
@@ -59,59 +64,56 @@ export default function SubscriptionScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Close button */}
-      <Pressable style={styles.closeBtn} onPress={() => router.back()}>
-        <Ionicons name="close" size={28} color={themeColors.textSecondary} />
-      </Pressable>
-
-      <ScrollView contentContainerStyle={styles.content}>
-        <Image
-          source={require('@/assets/images/promo/premium-banner.png')}
-          style={styles.banner}
-          resizeMode="contain"
-        />
-        <Image source={require('@/assets/images/logo/main_logo.png')} style={{ width: 100, height: 100 }} resizeMode="contain" />
-
-        <Text style={styles.title}>Deep Sleep Premium</Text>
-        <Text style={styles.subtitle}>{t('subscription.subtitle')}</Text>
-
-        <BenefitList />
-
-        {/* Plan cards */}
-        <View style={styles.plans}>
-          {PLANS.map((plan) => (
-            <PlanCard
-              key={plan.id}
-              title={plan.title}
-              price={plan.price}
-              period={plan.period}
-              recommended={plan.recommended}
-              selected={selectedPlan === plan.id}
-              onPress={() => setSelectedPlan(plan.id)}
-            />
-          ))}
-        </View>
-
-        {/* Purchase */}
-        <Button
-          title={isPurchasing ? t('subscription.processing') : t('subscription.subscribe')}
-          variant="primary"
-          onPress={handlePurchase}
-          disabled={isPurchasing}
-        />
-
-        {/* Restore */}
-        <Pressable onPress={restore}>
-          <Text style={styles.restoreText}>{t('subscription.restore')}</Text>
+    <GradientBackground overlay overlayOpacity={0.45}>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        {/* Close button */}
+        <Pressable style={styles.closeBtn} onPress={() => router.back()}>
+          <Ionicons name="close" size={28} color={themeColors.textSecondary} />
         </Pressable>
 
-        {/* Legal */}
-        <Text style={styles.legal}>
-          {t('subscription.legal')}
-        </Text>
-      </ScrollView>
-    </SafeAreaView>
+        <ScrollView contentContainerStyle={styles.content}>
+          <Animated.Text style={[styles.title, { opacity: titleOpacity }]}>
+            Deep Sleep Premium
+          </Animated.Text>
+          <Text style={styles.subtitle}>{t('subscription.subtitle')}</Text>
+
+          <BenefitList />
+
+          {/* Plan cards */}
+          <View style={styles.plans}>
+            {PLANS.map((plan) => (
+              <PlanCard
+                key={plan.id}
+                title={plan.title}
+                price={plan.price}
+                period={plan.period}
+                recommended={plan.recommended}
+                selected={selectedPlan === plan.id}
+                onPress={() => setSelectedPlan(plan.id)}
+              />
+            ))}
+          </View>
+
+          {/* Purchase */}
+          <Button
+            title={isPurchasing ? t('subscription.processing') : t('subscription.subscribe')}
+            variant="primary"
+            onPress={handlePurchase}
+            disabled={isPurchasing}
+          />
+
+          {/* Restore */}
+          <Pressable onPress={restore}>
+            <Text style={styles.restoreText}>{t('subscription.restore')}</Text>
+          </Pressable>
+
+          {/* Legal */}
+          <Text style={styles.legal}>
+            {t('subscription.legal')}
+          </Text>
+        </ScrollView>
+      </SafeAreaView>
+    </GradientBackground>
   );
 }
 
