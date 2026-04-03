@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, Pressable, TextInput, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useThemeColors, typography, spacing } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 interface TimePickerProps {
   hour: number;
@@ -12,6 +13,7 @@ interface TimePickerProps {
 
 export function TimePicker({ hour, minute, onHourChange, onMinuteChange }: TimePickerProps) {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const [editingHour, setEditingHour] = useState(false);
   const [editingMinute, setEditingMinute] = useState(false);
   const [hourText, setHourText] = useState('');
@@ -21,23 +23,36 @@ export function TimePicker({ hour, minute, onHourChange, onMinuteChange }: TimeP
     () =>
       StyleSheet.create({
         container: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.md },
-        column: { alignItems: 'center' },
+        column: { alignItems: 'center', width: 90 },
         arrow: { padding: spacing.sm },
         arrowText: { fontSize: 24, color: themeColors.textSecondary },
-        value: { fontFamily: 'monospace', fontSize: 56, fontWeight: '700', color: themeColors.textPrimary, lineHeight: 68 },
+        value: {
+          fontFamily: 'monospace',
+          fontSize: 56,
+          fontWeight: '700',
+          color: themeColors.textPrimary,
+          textAlign: 'center',
+          width: 84,
+          height: 68,
+          lineHeight: 68,
+          borderBottomWidth: 2,
+          borderBottomColor: 'transparent',
+        },
         valueInput: {
           fontFamily: 'monospace',
           fontSize: 56,
           fontWeight: '700',
           color: themeColors.textPrimary,
-          lineHeight: 68,
           textAlign: 'center',
-          minWidth: 80,
+          width: 84,
+          height: 68,
+          lineHeight: 68,
           padding: 0,
           borderBottomWidth: 2,
           borderBottomColor: themeColors.accent1,
         },
         colon: { fontSize: 48, fontWeight: '700', color: themeColors.textPrimary, marginTop: -4 },
+        label: { fontSize: 10, fontWeight: '700', letterSpacing: 2, color: themeColors.textMuted, textTransform: 'uppercase', marginTop: 2 },
       }),
     [themeColors],
   );
@@ -95,6 +110,7 @@ export function TimePicker({ hour, minute, onHourChange, onMinuteChange }: TimeP
         <Pressable onPress={() => onHourChange((hour - 1 + 24) % 24)} style={styles.arrow}>
           <MaterialIcons name="keyboard-arrow-down" size={32} color={themeColors.textSecondary} />
         </Pressable>
+        <Text style={styles.label}>{t('timer.hourLabel')}</Text>
       </View>
 
       <Text style={styles.colon}>:</Text>
@@ -124,6 +140,7 @@ export function TimePicker({ hour, minute, onHourChange, onMinuteChange }: TimeP
         <Pressable onPress={() => onMinuteChange((minute - 1 + 60) % 60)} style={styles.arrow}>
           <MaterialIcons name="keyboard-arrow-down" size={32} color={themeColors.textSecondary} />
         </Pressable>
+        <Text style={styles.label}>{t('timer.minuteLabel')}</Text>
       </View>
     </View>
   );

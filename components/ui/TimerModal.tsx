@@ -453,7 +453,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
                 </Pressable>
                 {editingHours ? (
                   <TextInput
-                    style={{ fontSize: 48, fontWeight: '800', color: themeColors.textPrimary, fontVariant: ['tabular-nums'], textAlign: 'center', width: 72, height: 58, padding: 0, borderBottomWidth: 2, borderBottomColor: themeColors.accent1 }}
+                    style={{ fontSize: 48, fontWeight: '800', color: themeColors.textPrimary, fontVariant: ['tabular-nums'], textAlign: 'center', textAlignVertical: 'center', width: 72, height: 58, lineHeight: 58, padding: 0, borderBottomWidth: 2, borderBottomColor: themeColors.accent1 }}
                     value={hoursText}
                     onChangeText={(t) => setHoursText(t.replace(/[^0-9]/g, '').slice(0, 2))}
                     onBlur={() => {
@@ -473,7 +473,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
                   />
                 ) : (
                   <Pressable onPress={() => { setHoursText(String(tempHours).padStart(2, '0')); setEditingHours(true); setEditingMinutes(false); }}>
-                    <Text style={{ fontSize: 48, fontWeight: '800', color: themeColors.textPrimary, fontVariant: ['tabular-nums'], textAlign: 'center', width: 72, height: 58, borderBottomWidth: 2, borderBottomColor: 'transparent' }}>
+                    <Text style={{ fontSize: 48, fontWeight: '800', color: themeColors.textPrimary, fontVariant: ['tabular-nums'], textAlign: 'center', width: 72, height: 58, lineHeight: 58, borderBottomWidth: 2, borderBottomColor: 'transparent' }}>
                       {String(tempHours).padStart(2, '0')}
                     </Text>
                   </Pressable>
@@ -493,7 +493,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
                 </Pressable>
                 {editingMinutes ? (
                   <TextInput
-                    style={{ fontSize: 48, fontWeight: '800', color: themeColors.textPrimary, fontVariant: ['tabular-nums'], textAlign: 'center', width: 72, height: 58, padding: 0, borderBottomWidth: 2, borderBottomColor: themeColors.accent1 }}
+                    style={{ fontSize: 48, fontWeight: '800', color: themeColors.textPrimary, fontVariant: ['tabular-nums'], textAlign: 'center', textAlignVertical: 'center', width: 72, height: 58, lineHeight: 58, padding: 0, borderBottomWidth: 2, borderBottomColor: themeColors.accent1 }}
                     value={minutesText}
                     onChangeText={(t) => setMinutesText(t.replace(/[^0-9]/g, '').slice(0, 2))}
                     onBlur={() => {
@@ -513,7 +513,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
                   />
                 ) : (
                   <Pressable onPress={() => { setMinutesText(String(tempMinutes).padStart(2, '0')); setEditingMinutes(true); setEditingHours(false); }}>
-                    <Text style={{ fontSize: 48, fontWeight: '800', color: themeColors.textPrimary, fontVariant: ['tabular-nums'], textAlign: 'center', width: 72, height: 58, borderBottomWidth: 2, borderBottomColor: 'transparent' }}>
+                    <Text style={{ fontSize: 48, fontWeight: '800', color: themeColors.textPrimary, fontVariant: ['tabular-nums'], textAlign: 'center', width: 72, height: 58, lineHeight: 58, borderBottomWidth: 2, borderBottomColor: 'transparent' }}>
                       {String(tempMinutes).padStart(2, '0')}
                     </Text>
                   </Pressable>
