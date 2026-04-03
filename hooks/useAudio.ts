@@ -65,8 +65,8 @@ export function useAudio() {
   }, []);
 
   /** 수면 타이머 시작 */
-  const startTimer = useCallback((minutes: number) => {
-    useTimerStore.getState().startTimer(minutes);
+  const startTimer = useCallback((minutes: number, alarmSync?: boolean) => {
+    useTimerStore.getState().startTimer(minutes, alarmSync);
   }, []);
 
   /** 수면 타이머 취소 */

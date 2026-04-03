@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { View, Text, Pressable, FlatList, StyleSheet, Image, TextInput } from 'react-native';
+import { View, Text, Pressable, FlatList, StyleSheet, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -52,17 +52,22 @@ export default function AlarmsScreen() {
 
   const renderAlarmItem = ({ item }: { item: Alarm }) => {
     const timeStr = `${String(item.time.hour).padStart(2, '0')}:${String(item.time.minute).padStart(2, '0')}`;
+    const isPast = item.specificDate
+      ? msUntilSpecificDate(item.specificDate, item.time.hour, item.time.minute) <= 0
+      : false;
+    const dimmed = !item.enabled || isPast;
     return (
       <Pressable
         style={[
           styles.alarmCard,
-          item.enabled && styles.alarmCardActive,
+          item.enabled && !isPast && styles.alarmCardActive,
+          isPast && { opacity: 0.5 },
         ]}
         onPress={() => router.push({ pathname: '/alarms/edit', params: { id: item.id } })}
       >
         {/* Time */}
         <View style={styles.alarmTime}>
-          <Text style={[styles.timeText, !item.enabled && styles.timeTextDisabled]}>
+          <Text style={[styles.timeText, dimmed && styles.timeTextDisabled]}>
             {timeStr}
           </Text>
         </View>
@@ -71,7 +76,7 @@ export default function AlarmsScreen() {
         <View style={styles.alarmInfo}>
           {!!item.label && (
             <Text
-              style={[styles.alarmLabel, !item.enabled && { color: 'rgba(255,255,255,0.4)' }]}
+              style={[styles.alarmLabel, dimmed && { color: 'rgba(255,255,255,0.4)' }]}
               numberOfLines={1}
             >
               {item.label}
@@ -79,7 +84,7 @@ export default function AlarmsScreen() {
           )}
           <View style={styles.daysRow}>
             {item.specificDate ? (
-              <Text style={[styles.dayText, styles.dayTextActive, !item.enabled && { opacity: 0.5 }]}>
+              <Text style={[styles.dayText, styles.dayTextActive, dimmed && { opacity: 0.5 }]}>
                 {item.specificDate}
               </Text>
             ) : (
@@ -89,7 +94,7 @@ export default function AlarmsScreen() {
                   style={[
                     styles.dayText,
                     active && styles.dayTextActive,
-                    !item.enabled && { opacity: 0.5 },
+                    dimmed && { opacity: 0.5 },
                   ]}
                 >
                   {DAY_LABELS[i]}
@@ -141,11 +146,9 @@ export default function AlarmsScreen() {
 
         {alarms.length === 0 ? (
           <View style={styles.empty}>
-            <Image
-              source={require('@/assets/images/empty/empty-alarms.png')}
-              style={styles.emptyImage}
-              resizeMode="contain"
-            />
+            <View style={styles.emptyIconContainer}>
+              <MaterialIcons name="alarm" size={72} color="rgba(255,255,255,0.25)" />
+            </View>
             <Text style={styles.emptyText}>{t('alarms.empty')}</Text>
             <Text style={styles.emptyHint}>{t('alarms.emptyHint')}</Text>
           </View>
@@ -290,9 +293,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.sm,
   },
-  emptyImage: {
-    width: 200,
-    height: 200,
+  emptyIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.sm,
   },
   emptyText: {

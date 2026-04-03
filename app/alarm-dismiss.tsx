@@ -9,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useAlarm } from '@/hooks/useAlarm';
 import { useAlarmStore } from '@/stores/useAlarmStore';
+import { useTimerStore } from '@/stores/useTimerStore';
 import { MathProblemView } from '@/components/alarm/MathProblem';
 import { Button } from '@/components/ui/Button';
 import { generateMathProblem } from '@/utils/mathProblem';
@@ -66,6 +67,11 @@ export default function AlarmDismissScreen() {
 
   const dismiss = () => {
     Vibration.cancel();
+    // Stop sleep timer if alarm-sync mode
+    const timerState = useTimerStore.getState();
+    if (timerState.isActive && timerState.isAlarmSync) {
+      timerState.cancelTimer();
+    }
     router.back();
   };
 

@@ -5,14 +5,14 @@ import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useThemeColors } from '@/theme';
 import { useTranslation } from 'react-i18next';
 import { useAlarmStore } from '@/stores/useAlarmStore';
-import { msUntilAlarm, formatRemainingTime } from '@/utils/formatTime';
+import { msUntilAlarm } from '@/utils/formatTime';
 
 const QUICK_MINUTES = [15, 30, 45, 60] as const;
 
 interface TimerModalProps {
   visible: boolean;
   onClose: () => void;
-  onStart: (minutes: number) => void;
+  onStart: (minutes: number, alarmSync?: boolean) => void;
 }
 
 export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
@@ -71,27 +71,28 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
 
   const displayStr = useMemo(() => {
     if (useUnlimited) return '∞';
+    if (useAlarmSync) return '';
     const h = Math.floor(totalMinutes / 60);
     const m = totalMinutes % 60;
     if (h > 0) return `${h}:${String(m).padStart(2, '0')}`;
     return `${m}:00`;
-  }, [useUnlimited, totalMinutes]);
+  }, [useUnlimited, useAlarmSync, totalMinutes]);
 
   const displayLabel = useMemo(() => {
     if (useUnlimited) return t('timer.unlimited');
+    if (useAlarmSync) return t('timer.alarmSync');
     const h = Math.floor(totalMinutes / 60);
     if (h > 0) return t('timer.hourMin');
     return t('timer.minSec');
-  }, [useUnlimited, totalMinutes]);
+  }, [useUnlimited, useAlarmSync, totalMinutes]);
 
   const hasTime = useUnlimited || totalMinutes > 0;
 
   const handleSave = useCallback(() => {
     if (!hasTime) return;
-    // For unlimited, pass a very large number (24*60 = 1440 min = 24h)
-    onStart(useUnlimited ? 99999 : totalMinutes);
+    onStart(useUnlimited ? 99999 : totalMinutes, useAlarmSync);
     onClose();
-  }, [hasTime, useUnlimited, totalMinutes, onStart, onClose]);
+  }, [hasTime, useUnlimited, useAlarmSync, totalMinutes, onStart, onClose]);
 
   const selectQuick = (min: number) => {
     setSelectedQuick(min);
@@ -257,10 +258,6 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
           fontWeight: '600',
           color: themeColors.textPrimary,
         },
-        alarmTime: {
-          fontSize: 12,
-          color: themeColors.accent1,
-        },
         saveBtn: {
           borderRadius: 9999,
           paddingVertical: 18,
@@ -299,7 +296,11 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
             borderColor: themeColors.glassLight,
           }}
         />
-        <Text style={styles.dialTime}>{displayStr}</Text>
+        {useAlarmSync ? (
+          <MaterialIcons name="alarm" size={44} color={themeColors.textPrimary} />
+        ) : (
+          <Text style={styles.dialTime}>{displayStr}</Text>
+        )}
         <Text style={styles.dialLabel}>{displayLabel}</Text>
       </View>
 
@@ -383,24 +384,20 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
           ]}
           onPress={() => { setUseAlarmSync((v) => !v); setUseCustom(false); setUseUnlimited(false); }}
         >
-          <View>
-            <Text style={styles.alarmLabel}>{t('timer.alarmSync')}</Text>
-            <Text style={styles.alarmTime}>{t('timer.alarmRemaining', { time: formatRemainingTime(nextAlarmMs) })}</Text>
-          </View>
-          <View
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: 11,
-              borderWidth: 2,
-              borderColor: useAlarmSync ? themeColors.accent1 : themeColors.glassBorder,
-              backgroundColor: useAlarmSync ? themeColors.accent1 : 'transparent',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {useAlarmSync && <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>✓</Text>}
-          </View>
+          <Text style={styles.alarmLabel}>{t('timer.alarmSync')}</Text>
+          {useAlarmSync ? (
+            <MaterialIcons name="check-circle" size={20} color={themeColors.accent1} />
+          ) : (
+            <View
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: themeColors.glassBorder,
+              }}
+            />
+          )}
         </Pressable>
       )}
 

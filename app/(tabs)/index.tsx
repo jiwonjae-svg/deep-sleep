@@ -82,45 +82,41 @@ export default function HomeScreen() {
 
   const timerPrecise = formatTimerPrecise(timerRemaining);
   const isUnlimited = timer.isActive && timer.durationMinutes >= 99999;
-  const timerUnitLabel = timerRemaining > 0 && !isUnlimited
+  const isAlarmSync = timer.isActive && timer.isAlarmSync;
+  const timerUnitLabel = timerRemaining > 0 && !isUnlimited && !isAlarmSync
     ? (timerRemaining >= 3600000 ? t('home.hourMinLabel') : t('home.minSecLabel'))
     : '';
 
   // Progress for circular ring (0 to 1)
   const timerProgress = useMemo(() => {
-    if (!timer.isActive || isUnlimited || timer.durationMinutes <= 0) return 0;
+    if (!timer.isActive || isUnlimited || isAlarmSync || timer.durationMinutes <= 0) return 0;
     const totalMs = timer.durationMinutes * 60_000;
     return Math.max(0, Math.min(1, 1 - timerRemaining / totalMs));
-  }, [timer.isActive, isUnlimited, timer.durationMinutes, timerRemaining]);
+  }, [timer.isActive, isUnlimited, isAlarmSync, timer.durationMinutes, timerRemaining]);
 
-  // Next alarm
-  const nextAlarm = alarms
-    .filter((a) => a.enabled)
-    .reduce<{ alarm: typeof alarms[0]; ms: number } | null>((best, a) => {
-      const ms = a.specificDate
-        ? msUntilSpecificDate(a.specificDate, a.time.hour, a.time.minute)
-        : msUntilAlarm(a.time.hour, a.time.minute);
-      if (ms <= 0) return best;
-      if (!best || ms < best.ms) return { alarm: a, ms };
-      return best;
-    }, null);
-
-  const [alarmMs, setAlarmMs] = useState(0);
+  // Next alarm — recompute on alarm changes + every 60s
+  const [alarmCountdownText, setAlarmCountdownText] = useState<string | null>(null);
   useEffect(() => {
-    if (!nextAlarm) { setAlarmMs(0); return; }
-    setAlarmMs(nextAlarm.ms);
-    const id = setInterval(() => {
-      const ms = nextAlarm.alarm.specificDate
-        ? msUntilSpecificDate(nextAlarm.alarm.specificDate, nextAlarm.alarm.time.hour, nextAlarm.alarm.time.minute)
-        : msUntilAlarm(nextAlarm.alarm.time.hour, nextAlarm.alarm.time.minute);
-      setAlarmMs(ms);
-    }, 60_000);
+    const compute = () => {
+      const enabled = alarms.filter((a) => a.enabled);
+      const best = enabled.reduce<{ ms: number } | null>((acc, a) => {
+        const ms = a.specificDate
+          ? msUntilSpecificDate(a.specificDate, a.time.hour, a.time.minute)
+          : msUntilAlarm(a.time.hour, a.time.minute);
+        if (ms <= 0) return acc;
+        if (!acc || ms < acc.ms) return { ms };
+        return acc;
+      }, null);
+      if (best && best.ms > 0) {
+        setAlarmCountdownText(t('home.alarmCountdown', { time: formatRemainingTimeLong(best.ms) }));
+      } else {
+        setAlarmCountdownText(null);
+      }
+    };
+    compute();
+    const id = setInterval(compute, 60_000);
     return () => clearInterval(id);
-  }, [nextAlarm?.alarm?.id]);
-
-  const alarmCountdownText = nextAlarm
-    ? t('home.alarmCountdown', { time: formatRemainingTimeLong(alarmMs || nextAlarm.ms) })
-    : null;
+  }, [alarms, t]);
 
   // Colon blink animation
   const colonOpacity = useSharedValue(1);
@@ -176,8 +172,8 @@ export default function HomeScreen() {
     [],
   );
 
-  const handleTimerStart = (minutes: number) => {
-    startTimer(minutes);
+  const handleTimerStart = (minutes: number, alarmSync?: boolean) => {
+    startTimer(minutes, alarmSync);
   };
 
   return (
@@ -231,6 +227,8 @@ export default function HomeScreen() {
             <View style={styles.ringContent}>
               {isUnlimited ? (
                 <Text style={styles.timerTime}>∞</Text>
+              ) : isAlarmSync ? (
+                <MaterialIcons name="alarm" size={48} color="rgba(255,255,255,0.9)" />
               ) : (
                 <View style={styles.timerRow}>
                   <Text style={styles.timerTime}>{timerPrecise.left}</Text>
@@ -240,6 +238,8 @@ export default function HomeScreen() {
               )}
               {timerUnitLabel ? (
                 <Text style={styles.timerLabel}>{timerUnitLabel}</Text>
+              ) : isAlarmSync ? (
+                <Text style={styles.timerLabel}>{t('timer.alarmSync')}</Text>
               ) : (
                 <Text style={styles.timerLabel}>{t('home.sleepTimer')}</Text>
               )}
