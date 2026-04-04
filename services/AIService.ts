@@ -2,6 +2,8 @@ import Constants from 'expo-constants';
 import { AIPresetResult, AIRecommendedSound, Frequency } from '@/types';
 import { sounds, validSoundIds } from '@/data/sounds';
 import { AI_API_TIMEOUT, AI_MAX_INPUT_LENGTH } from '@/utils/constants';
+import { useSleepStore } from '@/stores/useSleepStore';
+import { buildSleepContext } from '@/services/SleepCoachingService';
 
 // ──────────────────────────────────────────────
 // System prompt
@@ -10,6 +12,7 @@ import { AI_API_TIMEOUT, AI_MAX_INPUT_LENGTH } from '@/utils/constants';
 const ALL_SOUND_IDS = sounds.map((s) => s.id).join(', ');
 
 const SYSTEM_PROMPT = `당신은 수면/휴식 사운드 전문가입니다. 사용자의 기분이나 상황 설명을 바탕으로 최적의 자연 소리 조합을 추천해주세요.
+사용자의 수면 데이터가 제공되면, 해당 데이터를 참고하여 더 개인화된 추천을 해주세요.
 
 사용 가능한 소리 ID 목록: [${ALL_SOUND_IDS}]
 
@@ -115,7 +118,8 @@ export async function recommend(userInput: string): Promise<AIPresetResult> {
   if (!apiKey) throw new Error('API key not configured');
 
   // 입력 길이 제한 (프롬프트 인젝션 방지 + 비용 절감)
-  const sanitizedInput = userInput.trim().slice(0, AI_MAX_INPUT_LENGTH);
+  const sleepContext = buildSleepContext(useSleepStore.getState().records);
+  const sanitizedInput = userInput.trim().slice(0, AI_MAX_INPUT_LENGTH) + sleepContext;
   if (sanitizedInput.length === 0) throw new Error('입력이 비어있습니다');
 
   const controller = new AbortController();

@@ -356,5 +356,38 @@
     "noiseDetected": "{{count}}회 소음 감지",
     "noiseAvgAmp": "평균 강도 {{value}}%",
     "soundsUsed": "사용한 수면 사운드"
+  },
+  "coaching": {
+    "title": "수면 코칭",
+    "needDataTitle": "데이터 수집 중",
+    "needDataMsg": "3일 이상 수면을 기록하면 개인화된 수면 코칭을 받을 수 있어요",
+    "consistencyTitle": "취침 일관성",
+    "consistencyPoor": "취침 시간이 매일 크게 달라요. 일정한 시간에 자면 수면 품질이 크게 개선돼요",
+    "consistencyFair": "취침 시간이 조금씩 불규칙해요. 조금만 더 일정하게 자보세요",
+    "consistencyGood": "취침 시간이 일정해요! 좋은 습관을 유지하세요",
+    "bedtimeTitle": "최적 취침 시간",
+    "bedtimeMsg": "{{time}}에 잠들었을 때 수면 점수가 가장 높았어요",
+    "durationTitle": "최적 수면 시간",
+    "durationMsg": "{{duration}} 정도 자면 수면 품질이 가장 좋았어요",
+    "trendTitle": "수면 트렌드",
+    "trendImproving": "수면 품질이 개선되고 있어요! 지금처럼 계속하세요",
+    "trendDeclining": "최근 수면 품질이 떨어지고 있어요. 취침 루틴을 점검해보세요",
+    "soundTitle": "추천 사운드",
+    "soundMsg": "{{soundName}}을(를) 들을 때 수면 점수가 높았어요",
+    "noiseTitle": "소음 환경",
+    "noiseMsg": "수면 중 소음이 자주 감지돼요. 백색소음을 사용해보세요",
+    "lowScoreTitle": "수면 품질 알림",
+    "lowScoreMsg": "어젯밤 수면 점수가 낮았어요. 오늘 조금 일찍 자무 준비를 해보세요"
+  },
+  "report": {
+    "title": "월간 수면 리포트",
+    "avgScore": "평균 점수",
+    "avgSleep": "평균 수면",
+    "avgEfficiency": "평균 효율",
+    "totalNights": "{{count}}일 기록",
+    "scoreUp": "지난달 대비 {{diff}}점 상승",
+    "scoreDown": "지난달 대비 {{diff}}점 하락",
+    "bestDay": "최고의 밤: {{date}} ({{score}}점)",
+    "topSound": "가장 많이 사용: {{sound}}"
   }
 }

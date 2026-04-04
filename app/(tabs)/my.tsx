@@ -8,6 +8,9 @@ import { useSleepStore, MorningSurvey } from '@/stores/useSleepStore';
 import { startSleepTracking, stopSleepTracking } from '@/services/SleepTrackingService';
 import { WeeklyChart } from '@/components/sleep/WeeklyChart';
 import { SoundInsights } from '@/components/sleep/SoundInsights';
+import { CoachingCard } from '@/components/sleep/CoachingCard';
+import { SleepReportCard } from '@/components/sleep/SleepReport';
+import { analyzeSleepPattern, generateCoachingTips, generateMonthlyReport } from '@/services/SleepCoachingService';
 
 export default function MyScreen() {
   const themeColors = useThemeColors();
@@ -22,6 +25,11 @@ export default function MyScreen() {
 
   const latestRecord = records.length > 0 ? records[0] : null;
   const recentRecords = records.slice(0, 7);
+
+  // Phase 4: AI coaching & report
+  const sleepPattern = useMemo(() => analyzeSleepPattern(records), [records]);
+  const coachingTips = useMemo(() => generateCoachingTips(records, sleepPattern), [records, sleepPattern]);
+  const monthlyReport = useMemo(() => generateMonthlyReport(records), [records]);
 
   const handleTrackingToggle = useCallback(async () => {
     if (isTracking) {
@@ -235,6 +243,16 @@ export default function MyScreen() {
         {/* Sound-Sleep Insights */}
         {records.length >= 3 && (
           <SoundInsights records={records} />
+        )}
+
+        {/* AI Sleep Coaching */}
+        {coachingTips.length > 0 && (
+          <CoachingCard tips={coachingTips} />
+        )}
+
+        {/* Monthly Sleep Report */}
+        {monthlyReport && (
+          <SleepReportCard report={monthlyReport} />
         )}
 
         {/* Noise Events Summary for latest record */}

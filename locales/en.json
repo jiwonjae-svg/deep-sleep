@@ -356,5 +356,38 @@
     "noiseDetected": "{{count}} noise events detected",
     "noiseAvgAmp": "Avg intensity {{value}}%",
     "soundsUsed": "Sounds Used"
+  },
+  "coaching": {
+    "title": "Sleep Coaching",
+    "needDataTitle": "Collecting Data",
+    "needDataMsg": "Record 3+ nights to receive personalized sleep coaching",
+    "consistencyTitle": "Bedtime Consistency",
+    "consistencyPoor": "Your bedtime varies a lot. Going to bed at a consistent time can greatly improve sleep quality",
+    "consistencyFair": "Your bedtime is slightly irregular. Try to be a bit more consistent",
+    "consistencyGood": "Your bedtime is consistent! Keep up the good habit",
+    "bedtimeTitle": "Optimal Bedtime",
+    "bedtimeMsg": "Your sleep score was highest when you went to bed at {{time}}",
+    "durationTitle": "Optimal Duration",
+    "durationMsg": "Sleeping about {{duration}} gives you the best sleep quality",
+    "trendTitle": "Sleep Trend",
+    "trendImproving": "Your sleep quality is improving! Keep up the great work",
+    "trendDeclining": "Your sleep quality has been declining. Review your bedtime routine",
+    "soundTitle": "Recommended Sound",
+    "soundMsg": "Your sleep score was higher when listening to {{soundName}}",
+    "noiseTitle": "Noise Environment",
+    "noiseMsg": "Frequent noise detected during sleep. Try using white noise",
+    "lowScoreTitle": "Sleep Quality Alert",
+    "lowScoreMsg": "Last night's sleep score was low. Try going to bed a bit earlier tonight"
+  },
+  "report": {
+    "title": "Monthly Sleep Report",
+    "avgScore": "Avg Score",
+    "avgSleep": "Avg Sleep",
+    "avgEfficiency": "Avg Efficiency",
+    "totalNights": "{{count}} nights recorded",
+    "scoreUp": "{{diff}} points up from last month",
+    "scoreDown": "{{diff}} points down from last month",
+    "bestDay": "Best night: {{date}} ({{score}}pts)",
+    "topSound": "Most used: {{sound}}"
   }
 }
