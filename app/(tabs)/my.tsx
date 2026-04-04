@@ -6,6 +6,8 @@ import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { useTranslation } from 'react-i18next';
 import { useSleepStore, MorningSurvey } from '@/stores/useSleepStore';
 import { startSleepTracking, stopSleepTracking } from '@/services/SleepTrackingService';
+import { WeeklyChart } from '@/components/sleep/WeeklyChart';
+import { SoundInsights } from '@/components/sleep/SoundInsights';
 
 export default function MyScreen() {
   const themeColors = useThemeColors();
@@ -23,7 +25,7 @@ export default function MyScreen() {
 
   const handleTrackingToggle = useCallback(async () => {
     if (isTracking) {
-      const record = stopSleepTracking();
+      const record = await stopSleepTracking();
       if (record) {
         setSurveyRecordId(record.id);
         setSurveyStep(1);
@@ -225,6 +227,53 @@ export default function MyScreen() {
           </View>
         )}
 
+        {/* Weekly Trend Chart */}
+        {records.length >= 2 && (
+          <WeeklyChart records={records} />
+        )}
+
+        {/* Sound-Sleep Insights */}
+        {records.length >= 3 && (
+          <SoundInsights records={records} />
+        )}
+
+        {/* Noise Events Summary for latest record */}
+        {latestRecord?.noiseEvents && latestRecord.noiseEvents.length > 0 && (
+          <View style={[styles.noiseCard, { backgroundColor: themeColors.glassLight, borderColor: themeColors.glassBorder }]}>
+            <Text style={[styles.sectionTitle, { color: themeColors.textSecondary }]}>{t('my.noiseReport')}</Text>
+            <View style={styles.noiseRow}>
+              <MaterialIcons name="volume-up" size={20} color={themeColors.warning} />
+              <Text style={[styles.noiseText, { color: themeColors.textPrimary }]}>
+                {t('my.noiseDetected', { count: latestRecord.noiseEvents.length })}
+              </Text>
+            </View>
+            <Text style={[styles.noiseDetail, { color: themeColors.textMuted }]}>
+              {t('my.noiseAvgAmp', {
+                value: Math.round(
+                  latestRecord.noiseEvents.reduce((s, e) => s + e.amplitude, 0) /
+                  latestRecord.noiseEvents.length * 100
+                ),
+              })}
+            </Text>
+          </View>
+        )}
+
+        {/* Sounds Used in Latest Record */}
+        {latestRecord?.soundsPlayed && latestRecord.soundsPlayed.length > 0 && (
+          <View style={[styles.soundsUsedCard, { backgroundColor: themeColors.glassLight, borderColor: themeColors.glassBorder }]}>
+            <Text style={[styles.sectionTitle, { color: themeColors.textSecondary }]}>{t('my.soundsUsed')}</Text>
+            <View style={styles.soundChips}>
+              {latestRecord.soundsPlayed.map((id) => (
+                <View key={id} style={[styles.soundChip, { backgroundColor: `${themeColors.accent1}20`, borderColor: `${themeColors.accent1}40` }]}>
+                  <Text style={[styles.soundChipText, { color: themeColors.accent1 }]}>
+                    {t(`sounds.${id}`, { defaultValue: id })}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
         {/* Recent History */}
         {recentRecords.length > 0 && (
           <View style={styles.historySection}>
@@ -420,5 +469,50 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderWidth: 1,
     alignItems: 'center',
+  },
+  // Noise card
+  noiseCard: {
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    marginBottom: 20,
+    gap: 10,
+  },
+  noiseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  noiseText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  noiseDetail: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginLeft: 28,
+  },
+  // Sounds used
+  soundsUsedCard: {
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    marginBottom: 20,
+    gap: 12,
+  },
+  soundChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  soundChip: {
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+  },
+  soundChipText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

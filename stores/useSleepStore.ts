@@ -25,6 +25,19 @@ export interface SleepRecord {
   score: number;
   /** Morning survey data (optional) */
   survey?: MorningSurvey;
+  /** Sound IDs that were playing during this sleep session */
+  soundsPlayed?: string[];
+  /** Noise events detected during sleep */
+  noiseEvents?: NoiseEvent[];
+}
+
+export interface NoiseEvent {
+  /** Timestamp (ms) */
+  timestamp: number;
+  /** Average amplitude (0-1) */
+  amplitude: number;
+  /** Duration in seconds */
+  durationSec: number;
 }
 
 export interface MorningSurvey {
@@ -47,11 +60,16 @@ interface SleepState {
   trackingStartedAt: number | null;
   /** Raw epoch data (accel magnitude averages per minute) */
   epochs: number[];
+  /** Sound IDs playing when tracking started */
+  trackingSounds: string[];
+  /** Noise events collected during current session */
+  trackingNoiseEvents: NoiseEvent[];
 
   // Actions
-  startTracking: () => void;
+  startTracking: (soundIds?: string[]) => void;
   stopTracking: () => SleepRecord | null;
   addEpoch: (magnitude: number) => void;
+  addNoiseEvent: (event: NoiseEvent) => void;
   addSurvey: (recordId: string, survey: MorningSurvey) => void;
   getRecordByDate: (date: string) => SleepRecord | undefined;
   getRecentRecords: (days: number) => SleepRecord[];
@@ -138,7 +156,8 @@ function computeSleepMetrics(epochs: number[], trackingStart: number, trackingEn
   const seScore = se >= 85 ? 100 : Math.max(0, (se / 85) * 100);
   const solScore = sol <= 20 ? 100 : Math.max(0, 100 - (sol - 20) * 2.5);
   const awkScore = awakenings <= 1 ? 100 : awakenings <= 3 ? 75 : 50;
-  const consistencyScore = 75; // placeholder — needs 7-day history
+  // Consistency score placeholder (will be computed with full records in store)
+  const consistencyScore = 75;
 
   const score = Math.round(
     tstScore * 0.30 + seScore * 0.25 + solScore * 0.15 + awkScore * 0.15 + consistencyScore * 0.15,
@@ -164,21 +183,46 @@ export const useSleepStore = create<SleepState>()(
       isTracking: false,
       trackingStartedAt: null,
       epochs: [],
+      trackingSounds: [],
+      trackingNoiseEvents: [],
 
-      startTracking: () => {
+      startTracking: (soundIds?: string[]) => {
         set({
           isTracking: true,
           trackingStartedAt: Date.now(),
           epochs: [],
+          trackingSounds: soundIds ?? [],
+          trackingNoiseEvents: [],
         });
       },
 
       stopTracking: () => {
-        const { isTracking, trackingStartedAt, epochs } = get();
+        const { isTracking, trackingStartedAt, epochs, trackingSounds, trackingNoiseEvents, records } = get();
         if (!isTracking || !trackingStartedAt) return null;
 
         const trackingEnd = Date.now();
         const metrics = computeSleepMetrics(epochs, trackingStartedAt, trackingEnd);
+
+        // Compute consistency score from recent 7-day records
+        const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        const recentStarts = records
+          .filter((r) => r.trackingStart >= weekAgo)
+          .map((r) => {
+            const d = new Date(r.trackingStart);
+            return d.getHours() * 60 + d.getMinutes();
+          });
+        if (recentStarts.length >= 3) {
+          const mean = recentStarts.reduce((a, b) => a + b, 0) / recentStarts.length;
+          const variance = recentStarts.reduce((s, v) => s + (v - mean) ** 2, 0) / recentStarts.length;
+          const stdMinutes = Math.sqrt(variance);
+          // < 30 min std = 100, > 120 min std = 0, linear in between
+          const cScore = Math.max(0, Math.min(100, 100 - ((stdMinutes - 30) / 90) * 100));
+          metrics.score = Math.round(
+            (metrics.score * 0.85) + (cScore * 0.15),
+          );
+          metrics.score = Math.min(100, Math.max(0, metrics.score));
+        }
+
         const date = new Date(trackingStartedAt).toISOString().split('T')[0];
 
         const record: SleepRecord = {
@@ -187,12 +231,16 @@ export const useSleepStore = create<SleepState>()(
           trackingStart: trackingStartedAt,
           trackingEnd,
           ...metrics,
+          soundsPlayed: trackingSounds.length > 0 ? trackingSounds : undefined,
+          noiseEvents: trackingNoiseEvents.length > 0 ? trackingNoiseEvents : undefined,
         };
 
         set((state) => ({
           isTracking: false,
           trackingStartedAt: null,
           epochs: [],
+          trackingSounds: [],
+          trackingNoiseEvents: [],
           records: [record, ...state.records].slice(0, 365), // keep 1 year
         }));
 
@@ -202,6 +250,12 @@ export const useSleepStore = create<SleepState>()(
       addEpoch: (magnitude: number) => {
         set((state) => ({
           epochs: [...state.epochs, magnitude],
+        }));
+      },
+
+      addNoiseEvent: (event: NoiseEvent) => {
+        set((state) => ({
+          trackingNoiseEvents: [...state.trackingNoiseEvents, event],
         }));
       },
 

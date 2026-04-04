@@ -5,6 +5,8 @@ import { getPerlinVolume } from '@/utils/perlinNoise';
 import { getSoundById } from '@/data/sounds';
 import { ActiveSoundState, Frequency, VolumeChangeSpeed } from '@/types';
 import { MAX_SIMULTANEOUS_SOUNDS, TIMER_FADEOUT_DURATION } from '@/utils/constants';
+import { useSleepStore } from '@/stores/useSleepStore';
+import { startSleepTracking, stopSleepTracking, isTrackingActive } from '@/services/SleepTrackingService';
 
 // ──────────────────────────────────────────────
 // Sound instance tracking
@@ -206,6 +208,13 @@ export async function startMix(): Promise<void> {
 
   store.setPlaying(true);
   startTimerCheck();
+
+  // Auto-start sleep tracking when playback starts with a timer
+  const timer = useTimerStore.getState();
+  if (timer.isActive && !isTrackingActive()) {
+    const soundIds = Array.from(store.activeSounds.keys());
+    startSleepTracking(soundIds).catch(() => {});
+  }
 }
 
 export async function stopAll(): Promise<void> {
@@ -273,6 +282,10 @@ function startTimerCheck() {
     if (remaining <= 0) {
       timer.cancelTimer();
       await stopAll();
+      // Auto-stop sleep tracking when timer ends
+      if (isTrackingActive()) {
+        await stopSleepTracking();
+      }
     } else if (remaining <= TIMER_FADEOUT_DURATION) {
       // 페이드아웃 중 — 마스터 볼륨 점진적 감소
       const factor = remaining / TIMER_FADEOUT_DURATION;

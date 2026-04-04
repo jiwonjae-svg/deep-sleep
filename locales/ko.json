@@ -336,6 +336,25 @@
     "awk_0": "0번",
     "awk_1-2": "1-2번",
     "awk_3-4": "3-4번",
-    "awk_5+": "5번 이상"
+    "awk_5+": "5번 이상",
+    "weeklyTrend": "주간 수면 트렌드",
+    "avgScore": "평균",
+    "sun": "일",
+    "mon": "월",
+    "tue": "화",
+    "wed": "수",
+    "thu": "목",
+    "fri": "금",
+    "sat": "토",
+    "soundInsights": "사운드 수면 분석",
+    "bestSounds": "최고의 수면 사운드",
+    "soundBetter": "사운드와 함께 수면 점수가 {{diff}}점 높아요",
+    "soundWorse": "사운드 없이 수면 점수가 {{diff}}점 높아요",
+    "timesUsed": "회",
+    "noiseInsight": "수면 중 평균 {{count}}회 소음이 감지됐어요",
+    "noiseReport": "소음 리포트",
+    "noiseDetected": "{{count}}회 소음 감지",
+    "noiseAvgAmp": "평균 강도 {{value}}%",
+    "soundsUsed": "사용한 수면 사운드"
   }
 }

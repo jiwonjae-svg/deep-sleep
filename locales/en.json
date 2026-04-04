@@ -336,6 +336,25 @@
     "awk_0": "0 times",
     "awk_1-2": "1-2 times",
     "awk_3-4": "3-4 times",
-    "awk_5+": "5+ times"
+    "awk_5+": "5+ times",
+    "weeklyTrend": "Weekly Sleep Trend",
+    "avgScore": "Avg",
+    "sun": "Sun",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "soundInsights": "Sound-Sleep Analysis",
+    "bestSounds": "Best Sleep Sounds",
+    "soundBetter": "Sleep score is {{diff}} points higher with sounds",
+    "soundWorse": "Sleep score is {{diff}} points higher without sounds",
+    "timesUsed": "x",
+    "noiseInsight": "Avg {{count}} noise events detected during sleep",
+    "noiseReport": "Noise Report",
+    "noiseDetected": "{{count}} noise events detected",
+    "noiseAvgAmp": "Avg intensity {{value}}%",
+    "soundsUsed": "Sounds Used"
   }
 }
