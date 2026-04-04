@@ -21,6 +21,7 @@
     "mixer": "Mixer",
     "presets": "Presets",
     "alarms": "Alarms",
+    "my": "My",
     "settings": "Settings"
   },
   "onboarding": {
@@ -306,5 +307,35 @@
   },
   "loading": {
     "preparing": "Loading..."
+  },
+  "my": {
+    "title": "Sleep Records",
+    "lastSleepScore": "Last Sleep Score",
+    "noRecords": "No sleep records yet",
+    "startTracking": "Start Sleep Tracking",
+    "stopTracking": "Stop Sleep Tracking",
+    "totalSleepTime": "Total Sleep Time",
+    "sleepEfficiency": "Sleep Efficiency",
+    "sleepOnset": "Sleep Onset",
+    "awakenings": "Awakenings",
+    "recentHistory": "Recent History",
+    "efficiency": "Efficiency",
+    "hourShort": "h",
+    "minShort": "m",
+    "sensorUnavailable": "Sensor Unavailable",
+    "sensorUnavailableDesc": "Accelerometer is not available on this device.",
+    "morningSurvey": "Morning Survey",
+    "surveyQ1": "How satisfied are you with last night's sleep?",
+    "surveyQ2": "How long did it take to fall asleep?",
+    "surveyQ3": "How many times did you wake up?",
+    "surveyQ4": "How refreshed do you feel now?",
+    "sol_instant": "Instantly",
+    "sol_under15": "Under 15 min",
+    "sol_under30": "Under 30 min",
+    "sol_over60": "Over 1 hour",
+    "awk_0": "0 times",
+    "awk_1-2": "1-2 times",
+    "awk_3-4": "3-4 times",
+    "awk_5+": "5+ times"
   }
 }

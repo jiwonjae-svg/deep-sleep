@@ -21,6 +21,7 @@
     "mixer": "믹서",
     "presets": "프리셋",
     "alarms": "알람",
+    "my": "My",
     "settings": "설정"
   },
   "onboarding": {
@@ -306,5 +307,35 @@
   },
   "loading": {
     "preparing": "준비 중..."
+  },
+  "my": {
+    "title": "수면 기록",
+    "lastSleepScore": "최근 수면 점수",
+    "noRecords": "수면 기록이 없습니다",
+    "startTracking": "수면 추적 시작",
+    "stopTracking": "수면 추적 중지",
+    "totalSleepTime": "총 수면 시간",
+    "sleepEfficiency": "수면 효율",
+    "sleepOnset": "입면 지연",
+    "awakenings": "각성 횟수",
+    "recentHistory": "최근 기록",
+    "efficiency": "효율",
+    "hourShort": "시간",
+    "minShort": "분",
+    "sensorUnavailable": "센서 사용 불가",
+    "sensorUnavailableDesc": "이 기기에서 가속도계를 사용할 수 없습니다.",
+    "morningSurvey": "아침 설문",
+    "surveyQ1": "어젣밤 수면 만족도는?",
+    "surveyQ2": "잠들기까지 얼마나 걸렸나요?",
+    "surveyQ3": "밤에 몇 번 깨셨나요?",
+    "surveyQ4": "지금 얼마나 개운한가요?",
+    "sol_instant": "즉시",
+    "sol_under15": "15분 이내",
+    "sol_under30": "30분 이내",
+    "sol_over60": "1시간 이상",
+    "awk_0": "0번",
+    "awk_1-2": "1-2번",
+    "awk_3-4": "3-4번",
+    "awk_5+": "5번 이상"
   }
 }

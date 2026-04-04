@@ -15,6 +15,7 @@ import { categories } from '@/data/categories';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { useTranslation } from 'react-i18next';
 import { ActiveSoundState, SoundCategory, SoundConfig } from '@/types';
+import { useSoundPreview } from '@/hooks/useSoundPreview';
 
 // Same icon mappings as mixer page
 const CATEGORY_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
@@ -77,6 +78,7 @@ export default function PresetSaveScreen() {
   const [tempSounds, setTempSounds] = useState<ActiveSoundState[]>([]);
   const [editorCategory, setEditorCategory] = useState<SoundCategory>('rain-water');
   const [detailSoundId, setDetailSoundId] = useState<string | null>(null);
+  const { previewingSoundId, togglePreview } = useSoundPreview();
 
   const FREQ_OPTIONS = [
     t('frequency.continuous'), t('frequency.frequent'),
@@ -413,6 +415,12 @@ export default function PresetSaveScreen() {
                     ) : isActive ? (
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                         <Pressable
+                          style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: previewingSoundId === sound.id ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: previewingSoundId === sound.id ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}
+                          onPress={(e) => { e.stopPropagation(); togglePreview(sound.id); }}
+                        >
+                          <MaterialIcons name={previewingSoundId === sound.id ? 'stop' : 'play-arrow'} size={18} color={previewingSoundId === sound.id ? '#ffffff' : 'rgba(255,255,255,0.7)'} />
+                        </Pressable>
+                        <Pressable
                           style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}
                           onPress={(e) => { e.stopPropagation(); setDetailSoundId(sound.id); }}
                         >
@@ -426,8 +434,16 @@ export default function PresetSaveScreen() {
                         </Pressable>
                       </View>
                     ) : (
-                      <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}>
-                        <MaterialIcons name="add" size={20} color="#ffffff" />
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Pressable
+                          style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: previewingSoundId === sound.id ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: previewingSoundId === sound.id ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}
+                          onPress={(e) => { e.stopPropagation(); togglePreview(sound.id); }}
+                        >
+                          <MaterialIcons name={previewingSoundId === sound.id ? 'stop' : 'play-arrow'} size={18} color={previewingSoundId === sound.id ? '#ffffff' : 'rgba(255,255,255,0.7)'} />
+                        </Pressable>
+                        <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}>
+                          <MaterialIcons name="add" size={20} color="#ffffff" />
+                        </View>
                       </View>
                     )}
                   </Pressable>

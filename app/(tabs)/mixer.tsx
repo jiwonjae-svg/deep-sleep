@@ -17,6 +17,7 @@ import { getSoundsByCategory, getSoundById } from '@/data/sounds';
 import { categories, getCategoryById } from '@/data/categories';
 import { useThemeColors } from '@/theme';
 import { useTranslation } from 'react-i18next';
+import { useSoundPreview } from '@/hooks/useSoundPreview';
 
 // Material icon name for each category
 const CATEGORY_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
@@ -62,6 +63,9 @@ export default function MixerScreen() {
   const [selectedCategory, setSelectedCategory] = useState<SoundCategory>('rain-water');
   const [detailSound, setDetailSound] = useState<SoundConfig | null>(null);
   const [sheetVisible, setSheetVisible] = useState(false);
+
+  // Sound preview
+  const { previewingSoundId, togglePreview, stopPreview: stopSoundPreview } = useSoundPreview();
 
   // AI state
   const [aiSheetVisible, setAiSheetVisible] = useState(false);
@@ -281,6 +285,12 @@ export default function MixerScreen() {
                     ) : isActive ? (
                       <>
                         <Pressable
+                          style={[styles.trackActionBtn, previewingSoundId === sound.id && styles.trackActionBtnActive]}
+                          onPress={() => togglePreview(sound.id)}
+                        >
+                          <MaterialIcons name={previewingSoundId === sound.id ? 'stop' : 'play-arrow'} size={20} color={previewingSoundId === sound.id ? '#ffffff' : 'rgba(255,255,255,0.7)'} />
+                        </Pressable>
+                        <Pressable
                           style={styles.trackActionBtn}
                           onPress={() => handleSoundSettings(sound)}
                         >
@@ -294,12 +304,20 @@ export default function MixerScreen() {
                         </Pressable>
                       </>
                     ) : (
-                      <Pressable
-                        style={styles.trackActionBtn}
-                        onPress={() => handleSoundToggle(sound)}
-                      >
-                        <MaterialIcons name="add" size={20} color="#ffffff" />
-                      </Pressable>
+                      <>
+                        <Pressable
+                          style={[styles.trackActionBtn, previewingSoundId === sound.id && styles.trackActionBtnActive]}
+                          onPress={() => togglePreview(sound.id)}
+                        >
+                          <MaterialIcons name={previewingSoundId === sound.id ? 'stop' : 'play-arrow'} size={20} color={previewingSoundId === sound.id ? '#ffffff' : 'rgba(255,255,255,0.7)'} />
+                        </Pressable>
+                        <Pressable
+                          style={styles.trackActionBtn}
+                          onPress={() => handleSoundToggle(sound)}
+                        >
+                          <MaterialIcons name="add" size={20} color="#ffffff" />
+                        </Pressable>
+                      </>
                     )}
                   </View>
                 </View>
@@ -535,5 +553,9 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  trackActionBtnActive: {
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    borderColor: 'rgba(255,255,255,0.35)',
   },
 });

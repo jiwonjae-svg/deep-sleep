@@ -17,6 +17,8 @@ import { ActiveSoundState, Frequency, SoundConfig } from '@/types';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
 import { useTranslation } from 'react-i18next';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useSoundPreview } from '@/hooks/useSoundPreview';
 
 interface SoundDetailSheetProps {
   visible: boolean;
@@ -35,6 +37,7 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
   const updateSoundState = useAudioStore((s) => s.updateSoundState);
   const removeSound = useAudioStore((s) => s.removeSound);
   const isPremium = useSubscriptionStore((s) => s.isPremium);
+  const { previewingSoundId, togglePreview, stopPreview: stopSoundPreview } = useSoundPreview();
 
   // 중앙 fade-in/out 애니메이션
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -59,6 +62,7 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
   }, [visible]);
 
   const handleClose = useCallback(() => {
+    stopSoundPreview();
     Animated.parallel([
       Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
       Animated.timing(scaleAnim, { toValue: 0.92, duration: 150, useNativeDriver: true }),
@@ -66,7 +70,7 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
       setModalVisible(false);
       onClose();
     });
-  }, [onClose, fadeAnim, scaleAnim]);
+  }, [onClose, fadeAnim, scaleAnim, stopSoundPreview]);
 
   const styles = useMemo(
     () =>
@@ -102,6 +106,21 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
           ...typography.h2,
           color: themeColors.textPrimary,
           flex: 1,
+        },
+        previewBtn: {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: 'rgba(255,255,255,0.08)',
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.15)',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: spacing.xs,
+        },
+        previewBtnActive: {
+          backgroundColor: 'rgba(255,255,255,0.22)',
+          borderColor: 'rgba(255,255,255,0.35)',
         },
         closeBtn: {
           padding: spacing.xs,
@@ -196,6 +215,12 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
             {/* Header */}
             <View style={styles.header}>
               <Text style={styles.name}>{t(`sounds.${sound.id}`, { defaultValue: sound.name })}</Text>
+              <Pressable
+                style={[styles.previewBtn, previewingSoundId === sound.id && styles.previewBtnActive]}
+                onPress={() => togglePreview(sound.id)}
+              >
+                <MaterialIcons name={previewingSoundId === sound.id ? 'stop' : 'play-arrow'} size={20} color="#ffffff" />
+              </Pressable>
               <Pressable style={styles.closeBtn} onPress={handleClose}>
                 <Text style={styles.closeText}>✕</Text>
               </Pressable>

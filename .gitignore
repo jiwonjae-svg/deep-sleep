@@ -47,3 +47,6 @@ internal/
 
 # Repomix output
 repomix-output.xml
+
+# Sound asset files (large binary, processed from internal/assets/raw/)
+assets/sounds/
