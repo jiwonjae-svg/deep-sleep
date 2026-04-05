@@ -158,8 +158,10 @@ export default function HomeScreen() {
   const handlePlayToggle = () => {
     if (isPlaying) {
       stop();
+    } else if (currentPreset) {
+      // applyPreset이 내부에서 startMix 호출 — play() 별도 호출 불필요
+      applyPreset(currentPreset);
     } else {
-      if (currentPreset) applyPreset(currentPreset);
       play();
     }
   };

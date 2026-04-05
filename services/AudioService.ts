@@ -23,6 +23,49 @@ let timerCheckInterval: ReturnType<typeof setInterval> | null = null;
 let seedCounter = 0;
 
 // ──────────────────────────────────────────────
+// Global fade factor (0..1)
+// ──────────────────────────────────────────────
+
+let fadeFactor = 1.0;
+let fadeTimer: ReturnType<typeof setInterval> | null = null;
+const FADE_IN_MS = 800;
+const FADE_OUT_MS = 800;
+const FADE_STEP_MS = 50;
+
+function clearFadeTimer() {
+  if (fadeTimer) {
+    clearInterval(fadeTimer);
+    fadeTimer = null;
+  }
+}
+
+function fadeIn(durationMs: number = FADE_IN_MS): void {
+  clearFadeTimer();
+  fadeFactor = 0;
+  const increment = FADE_STEP_MS / durationMs;
+  fadeTimer = setInterval(() => {
+    fadeFactor = Math.min(1, fadeFactor + increment);
+    if (fadeFactor >= 1) clearFadeTimer();
+  }, FADE_STEP_MS);
+}
+
+function fadeOut(durationMs: number = FADE_OUT_MS): Promise<void> {
+  return new Promise((resolve) => {
+    clearFadeTimer();
+    if (fadeFactor <= 0) { resolve(); return; }
+    const startVal = fadeFactor;
+    const decrement = startVal * FADE_STEP_MS / durationMs;
+    fadeTimer = setInterval(() => {
+      fadeFactor = Math.max(0, fadeFactor - decrement);
+      if (fadeFactor <= 0) {
+        clearFadeTimer();
+        resolve();
+      }
+    }, FADE_STEP_MS);
+  });
+}
+
+// ──────────────────────────────────────────────
 // Audio mode initialization
 // ──────────────────────────────────────────────
 
@@ -74,13 +117,17 @@ async function unloadSound(soundId: string): Promise<void> {
   clearVolumeAnimator(soundId);
   clearFrequencyTimer(soundId);
 
-  try {
-    await sound.stopAsync();
-    await sound.unloadAsync();
-  } catch {
-    // already unloaded
-  }
+  try { await sound.stopAsync(); } catch {}
+  try { await sound.unloadAsync(); } catch {}
   soundPool.delete(soundId);
+}
+
+/** 사운드 풀 전체 정리 (orphaned 인스턴스 포함) */
+async function cleanupSoundPool(): Promise<void> {
+  const ids = Array.from(soundPool.keys());
+  for (const id of ids) {
+    await unloadSound(id);
+  }
 }
 
 // ──────────────────────────────────────────────
@@ -95,7 +142,7 @@ function clearVolumeAnimator(soundId: string) {
   }
 }
 
-function startVolumeAnimator(soundId: string, state: ActiveSoundState, speed: VolumeChangeSpeed) {
+function startVolumeAnimator(soundId: string, speed: VolumeChangeSpeed) {
   clearVolumeAnimator(soundId);
 
   const seed = soundSeeds.get(soundId) ?? 0;
@@ -107,9 +154,17 @@ function startVolumeAnimator(soundId: string, state: ActiveSoundState, speed: Vo
       return;
     }
 
-    const masterVolume = useAudioStore.getState().masterVolume / 100;
+    // 매 틱마다 스토어에서 최신 상태 읽기 (상세 설정 변경 실시간 반영)
+    const store = useAudioStore.getState();
+    const state = store.activeSounds.get(soundId);
+    if (!state) {
+      clearVolumeAnimator(soundId);
+      return;
+    }
+
+    const masterVolume = store.masterVolume / 100;
     const vol = getPerlinVolume(Date.now() / 1000, seed, speed, state.volumeMin, state.volumeMax);
-    sound.setVolumeAsync(vol * masterVolume).catch(() => {});
+    sound.setVolumeAsync(vol * masterVolume * fadeFactor).catch(() => {});
   }, 100); // 10fps
 
   volumeAnimators.set(soundId, id);
@@ -140,12 +195,15 @@ function getIntervalRange(freq: Frequency): [number, number] {
   }
 }
 
-function scheduleIntermittent(soundId: string, state: ActiveSoundState) {
+function scheduleIntermittent(soundId: string) {
   clearFrequencyTimer(soundId);
 
   const meta = getSoundById(soundId);
   if (!meta || meta.type !== 'intermittent') return;
-  if (state.frequency === 'continuous') return;
+
+  // 스토어에서 최신 상태 읽기,
+  const state = useAudioStore.getState().activeSounds.get(soundId);
+  if (!state || state.frequency === 'continuous') return;
 
   const [min, max] = getIntervalRange(state.frequency);
   const delay = min + Math.random() * (max - min);
@@ -154,12 +212,16 @@ function scheduleIntermittent(soundId: string, state: ActiveSoundState) {
     const sound = soundPool.get(soundId);
     if (!sound) return;
 
+    // 최신 상태로 볼륨 적용
+    const currentState = useAudioStore.getState().activeSounds.get(soundId);
+    if (!currentState) return;
+
     try {
       const status = await sound.getStatusAsync();
       if (status.isLoaded && !status.isPlaying) {
         const masterVolume = useAudioStore.getState().masterVolume / 100;
-        const vol = (state.volumeMin + state.volumeMax) / 2 / 100;
-        await sound.setVolumeAsync(vol * masterVolume);
+        const vol = ((currentState.volumeMin + currentState.volumeMax) / 2 / 100) * masterVolume * fadeFactor;
+        await sound.setVolumeAsync(vol);
         await sound.setPositionAsync(0);
         await sound.playAsync();
       }
@@ -167,9 +229,9 @@ function scheduleIntermittent(soundId: string, state: ActiveSoundState) {
       // ignore
     }
 
-    // 재생 후 다음 스케줄
+    // 재생 후 다음 스케줄 (최신 상태로)
     if (useAudioStore.getState().isPlaying) {
-      scheduleIntermittent(soundId, state);
+      scheduleIntermittent(soundId);
     }
   }, delay);
 
@@ -181,6 +243,9 @@ function scheduleIntermittent(soundId: string, state: ActiveSoundState) {
 // ──────────────────────────────────────────────
 
 export async function startMix(): Promise<void> {
+  // 기존 사운드 정리 (이중 재생 방지)
+  await cleanupSoundPool();
+
   const store = useAudioStore.getState();
   const entries = Array.from(store.activeSounds.values());
 
@@ -193,20 +258,21 @@ export async function startMix(): Promise<void> {
     const meta = getSoundById(state.soundId);
     if (!meta) continue;
 
-    const masterVolume = store.masterVolume / 100;
-    const initialVol = ((state.volumeMin + state.volumeMax) / 2 / 100) * masterVolume;
-    await sound.setVolumeAsync(initialVol);
+    // volume 0으로 시작 (fadeIn이 점진적으로 올림)
+    await sound.setVolumeAsync(0);
 
     if (meta.type === 'continuous') {
       await sound.playAsync();
-      startVolumeAnimator(state.soundId, state, 'medium');
+      startVolumeAnimator(state.soundId, 'medium');
     } else {
       // 간헐적 소리: 처음 한 번 재생 후 타이머 시작
       await sound.playAsync();
-      scheduleIntermittent(state.soundId, state);
+      scheduleIntermittent(state.soundId);
     }
   }
 
+  // 페이드인 시작
+  fadeIn(FADE_IN_MS);
   store.setPlaying(true);
   startTimerCheck();
 
@@ -219,45 +285,16 @@ export async function startMix(): Promise<void> {
 }
 
 export async function stopAll(): Promise<void> {
-  const store = useAudioStore.getState();
-  const soundIds = Array.from(store.activeSounds.keys());
+  // 페이드아웃 후 정리
+  await fadeOut(FADE_OUT_MS);
+  await cleanupSoundPool();
 
-  for (const id of soundIds) {
-    await unloadSound(id);
-  }
-
-  store.setPlaying(false);
+  useAudioStore.getState().setPlaying(false);
   stopTimerCheck();
 }
 
-export async function fadeOutAll(durationMs: number = 5000): Promise<void> {
-  const store = useAudioStore.getState();
-  const soundIds = Array.from(store.activeSounds.keys());
-
-  // 모든 volume animator 중지
-  for (const id of soundIds) clearVolumeAnimator(id);
-
-  const steps = 50;
-  const interval = durationMs / steps;
-
-  for (let i = steps; i >= 0; i--) {
-    const factor = i / steps;
-    for (const id of soundIds) {
-      const sound = soundPool.get(id);
-      const state = store.activeSounds.get(id);
-      if (sound && state) {
-        const vol = ((state.volumeMin + state.volumeMax) / 2 / 100) * factor;
-        await sound.setVolumeAsync(vol).catch(() => {});
-      }
-    }
-    await new Promise((r) => setTimeout(r, interval));
-  }
-
-  await stopAll();
-}
-
 export async function applyPreset(sounds: ActiveSoundState[], presetId: string): Promise<void> {
-  // 기존 재생 중지
+  // 기존 재생 중지 (페이드아웃 포함)
   await stopAll();
 
   // 새로운 소리 설정
@@ -265,7 +302,7 @@ export async function applyPreset(sounds: ActiveSoundState[], presetId: string):
   store.setActiveSounds(sounds);
   store.setActivePresetId(presetId);
 
-  // 재생 시작
+  // 재생 시작 (페이드인 포함)
   await startMix();
 }
 
@@ -282,23 +319,18 @@ function startTimerCheck() {
     const remaining = timer.endTime - Date.now();
     if (remaining <= 0) {
       timer.cancelTimer();
-      await stopAll();
+      fadeFactor = 0;
+      clearFadeTimer();
+      await cleanupSoundPool();
+      useAudioStore.getState().setPlaying(false);
+      stopTimerCheck();
       // Auto-stop sleep tracking when timer ends
       if (isTrackingActive()) {
         await stopSleepTracking();
       }
     } else if (remaining <= TIMER_FADEOUT_DURATION) {
-      // 페이드아웃 중 — 마스터 볼륨 점진적 감소
-      const factor = remaining / TIMER_FADEOUT_DURATION;
-      const store = useAudioStore.getState();
-      const adjustedMaster = (store.masterVolume / 100) * factor;
-      for (const [id, state] of store.activeSounds) {
-        const sound = soundPool.get(id);
-        if (sound) {
-          const vol = ((state.volumeMin + state.volumeMax) / 2 / 100) * adjustedMaster;
-          await sound.setVolumeAsync(Math.max(0, vol)).catch(() => {});
-        }
-      }
+      // 타이머 종료 전 점진적 페이드아웃 — fadeFactor로 통합 관리
+      fadeFactor = remaining / TIMER_FADEOUT_DURATION;
     }
   }, 1000);
 }
@@ -312,8 +344,10 @@ function stopTimerCheck() {
 
 /** CleanUp: 앱 종료 시 호출 */
 export async function cleanupAudio(): Promise<void> {
-  await stopAll();
-  soundPool.clear();
+  clearFadeTimer();
+  await cleanupSoundPool();
+  useAudioStore.getState().setPlaying(false);
+  stopTimerCheck();
   soundSeeds.clear();
   seedCounter = 0;
 }
