@@ -100,23 +100,27 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: spacing.lg,
+          marginBottom: spacing.sm,
         },
         name: {
           ...typography.h2,
           color: themeColors.textPrimary,
           flex: 1,
         },
+        previewBtnRow: {
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: spacing.lg,
+        },
         previewBtn: {
-          width: 40,
-          height: 40,
-          borderRadius: 20,
+          width: 56,
+          height: 56,
+          borderRadius: 28,
           backgroundColor: 'rgba(255,255,255,0.08)',
           borderWidth: 1,
           borderColor: 'rgba(255,255,255,0.15)',
           alignItems: 'center',
           justifyContent: 'center',
-          marginRight: spacing.xs,
         },
         previewBtnActive: {
           backgroundColor: 'rgba(255,255,255,0.22)',
@@ -215,14 +219,18 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
             {/* Header */}
             <View style={styles.header}>
               <Text style={styles.name}>{t(`sounds.${sound.id}`, { defaultValue: sound.name })}</Text>
+              <Pressable style={styles.closeBtn} onPress={handleClose}>
+                <Text style={styles.closeText}>✕</Text>
+              </Pressable>
+            </View>
+
+            {/* Centered Play Button */}
+            <View style={styles.previewBtnRow}>
               <Pressable
                 style={[styles.previewBtn, previewingSoundId === sound.id && styles.previewBtnActive]}
                 onPress={() => togglePreview(sound.id)}
               >
-                <MaterialIcons name={previewingSoundId === sound.id ? 'stop' : 'play-arrow'} size={20} color="#ffffff" />
-              </Pressable>
-              <Pressable style={styles.closeBtn} onPress={handleClose}>
-                <Text style={styles.closeText}>✕</Text>
+                <MaterialIcons name={previewingSoundId === sound.id ? 'stop' : 'play-arrow'} size={28} color="#ffffff" />
               </Pressable>
             </View>
 

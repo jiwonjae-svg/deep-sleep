@@ -1,5 +1,6 @@
 import { Audio } from 'expo-av';
 import { getSoundById } from '@/data/sounds';
+import { getSoundAsset } from '@/data/soundAssets';
 
 /**
  * Lightweight singleton for independent sound preview.
@@ -38,8 +39,11 @@ export async function startPreview(soundId: string): Promise<void> {
   if (!meta) return;
 
   try {
+    const source = getSoundAsset(soundId);
+    if (!source) return;
+
     const { sound } = await Audio.Sound.createAsync(
-      { uri: `asset:///sounds/${meta.fileName}` },
+      source,
       { shouldPlay: true, isLooping: true, volume: 0.7 },
     );
 

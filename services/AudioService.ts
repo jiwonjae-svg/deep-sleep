@@ -3,6 +3,7 @@ import { useAudioStore } from '@/stores/useAudioStore';
 import { useTimerStore } from '@/stores/useTimerStore';
 import { getPerlinVolume } from '@/utils/perlinNoise';
 import { getSoundById } from '@/data/sounds';
+import { getSoundAsset } from '@/data/soundAssets';
 import { ActiveSoundState, Frequency, VolumeChangeSpeed } from '@/types';
 import { MAX_SIMULTANEOUS_SOUNDS, TIMER_FADEOUT_DURATION } from '@/utils/constants';
 import { useSleepStore } from '@/stores/useSleepStore';
@@ -46,11 +47,11 @@ async function loadSound(soundId: string): Promise<Audio.Sound | null> {
   if (!meta) return null;
 
   try {
-    // expo-av requires static imports for bundled assets.
-    // For production, sounds would be in assets/sounds/.
-    // For now, we create a placeholder that handles missing files gracefully.
+    const source = getSoundAsset(soundId);
+    if (!source) return null;
+
     const { sound } = await Audio.Sound.createAsync(
-      { uri: `asset:///sounds/${meta.fileName}` },
+      source,
       { shouldPlay: false, isLooping: meta.type === 'continuous', volume: 0 },
     );
     soundPool.set(soundId, sound);
