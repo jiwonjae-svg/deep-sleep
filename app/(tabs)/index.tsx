@@ -9,6 +9,7 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 import { useAudio } from '@/hooks/useAudio';
 import { useAlarmStore } from '@/stores/useAlarmStore';
 import { useTimerStore } from '@/stores/useTimerStore';
@@ -33,6 +34,7 @@ const PRESET_IMAGES: Record<string, ImageSourcePropType> = {
 export default function HomeScreen() {
   const themeColors = useThemeColors();
   const { t } = useTranslation();
+  const router = useRouter();
   const {
     isPlaying,
     masterVolume,
@@ -309,6 +311,15 @@ export default function HomeScreen() {
             <MaterialIcons name="volume-up" size={20} color="rgba(255,255,255,0.7)" />
           </View>
         </View>
+
+        {/* Breathing Guide Button */}
+        <Pressable
+          style={styles.breathingBtn}
+          onPress={() => router.push('/breathing')}
+        >
+          <MaterialIcons name="self-improvement" size={20} color="rgba(255,255,255,0.8)" />
+          <Text style={styles.breathingBtnText}>{t('breathing.title', { defaultValue: '호흡 가이드' })}</Text>
+        </Pressable>
       </View>
 
       {/* Timer Modal */}
@@ -531,6 +542,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     color: 'rgba(255,255,255,0.6)',
+  },
+  breathingBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 40,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  breathingBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.8)',
   },
 });
 

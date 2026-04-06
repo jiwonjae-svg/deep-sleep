@@ -2,9 +2,11 @@
 import { View, Text, Pressable, ScrollView, Modal, StyleSheet, TextInput } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { BottomSheet } from '@/components/ui/BottomSheet';
+import { Toggle } from '@/components/ui/Toggle';
 import { useThemeColors } from '@/theme';
 import { useTranslation } from 'react-i18next';
 import { useAlarmStore } from '@/stores/useAlarmStore';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 import { msUntilAlarm } from '@/utils/formatTime';
 
 const QUICK_MINUTES = [15, 30, 45, 60] as const;
@@ -400,6 +402,99 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
           )}
         </Pressable>
       )}
+
+      {/* Advanced Timer Settings (3.4) */}
+      <View style={{
+        backgroundColor: themeColors.glassLight,
+        borderRadius: 20,
+        padding: 16,
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: themeColors.glassBorder,
+        gap: 12,
+      }}>
+        <Text style={{
+          fontSize: 10,
+          fontWeight: '700',
+          letterSpacing: 3,
+          textTransform: 'uppercase',
+          color: themeColors.textMuted,
+          marginBottom: 4,
+        }}>
+          {t('timer.advancedSettings', { defaultValue: '고급 설정' })}
+        </Text>
+
+        {/* Gradual Fade-out */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flex: 1, marginRight: 12 }}>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: themeColors.textPrimary }}>
+              {t('timer.gradualFadeOut', { defaultValue: '점진적 페이드아웃' })}
+            </Text>
+            <Text style={{ fontSize: 11, color: themeColors.textMuted, marginTop: 2 }}>
+              {t('timer.gradualFadeOutDesc', { defaultValue: '종료 전 서서히 볼륨 감소' })}
+            </Text>
+          </View>
+          <Toggle
+            value={useSettingsStore.getState().settings.timerFadeOutEnabled}
+            onValueChange={(v) => useSettingsStore.getState().updateSettings({ timerFadeOutEnabled: v })}
+          />
+        </View>
+
+        {/* Fade-out duration chips */}
+        {useSettingsStore.getState().settings.timerFadeOutEnabled && (
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {[3, 5, 10].map((min) => {
+              const isActive = useSettingsStore.getState().settings.timerFadeOutMinutes === min;
+              return (
+                <Pressable
+                  key={min}
+                  style={{
+                    flex: 1,
+                    height: 36,
+                    borderRadius: 18,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: isActive ? themeColors.accent1 : themeColors.glassMedium,
+                    borderWidth: 1,
+                    borderColor: isActive ? themeColors.accent1 : themeColors.glassBorder,
+                  }}
+                  onPress={() => useSettingsStore.getState().updateSettings({ timerFadeOutMinutes: min })}
+                >
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: isActive ? '#ffffff' : themeColors.textSecondary }}>
+                    {min}{t('home.minuteUnit', { defaultValue: '분' })}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
+
+        {/* Intelligent Timer */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flex: 1, marginRight: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: themeColors.textPrimary }}>
+                {t('timer.intelligentTimer', { defaultValue: '스마트 종료' })}
+              </Text>
+              <View style={{
+                backgroundColor: themeColors.accent1,
+                borderRadius: 4,
+                paddingHorizontal: 6,
+                paddingVertical: 2,
+              }}>
+                <Text style={{ fontSize: 8, fontWeight: '700', color: '#ffffff' }}>PLUS</Text>
+              </View>
+            </View>
+            <Text style={{ fontSize: 11, color: themeColors.textMuted, marginTop: 2 }}>
+              {t('timer.intelligentTimerDesc', { defaultValue: '수면 감지 시 자동 종료' })}
+            </Text>
+          </View>
+          <Toggle
+            value={useSettingsStore.getState().settings.intelligentTimerEnabled}
+            onValueChange={(v) => useSettingsStore.getState().updateSettings({ intelligentTimerEnabled: v })}
+          />
+        </View>
+      </View>
 
       {/* Save button (not start) */}
       <Pressable

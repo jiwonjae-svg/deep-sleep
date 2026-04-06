@@ -70,6 +70,7 @@ function ThemedApp() {
         <Stack.Screen name="playing" options={{ animation: 'fade' }} />
         <Stack.Screen name="alarm-dismiss" options={{ animation: 'fade', gestureEnabled: false }} />
         <Stack.Screen name="subscription" options={{ animation: 'fade', presentation: 'modal' }} />
+        <Stack.Screen name="breathing" options={{ animation: 'fade' }} />
         <Stack.Screen
           name="presets/save"
           options={{

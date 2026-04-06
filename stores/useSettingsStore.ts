@@ -15,6 +15,9 @@ const DEFAULT_SETTINGS: AppSettings = {
   volumeChangeSpeed: 'medium',
   defaultSnoozeMinutes: 5,
   defaultAlarmSoundId: 'alarm-default',
+  timerFadeOutEnabled: true,
+  timerFadeOutMinutes: 5,
+  intelligentTimerEnabled: false,
 };
 
 interface SettingsStoreState {

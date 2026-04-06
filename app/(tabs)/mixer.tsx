@@ -92,9 +92,24 @@ const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'cave-echo': 'landscape',
   'temple-bells': 'temple-buddhist',
   'hot-spring': 'hot-tub',
+  // ASMR
+  'whispering': 'record-voice-over',
+  'hair-brushing': 'brush',
   // Seasonal & Special
   'cherry-blossom': 'local-florist',
   'snow-walking': 'ac-unit',
+  // New sounds
+  'waterfall': 'water',
+  'fountain': 'water',
+  'whale': 'waves',
+  'cicadas': 'grass',
+  'wolf': 'pets',
+  'dolphin': 'waves',
+  'washing-machine': 'local-laundry-service',
+  'dryer': 'air',
+  'page-turning': 'menu-book',
+  'bus': 'directions-bus',
+  'lofi-beats': 'headphones',
 };
 
 export default function MixerScreen() {
@@ -117,7 +132,10 @@ export default function MixerScreen() {
   const [aiResultVisible, setAiResultVisible] = useState(false);
   const [aiResult, setAiResult] = useState<AIPresetResult | null>(null);
 
-  const categorySounds = getSoundsByCategory(selectedCategory);
+  const categorySounds = useMemo(
+    () => [...getSoundsByCategory(selectedCategory)].sort((a, b) => Number(a.isPremium) - Number(b.isPremium)),
+    [selectedCategory],
+  );
   const activeSoundIds = new Set(activeSoundsMap.keys());
 
   const visibleCategories = useMemo(
@@ -313,7 +331,7 @@ export default function MixerScreen() {
                       </Text>
                       {isLocked && (
                         <View style={[styles.premiumBadge, { backgroundColor: themeColors.accent1 }]}>
-                          <Text style={styles.premiumBadgeText}>PREMIUM</Text>
+                          <Text style={styles.premiumBadgeText}>PLUS</Text>
                         </View>
                       )}
                     </View>

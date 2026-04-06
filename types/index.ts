@@ -97,6 +97,10 @@ export interface AppSettings {
   volumeChangeSpeed: VolumeChangeSpeed;
   defaultSnoozeMinutes: number;
   defaultAlarmSoundId: string;
+  // Timer advanced mode (3.4)
+  timerFadeOutEnabled: boolean;
+  timerFadeOutMinutes: number; // 3, 5, 10
+  intelligentTimerEnabled: boolean;
 }
 
 // ──────────────────────────────────────────────
@@ -132,4 +136,22 @@ export interface CategoryInfo {
   nameEn: string;
   emoji: string;
   color: string;
+}
+
+// ──────────────────────────────────────────────
+// Timer Advanced Mode (3.4)
+// ──────────────────────────────────────────────
+
+export type TimerTransitionType = 'crossfade' | 'cut';
+
+export interface TimerPhase {
+  presetId: string;
+  durationMinutes: number;
+  transitionType: TimerTransitionType;
+  crossfadeSec: number;
+}
+
+export interface TimerSchedule {
+  phases: TimerPhase[];
+  loopLastPhase: boolean;
 }

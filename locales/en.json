@@ -13,7 +13,7 @@
     "loading": "Loading...",
     "error": "An error occurred",
     "retry": "Retry",
-    "premium": "Premium",
+    "premium": "Plus",
     "free": "Free"
   },
   "tabs": {
@@ -51,7 +51,7 @@
   "mixer": {
     "title": "Sound Mixer",
     "activeCount": "{{count}}/10 active",
-    "premiumRequired": "This sound requires Premium",
+    "premiumRequired": "This sound requires Plus",
     "maxReached": "You can play up to 10 sounds simultaneously",
     "dailyLimit": "Daily Limit",
     "dailyLimitMessage": "AI recommendations are limited to 5 per day.",
@@ -114,7 +114,7 @@
     "longPressToStop": "Long press to stop"
   },
   "subscription": {
-    "title": "Deep Sleep Premium",
+    "title": "Deep Sleep Plus",
     "subtitle": "Enjoy all 100 sounds ad-free",
     "monthly": "Monthly",
     "yearly": "Yearly",
@@ -132,7 +132,7 @@
     "lifetimePeriod": "one-time",
     "benefits": {
       "noAds": "Remove all ads",
-      "premiumSounds": "61 premium sounds",
+      "premiumSounds": "All Plus sounds",
       "unlimitedPresets": "Unlimited preset saves",
       "aiRecommend": "AI sound recommendations",
       "panControl": "Pan control",
@@ -176,7 +176,7 @@
     "recommendTitle": "AI Recommendation",
     "inputPlaceholder": "Describe the sleep atmosphere you want...",
     "recommend": "Get Recommendation",
-    "premiumOnly": "Premium feature only",
+    "premiumOnly": "Plus feature only",
     "rateLimitExceeded": "Daily recommendation limit reached",
     "apply": "Apply",
     "retry": "Try Again",
@@ -188,6 +188,20 @@
   "soundType": {
     "continuous": "Continuous",
     "intermittent": "Intermittent"
+  },
+  "breathing": {
+    "title": "Breathing Guide",
+    "selectPattern": "Breathing Pattern",
+    "start": "Start",
+    "stop": "Stop",
+    "cycles": "cycles",
+    "complete": "Breathing exercise complete!",
+    "patterns": {
+      "4-7-8": "4-7-8 Breathing",
+      "box-4": "Box Breathing",
+      "relaxing-2-4": "Relaxing Breath",
+      "deep-calm": "Deep Calm"
+    }
   },
   "soundDetail": {
     "volumeRange": "Volume Range",
@@ -235,7 +249,12 @@
     "saveTimer": "Save Timer",
     "timeSetup": "Set Time",
     "hourLabel": "Hours",
-    "minuteLabel": "Minutes"
+    "minuteLabel": "Minutes",
+    "advancedSettings": "Advanced",
+    "gradualFadeOut": "Gradual Fade-out",
+    "gradualFadeOutDesc": "Slowly reduce volume before ending",
+    "intelligentTimer": "Smart Stop",
+    "intelligentTimerDesc": "Auto-stop when sleep is detected"
   },
   "format": {
     "years": "{{n}}yr",
@@ -310,7 +329,20 @@
     "temple-bells": "Temple Bells",
     "hot-spring": "Hot Spring",
     "cherry-blossom": "Cherry Blossom",
-    "snow-walking": "Walking on Snow"
+    "snow-walking": "Walking on Snow",
+    "waterfall": "Waterfall",
+    "fountain": "Fountain",
+    "whale": "Whale Song",
+    "cicadas": "Cicadas",
+    "wolf": "Wolf Howl",
+    "dolphin": "Dolphin",
+    "washing-machine": "Washing Machine",
+    "dryer": "Dryer",
+    "page-turning": "Page Turning",
+    "bus": "Bus Interior",
+    "lofi-beats": "Lo-fi Beats",
+    "whispering": "Whispering",
+    "hair-brushing": "Hair Brushing"
   },
   "categories": {
     "rain-water": "Rain & Water",

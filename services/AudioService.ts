@@ -1,6 +1,7 @@
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useTimerStore } from '@/stores/useTimerStore';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 import { getPerlinVolume } from '@/utils/perlinNoise';
 import { getSoundById } from '@/data/sounds';
 import { getSoundAsset, getSoundVariants } from '@/data/soundAssets';
@@ -133,8 +134,18 @@ async function loadSound(soundId: string): Promise<Audio.Sound | null> {
 function setupCrossfadeMonitor(soundId: string, sound: Audio.Sound) {
   sound.setOnPlaybackStatusUpdate((status) => {
     if (!('isLoaded' in status) || !status.isLoaded) return;
-    if (!status.isPlaying) return;
     if (crossfadeInProgress.has(soundId)) return;
+
+    // 백그라운드 안전장치: 크로스페이드 없이 재생이 끝난 경우 즉시 재시작
+    if (status.didJustFinish) {
+      crossfadeInProgress.add(soundId);
+      performVariantCrossfade(soundId, sound).catch(() => {
+        crossfadeInProgress.delete(soundId);
+      });
+      return;
+    }
+
+    if (!status.isPlaying) return;
 
     const duration = status.durationMillis ?? 0;
     const position = status.positionMillis;
@@ -484,8 +495,15 @@ function startTimerCheck() {
       if (isTrackingActive()) {
         await stopSleepTracking();
       }
-    } else if (remaining <= TIMER_FADEOUT_DURATION) {
-      fadeFactor = remaining / TIMER_FADEOUT_DURATION;
+    } else {
+      // 설정에서 페이드아웃 시간 가져오기
+      const settings = useSettingsStore.getState().settings;
+      const fadeOutMs = settings.timerFadeOutEnabled
+        ? settings.timerFadeOutMinutes * 60 * 1000
+        : TIMER_FADEOUT_DURATION;
+      if (remaining <= fadeOutMs) {
+        fadeFactor = remaining / fadeOutMs;
+      }
     }
   }, 1000);
 }

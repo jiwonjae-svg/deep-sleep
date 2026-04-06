@@ -1,0 +1,28 @@
+{
+  "widgets": [
+    {
+      "name": "DeepSleepSmall",
+      "label": "Deep Sleep (Small)",
+      "minWidth": "110dp",
+      "minHeight": "40dp",
+      "description": "Quick play/pause with preset name",
+      "previewImage": "widget_preview_small"
+    },
+    {
+      "name": "DeepSleepMedium",
+      "label": "Deep Sleep",
+      "minWidth": "250dp",
+      "minHeight": "40dp",
+      "description": "Play/pause, preset name, and timer",
+      "previewImage": "widget_preview_medium"
+    },
+    {
+      "name": "DeepSleepLarge",
+      "label": "Deep Sleep (Full)",
+      "minWidth": "250dp",
+      "minHeight": "110dp",
+      "description": "Full controls with favorite presets",
+      "previewImage": "widget_preview_large"
+    }
+  ]
+}

@@ -73,7 +73,7 @@ export default function SubscriptionScreen() {
 
         <ScrollView contentContainerStyle={styles.content}>
           <Animated.Text style={[styles.title, { opacity: titleOpacity }]}>
-            Deep Sleep Premium
+            Deep Sleep Plus
           </Animated.Text>
           <Text style={styles.subtitle}>{t('subscription.subtitle')}</Text>
 

@@ -13,7 +13,7 @@
     "loading": "로딩 중...",
     "error": "오류가 발생했습니다",
     "retry": "다시 시도",
-    "premium": "Premium",
+    "premium": "Plus",
     "free": "무료"
   },
   "tabs": {
@@ -51,7 +51,7 @@
   "mixer": {
     "title": "사운드 믹서",
     "activeCount": "{{count}}/10 활성",
-    "premiumRequired": "프리미엄 전용 소리입니다",
+    "premiumRequired": "Plus 전용 소리입니다",
     "maxReached": "최대 10개의 소리만 동시에 재생할 수 있습니다",
     "dailyLimit": "일일 시도 한도",
     "dailyLimitMessage": "AI 추천은 하루에 5번까지 사용할 수 있습니다.",
@@ -114,7 +114,7 @@
     "longPressToStop": "길게 눌러서 정지"
   },
   "subscription": {
-    "title": "Deep Sleep Premium",
+    "title": "Deep Sleep Plus",
     "subtitle": "광고 없이 100가지 소리를 마음껏 즐기세요",
     "monthly": "월간",
     "yearly": "연간",
@@ -132,7 +132,7 @@
     "lifetimePeriod": "1회 결제",
     "benefits": {
       "noAds": "모든 광고 제거",
-      "premiumSounds": "61개 프리미엄 소리",
+      "premiumSounds": "Plus 전용 소리",
       "unlimitedPresets": "무제한 프리셋 저장",
       "aiRecommend": "AI 사운드 추천",
       "panControl": "팬(Pan) 조절",
@@ -176,7 +176,7 @@
     "recommendTitle": "AI 추천",
     "inputPlaceholder": "원하는 수면 분위기를 설명해주세요...",
     "recommend": "추천 받기",
-    "premiumOnly": "프리미엄 전용 기능입니다",
+    "premiumOnly": "Plus 전용 기능입니다",
     "rateLimitExceeded": "오늘의 추천 횟수를 모두 사용했습니다",
     "apply": "적용",
     "retry": "다시 추천",
@@ -188,6 +188,20 @@
   "soundType": {
     "continuous": "연속 재생",
     "intermittent": "간헐적"
+  },
+  "breathing": {
+    "title": "호흡 가이드",
+    "selectPattern": "호흡 패턴",
+    "start": "시작",
+    "stop": "중지",
+    "cycles": "사이클",
+    "complete": "호흡 운동 완료!",
+    "patterns": {
+      "4-7-8": "4-7-8 호흡법",
+      "box-4": "박스 호흡법",
+      "relaxing-2-4": "이완 호흡",
+      "deep-calm": "깊은 안정"
+    }
   },
   "soundDetail": {
     "volumeRange": "음량 범위",
@@ -235,7 +249,12 @@
     "saveTimer": "타이머 저장",
     "timeSetup": "시간 설정",
     "hourLabel": "시간",
-    "minuteLabel": "분"
+    "minuteLabel": "분",
+    "advancedSettings": "고급 설정",
+    "gradualFadeOut": "점진적 페이드아웃",
+    "gradualFadeOutDesc": "종료 전 서서히 볼륨 감소",
+    "intelligentTimer": "스마트 종료",
+    "intelligentTimerDesc": "수면 감지 시 자동 종료"
   },
   "format": {
     "years": "{{n}}년",
@@ -310,7 +329,20 @@
     "temple-bells": "사원 종소리",
     "hot-spring": "온천",
     "cherry-blossom": "벚꽃 비",
-    "snow-walking": "눈 밟는 소리"
+    "snow-walking": "눈 밟는 소리",
+    "waterfall": "폭포",
+    "fountain": "분수",
+    "whale": "고래 소리",
+    "cicadas": "매미",
+    "wolf": "늑대 울음",
+    "dolphin": "돌고래",
+    "washing-machine": "세탁기",
+    "dryer": "건조기",
+    "page-turning": "페이지 넘김",
+    "bus": "버스 내부",
+    "lofi-beats": "로파이 비트",
+    "whispering": "속삭임",
+    "hair-brushing": "헤어 브러싱"
   },
   "categories": {
     "rain-water": "비 & 물",
