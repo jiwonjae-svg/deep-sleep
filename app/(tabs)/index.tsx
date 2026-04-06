@@ -9,7 +9,6 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { useRouter } from 'expo-router';
 import { useAudio } from '@/hooks/useAudio';
 import { useAlarmStore } from '@/stores/useAlarmStore';
 import { useTimerStore } from '@/stores/useTimerStore';
@@ -21,7 +20,6 @@ import { useThemeColors, spacing, layout } from '@/theme';
 import { useTranslation } from 'react-i18next';
 import { formatRemainingTimeLong, formatTimerPrecise, msUntilAlarm, msUntilSpecificDate } from '@/utils/formatTime';
 import { Preset } from '@/types';
-import { SleepDebtCard } from '@/components/sleep/SleepDebtCard';
 
 // 프리셋 ID → 이미지 매핑
 const PRESET_IMAGES: Record<string, ImageSourcePropType> = {
@@ -35,7 +33,6 @@ const PRESET_IMAGES: Record<string, ImageSourcePropType> = {
 export default function HomeScreen() {
   const themeColors = useThemeColors();
   const { t } = useTranslation();
-  const router = useRouter();
   const {
     isPlaying,
     masterVolume,
@@ -325,27 +322,6 @@ export default function HomeScreen() {
             <MaterialIcons name="volume-up" size={20} color="rgba(255,255,255,0.7)" />
           </View>
         </View>
-
-        {/* Breathing Guide Button */}
-        <View style={styles.quickActions}>
-          <Pressable
-            style={styles.breathingBtn}
-            onPress={() => router.push('/breathing')}
-          >
-            <MaterialIcons name="self-improvement" size={20} color="rgba(255,255,255,0.8)" />
-            <Text style={styles.breathingBtnText}>{t('breathing.title', { defaultValue: '호흡 가이드' })}</Text>
-          </Pressable>
-
-          <Pressable
-            style={styles.breathingBtn}
-            onPress={() => router.push('/focus')}
-          >
-            <MaterialIcons name="center-focus-strong" size={20} color="rgba(255,255,255,0.8)" />
-            <Text style={styles.breathingBtnText}>{t('focus.title', { defaultValue: '집중 모드' })}</Text>
-          </Pressable>
-        </View>
-
-        <SleepDebtCard />
       </View>
 
       {/* Timer Modal */}
@@ -568,28 +544,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     color: 'rgba(255,255,255,0.6)',
-  },
-  breathingBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 40,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    flex: 1,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  breathingBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.8)',
   },
 });
 

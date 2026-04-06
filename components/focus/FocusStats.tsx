@@ -16,13 +16,18 @@ export function FocusStats() {
   const themeColors = useThemeColors();
   const { t, i18n } = useTranslation();
   const todayFocusMinutes = useFocusStore((s) => s.todayFocusMinutes);
-  const weeklyStats = useFocusStore((s) => s.getWeeklyStats());
+  const records = useFocusStore((s) => s.records);
 
   const dayLabels = i18n.language === 'ko' ? DAY_LABELS_KO : DAY_LABELS_EN;
 
   // Build 7-day chart data
   const chartData = useMemo(() => {
     const today = new Date();
+    const cutoff = new Date(today);
+    cutoff.setDate(cutoff.getDate() - 7);
+    const cutoffStr = cutoff.toISOString().split('T')[0];
+    const weeklyStats = records.filter((r) => r.date >= cutoffStr);
+
     const data: { date: string; minutes: number; dayIdx: number }[] = [];
 
     for (let i = 6; i >= 0; i--) {
@@ -39,7 +44,7 @@ export function FocusStats() {
     }
 
     return data;
-  }, [weeklyStats]);
+  }, [records]);
 
   const maxMinutes = Math.max(60, ...chartData.map((d) => d.minutes));
   const totalWeekMinutes = chartData.reduce((s, d) => s + d.minutes, 0);

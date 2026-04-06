@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface BreathingPhase {
   type: 'inhale' | 'hold' | 'exhale';
@@ -71,6 +73,14 @@ export const BREATHING_PATTERNS: BreathingPattern[] = [
   },
 ];
 
+export interface BreathingSessionRecord {
+  date: string; // YYYY-MM-DD
+  patternId: string;
+  completedCycles: number;
+  totalDurationSec: number;
+  timestamp: number;
+}
+
 interface BreathingStoreState {
   /** 현재 선택된 패턴 ID */
   selectedPatternId: string;
@@ -84,6 +94,8 @@ interface BreathingStoreState {
   completedCycles: number;
   /** 목표 사이클 수 */
   targetCycles: number;
+  /** 호흡 기록 */
+  records: BreathingSessionRecord[];
 }
 
 interface BreathingStoreActions {
@@ -93,66 +105,98 @@ interface BreathingStoreActions {
   tick: () => void;
 }
 
-export const useBreathingStore = create<BreathingStoreState & BreathingStoreActions>(
-  (set, get) => ({
-    selectedPatternId: '4-7-8',
-    isSessionActive: false,
-    currentPhaseIndex: 0,
-    phaseRemainingSec: 0,
-    completedCycles: 0,
-    targetCycles: 4,
+function saveRecord(state: BreathingStoreState & BreathingStoreActions, completedCycles: number) {
+  if (completedCycles <= 0) return;
+  const pattern = BREATHING_PATTERNS.find((p) => p.id === state.selectedPatternId);
+  if (!pattern) return;
+  const record: BreathingSessionRecord = {
+    date: new Date().toISOString().split('T')[0],
+    patternId: state.selectedPatternId,
+    completedCycles,
+    totalDurationSec: completedCycles * pattern.totalCycleSec,
+    timestamp: Date.now(),
+  };
+  return [record, ...state.records].slice(0, 200);
+}
 
-    setPattern: (id) => set({ selectedPatternId: id }),
+export const useBreathingStore = create<BreathingStoreState & BreathingStoreActions>()(
+  persist(
+    (set, get) => ({
+      selectedPatternId: '4-7-8',
+      isSessionActive: false,
+      currentPhaseIndex: 0,
+      phaseRemainingSec: 0,
+      completedCycles: 0,
+      targetCycles: 4,
+      records: [],
 
-    startSession: (cycles) => {
-      const pattern = BREATHING_PATTERNS.find((p) => p.id === get().selectedPatternId);
-      if (!pattern) return;
-      set({
-        isSessionActive: true,
-        currentPhaseIndex: 0,
-        phaseRemainingSec: pattern.phases[0].durationSec,
-        completedCycles: 0,
-        targetCycles: cycles ?? pattern.recommendedCycles,
-      });
-    },
+      setPattern: (id) => set({ selectedPatternId: id }),
 
-    stopSession: () =>
-      set({
-        isSessionActive: false,
-        currentPhaseIndex: 0,
-        phaseRemainingSec: 0,
-        completedCycles: 0,
-      }),
+      startSession: (cycles) => {
+        const pattern = BREATHING_PATTERNS.find((p) => p.id === get().selectedPatternId);
+        if (!pattern) return;
+        set({
+          isSessionActive: true,
+          currentPhaseIndex: 0,
+          phaseRemainingSec: pattern.phases[0].durationSec,
+          completedCycles: 0,
+          targetCycles: cycles ?? pattern.recommendedCycles,
+        });
+      },
 
-    tick: () => {
-      const state = get();
-      if (!state.isSessionActive) return;
+      stopSession: () => {
+        const state = get();
+        const updated = saveRecord(state, state.completedCycles);
+        set({
+          isSessionActive: false,
+          currentPhaseIndex: 0,
+          phaseRemainingSec: 0,
+          completedCycles: 0,
+          ...(updated ? { records: updated } : {}),
+        });
+      },
 
-      const pattern = BREATHING_PATTERNS.find((p) => p.id === state.selectedPatternId);
-      if (!pattern) return;
+      tick: () => {
+        const state = get();
+        if (!state.isSessionActive) return;
 
-      if (state.phaseRemainingSec > 1) {
-        set({ phaseRemainingSec: state.phaseRemainingSec - 1 });
-      } else {
-        const nextPhaseIndex = state.currentPhaseIndex + 1;
-        if (nextPhaseIndex >= pattern.phases.length) {
-          const nextCycle = state.completedCycles + 1;
-          if (nextCycle >= state.targetCycles) {
-            set({ isSessionActive: false, completedCycles: nextCycle });
+        const pattern = BREATHING_PATTERNS.find((p) => p.id === state.selectedPatternId);
+        if (!pattern) return;
+
+        if (state.phaseRemainingSec > 1) {
+          set({ phaseRemainingSec: state.phaseRemainingSec - 1 });
+        } else {
+          const nextPhaseIndex = state.currentPhaseIndex + 1;
+          if (nextPhaseIndex >= pattern.phases.length) {
+            const nextCycle = state.completedCycles + 1;
+            if (nextCycle >= state.targetCycles) {
+              // 세션 완료 → 기록 저장
+              const updated = saveRecord(state, nextCycle);
+              set({
+                isSessionActive: false,
+                completedCycles: nextCycle,
+                ...(updated ? { records: updated } : {}),
+              });
+            } else {
+              set({
+                currentPhaseIndex: 0,
+                phaseRemainingSec: pattern.phases[0].durationSec,
+                completedCycles: nextCycle,
+              });
+            }
           } else {
             set({
-              currentPhaseIndex: 0,
-              phaseRemainingSec: pattern.phases[0].durationSec,
-              completedCycles: nextCycle,
+              currentPhaseIndex: nextPhaseIndex,
+              phaseRemainingSec: pattern.phases[nextPhaseIndex].durationSec,
             });
           }
-        } else {
-          set({
-            currentPhaseIndex: nextPhaseIndex,
-            phaseRemainingSec: pattern.phases[nextPhaseIndex].durationSec,
-          });
         }
-      }
+      },
+    }),
+    {
+      name: 'deep-sleep-breathing-store',
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({ records: state.records }),
     },
-  }),
+  ),
 );

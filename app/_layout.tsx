@@ -86,9 +86,7 @@ function ThemedApp() {
             presentation: 'transparentModal',
             contentStyle: { backgroundColor: 'transparent' },
           }}
-        />
-        <Stack.Screen name="focus" options={{ animation: 'slide_from_right' }} />
-      </Stack>
+        />\n      </Stack>
     </GestureHandlerRootView>
   );
 }

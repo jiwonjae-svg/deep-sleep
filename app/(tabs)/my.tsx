@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { useTranslation } from 'react-i18next';
 import { useSleepStore, MorningSurvey } from '@/stores/useSleepStore';
@@ -12,11 +13,14 @@ import { CoachingCard } from '@/components/sleep/CoachingCard';
 import { SleepReportCard } from '@/components/sleep/SleepReport';
 import { SnoringReport } from '@/components/sleep/SnoringReport';
 import { SnoringTimeline } from '@/components/sleep/SnoringTimeline';
+import { SleepDebtCard } from '@/components/sleep/SleepDebtCard';
+import { useBreathingStore } from '@/stores/useBreathingStore';
 import { analyzeSleepPattern, generateCoachingTips, generateMonthlyReport } from '@/services/SleepCoachingService';
 
 export default function MyScreen() {
   const themeColors = useThemeColors();
   const { t } = useTranslation();
+  const router = useRouter();
   const isTracking = useSleepStore((s) => s.isTracking);
   const records = useSleepStore((s) => s.records);
   const snoringRecords = useSleepStore((s) => s.snoringRecords);
@@ -29,6 +33,15 @@ export default function MyScreen() {
   const latestRecord = records.length > 0 ? records[0] : null;
   const recentRecords = records.slice(0, 7);
   const latestSnoring = snoringRecords.length > 0 ? snoringRecords[0] : null;
+  const breathingRecords = useBreathingStore((s) => s.records);
+  const todayBreathingCount = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return breathingRecords.filter((r) => r.date === today).length;
+  }, [breathingRecords]);
+  const todayBreathingSec = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return breathingRecords.filter((r) => r.date === today).reduce((s, r) => s + r.totalDurationSec, 0);
+  }, [breathingRecords]);
 
   // Phase 4: AI coaching & report
   const sleepPattern = useMemo(() => analyzeSleepPattern(records), [records]);
@@ -243,6 +256,38 @@ export default function MyScreen() {
         {records.length >= 2 && (
           <WeeklyChart records={records} />
         )}
+
+        {/* Sleep Debt */}
+        <SleepDebtCard />
+
+        {/* Breathing */}
+        <View style={[styles.breathingCard, { backgroundColor: themeColors.glassLight, borderColor: themeColors.glassBorder }]}>
+          <View style={styles.breathingHeader}>
+            <View>
+              <Text style={[styles.sectionTitle, { color: themeColors.textSecondary }]}>
+                {t('breathing.title', { defaultValue: '호흡 가이드' })}
+              </Text>
+              {todayBreathingCount > 0 && (
+                <Text style={[styles.breathingStats, { color: themeColors.textMuted }]}>
+                  {t('my.breathingToday', {
+                    count: todayBreathingCount,
+                    seconds: todayBreathingSec,
+                    defaultValue: `오늘 ${todayBreathingCount}회 · ${Math.floor(todayBreathingSec / 60)}분 ${todayBreathingSec % 60}초`,
+                  })}
+                </Text>
+              )}
+            </View>
+            <Pressable
+              style={[styles.breathingBtn, { borderColor: themeColors.accent1 }]}
+              onPress={() => router.push('/breathing')}
+            >
+              <MaterialIcons name="self-improvement" size={18} color={themeColors.accent1} />
+              <Text style={[styles.breathingBtnText, { color: themeColors.accent1 }]}>
+                {t('breathing.start', { defaultValue: '시작' })}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
 
         {/* Sound-Sleep Insights */}
         {records.length >= 3 && (
@@ -546,6 +591,36 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   soundChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  // Breathing card
+  breathingCard: {
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    marginBottom: 20,
+  },
+  breathingHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  breathingStats: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  breathingBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+  },
+  breathingBtnText: {
     fontSize: 12,
     fontWeight: '700',
   },

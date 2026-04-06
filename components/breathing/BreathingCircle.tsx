@@ -71,6 +71,9 @@ export function BreathingCircle() {
       />
       <View style={styles.centerContent}>
         <Text style={styles.countdown}>{phaseRemainingSec}</Text>
+        {isSessionActive && (
+          <Text style={styles.secondLabel}>초</Text>
+        )}
         {currentPhase && (
           <Text style={[styles.phaseLabel, { color: phaseColor }]}>
             {currentPhase.label}
@@ -99,13 +102,19 @@ const styles = StyleSheet.create({
   },
   centerContent: {
     alignItems: 'center',
-    gap: 4,
   },
   countdown: {
     fontSize: 48,
     fontWeight: '800',
     color: '#ffffff',
     letterSpacing: -2,
+  },
+  secondLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: -4,
+    marginBottom: 4,
   },
   phaseLabel: {
     fontSize: 14,

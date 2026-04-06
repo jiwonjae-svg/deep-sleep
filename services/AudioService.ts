@@ -35,10 +35,14 @@ let isPausedForPreview = false;
 
 let fadeFactor = 1.0;
 let fadeTimer: ReturnType<typeof setInterval> | null = null;
-const FADE_IN_MS = 800;
-const FADE_OUT_MS = 800;
+const FADE_IN_MS = 750;
+const FADE_OUT_MS = 750;
 const FADE_STEP_MS = 50;
-const CROSSFADE_MS = 1000; // 배리언트 크로스페이드 시간
+const CROSSFADE_MS = 750; // 0.75초 듀얼 레이어 크로스페이드
+
+// 시스템 정지 플래그 + 크로스페이드 타이머 추적
+let isSystemStopping = false;
+const crossfadeTimerMap = new Map<string, ReturnType<typeof setInterval>>();
 
 function clearFadeTimer() {
   if (fadeTimer) {
@@ -133,6 +137,7 @@ async function loadSound(soundId: string): Promise<Audio.Sound | null> {
 /** 크로스페이드 루핑 모니터: 끝나기 1초 전에 다음 배리언트로 전환 */
 function setupCrossfadeMonitor(soundId: string, sound: Audio.Sound) {
   sound.setOnPlaybackStatusUpdate((status) => {
+    if (isSystemStopping) return;
     if (!('isLoaded' in status) || !status.isLoaded) return;
     if (crossfadeInProgress.has(soundId)) return;
 
@@ -163,6 +168,7 @@ function setupCrossfadeMonitor(soundId: string, sound: Audio.Sound) {
 
 /** 배리언트 크로스페이드: 현재 소리 페이드아웃 + 새 배리언트 페이드인 */
 async function performVariantCrossfade(soundId: string, oldSound: Audio.Sound) {
+  if (isSystemStopping) { crossfadeInProgress.delete(soundId); return; }
   const meta = getSoundById(soundId);
   if (!meta) { crossfadeInProgress.delete(soundId); return; }
 
@@ -188,7 +194,16 @@ async function performVariantCrossfade(soundId: string, oldSound: Audio.Sound) {
     const increment = 1 / steps;
     let step = 0;
 
+    // 기존 크로스페이드 타이머 정리
+    const prevTimer = crossfadeTimerMap.get(soundId);
+    if (prevTimer) clearInterval(prevTimer);
+
     const crossfadeTimer = setInterval(async () => {
+      if (isSystemStopping) {
+        clearInterval(crossfadeTimer);
+        crossfadeTimerMap.delete(soundId);
+        return;
+      }
       step++;
       const factor = Math.min(1, step * increment);
       soundCrossfadeFactor.set(soundId, factor);
@@ -200,6 +215,7 @@ async function performVariantCrossfade(soundId: string, oldSound: Audio.Sound) {
 
       if (step >= steps) {
         clearInterval(crossfadeTimer);
+        crossfadeTimerMap.delete(soundId);
         soundCrossfadeFactor.set(soundId, 1);
         crossfadeInProgress.delete(soundId);
 
@@ -209,6 +225,7 @@ async function performVariantCrossfade(soundId: string, oldSound: Audio.Sound) {
       }
     }, FADE_STEP_MS);
 
+    crossfadeTimerMap.set(soundId, crossfadeTimer);
     // 이전 소리를 추적 (정리 시 사용)
     crossfadeOutSounds.push(oldSound);
   } catch {
@@ -225,6 +242,13 @@ async function unloadSound(soundId: string): Promise<void> {
   crossfadeInProgress.delete(soundId);
   soundCrossfadeFactor.delete(soundId);
 
+  // 크로스페이드 타이머 정리
+  const cfTimer = crossfadeTimerMap.get(soundId);
+  if (cfTimer) { clearInterval(cfTimer); crossfadeTimerMap.delete(soundId); }
+
+  // 콜백 제거 (정리 중 크로스페이드 트리거 방지)
+  try { sound.setOnPlaybackStatusUpdate(null); } catch {}
+
   try { await sound.stopAsync(); } catch {}
   try { await sound.unloadAsync(); } catch {}
   soundPool.delete(soundId);
@@ -232,6 +256,13 @@ async function unloadSound(soundId: string): Promise<void> {
 
 /** 사운드 풀 전체 정리 (orphaned 인스턴스 포함) */
 async function cleanupSoundPool(): Promise<void> {
+  // 모든 크로스페이드 타이머 선제 정리
+  for (const [, timer] of crossfadeTimerMap) {
+    clearInterval(timer);
+  }
+  crossfadeTimerMap.clear();
+  crossfadeInProgress.clear();
+
   const ids = Array.from(soundPool.keys());
   for (const id of ids) {
     await unloadSound(id);
@@ -365,6 +396,7 @@ function scheduleIntermittent(soundId: string) {
 // ──────────────────────────────────────────────
 
 export async function startMix(): Promise<void> {
+  isSystemStopping = false;
   await cleanupSoundPool();
   isPausedForPreview = false;
 
@@ -409,6 +441,8 @@ export async function startMix(): Promise<void> {
 
 /** 즉시 정지: UI 즉시 반영, 페이드아웃은 백그라운드 */
 export async function stopAll(): Promise<void> {
+  isSystemStopping = true;
+
   // 타이머 잔여 시간 스냅샷 저장
   const timerState = useTimerStore.getState();
   if (timerState.isActive) {
@@ -425,6 +459,7 @@ export async function stopAll(): Promise<void> {
   // 페이드아웃 후 정리 (백그라운드)
   await fadeOut(FADE_OUT_MS);
   await cleanupSoundPool();
+  isSystemStopping = false;
 }
 
 /** 프리셋 적용 — 재생 중이면 크로스페이드 전환 */
@@ -526,8 +561,10 @@ function stopTimerCheck() {
 
 /** CleanUp: 앱 종료 시 호출 */
 export async function cleanupAudio(): Promise<void> {
+  isSystemStopping = true;
   clearFadeTimer();
   await cleanupSoundPool();
+  isSystemStopping = false;
   useAudioStore.getState().setPlaying(false);
   stopTimerCheck();
   soundSeeds.clear();
