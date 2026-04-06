@@ -32,20 +32,66 @@ const CATEGORY_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
 };
 
 const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
+  // Rain & Water
+  'rain-light': 'water-drop',
+  'rain-heavy': 'thunderstorm',
   'thunder': 'bolt',
+  'rain-eaves': 'roofing',
+  'rain-umbrella': 'umbrella',
+  'rain-tent': 'holiday-village',
+  'rain-car': 'directions-car',
+  'stream': 'water',
+  // Ocean & Beach
   'wave-gentle': 'waves',
+  'wave-rough': 'waves',
+  'beach-sand': 'beach-access',
+  'sea-wind': 'air',
+  // Wind & Weather
   'wind-gentle': 'air',
+  'wind-strong': 'storm',
+  'leaves-rustle': 'eco',
+  'hail': 'grain',
+  // Forest & Nature
   'birds-morning': 'flutter-dash',
+  'cuckoo': 'flutter-dash',
+  'owl': 'visibility',
+  'crow': 'flutter-dash',
   'crickets': 'grass',
+  'frogs': 'pest-control',
+  'grass-insects': 'grass',
+  // Fire & Warmth
   'campfire': 'local-fire-department',
   'fireplace': 'fireplace',
-  'cafe-chatter': 'local-cafe',
-  'white-noise': 'graphic-eq',
-  'owl': 'visibility',
-  'singing-bowl': 'notifications',
-  'jazz-piano': 'piano',
+  'candle': 'local-fire-department',
+  'wood-crackling': 'local-fire-department',
+  // Indoor & Ambient
+  'air-conditioner': 'ac-unit',
+  'fan': 'mode-fan-off',
+  'clock-tick': 'schedule',
+  'keyboard-typing': 'keyboard',
   'cat-purr': 'pets',
-  'rain-car': 'directions-car',
+  'fridge-hum': 'kitchen',
+  // Urban & Transport
+  'traffic-distant': 'traffic',
+  'train-rails': 'train',
+  'cafe-chatter': 'local-cafe',
+  'airplane-cabin': 'flight',
+  'subway': 'subway',
+  // Musical & Tonal
+  'white-noise': 'graphic-eq',
+  'pink-noise': 'graphic-eq',
+  'brown-noise': 'graphic-eq',
+  'binaural-beats': 'psychology',
+  'singing-bowl': 'notifications',
+  'wind-chime': 'notifications-active',
+  'music-box': 'music-note',
+  // Special Environments
+  'cave-echo': 'landscape',
+  'temple-bells': 'temple-buddhist',
+  'hot-spring': 'hot-tub',
+  // Seasonal & Special
+  'cherry-blossom': 'local-florist',
+  'snow-walking': 'ac-unit',
 };
 
 export default function PresetSaveScreen() {

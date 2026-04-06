@@ -2,8 +2,10 @@ import { create } from 'zustand';
 import { ActiveSoundState } from '@/types';
 
 interface AudioStoreState {
-  /** 현재 활성화된 소리들의 상태 */
+  /** 사용자가 믹서에서 직접 선택한 소리들 */
   activeSounds: Map<string, ActiveSoundState>;
+  /** 프리셋에서 재생 중인 소리들 (믹서와 분리) */
+  presetSounds: Map<string, ActiveSoundState>;
   /** 재생 중 여부 */
   isPlaying: boolean;
   /** 마스터 볼륨 (0–100) */
@@ -17,6 +19,8 @@ interface AudioStoreActions {
   removeSound: (soundId: string) => void;
   updateSoundState: (soundId: string, partial: Partial<ActiveSoundState>) => void;
   setActiveSounds: (sounds: ActiveSoundState[]) => void;
+  setPresetSounds: (sounds: ActiveSoundState[]) => void;
+  clearPresetSounds: () => void;
   clearAllSounds: () => void;
   setPlaying: (playing: boolean) => void;
   setMasterVolume: (volume: number) => void;
@@ -27,6 +31,7 @@ const MAX_SIMULTANEOUS_SOUNDS = 10;
 
 export const useAudioStore = create<AudioStoreState & AudioStoreActions>((set, get) => ({
   activeSounds: new Map(),
+  presetSounds: new Map(),
   isPlaying: false,
   masterVolume: 80,
   activePresetId: null,
@@ -47,13 +52,13 @@ export const useAudioStore = create<AudioStoreState & AudioStoreActions>((set, g
         ...defaults,
       });
     }
-    set({ activeSounds: next, activePresetId: null });
+    set({ activeSounds: next });
   },
 
   removeSound: (soundId) => {
     const next = new Map(get().activeSounds);
     next.delete(soundId);
-    set({ activeSounds: next, activePresetId: null });
+    set({ activeSounds: next });
   },
 
   updateSoundState: (soundId, partial) => {
@@ -73,7 +78,17 @@ export const useAudioStore = create<AudioStoreState & AudioStoreActions>((set, g
     set({ activeSounds: next });
   },
 
-  clearAllSounds: () => set({ activeSounds: new Map(), activePresetId: null }),
+  setPresetSounds: (sounds) => {
+    const next = new Map<string, ActiveSoundState>();
+    for (const s of sounds.slice(0, MAX_SIMULTANEOUS_SOUNDS)) {
+      next.set(s.soundId, s);
+    }
+    set({ presetSounds: next });
+  },
+
+  clearPresetSounds: () => set({ presetSounds: new Map(), activePresetId: null }),
+
+  clearAllSounds: () => set({ activeSounds: new Map(), presetSounds: new Map(), activePresetId: null }),
 
   setPlaying: (playing) => set({ isPlaying: playing }),
 

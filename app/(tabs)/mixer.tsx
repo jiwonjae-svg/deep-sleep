@@ -1,4 +1,4 @@
-﻿import React, { useState, useCallback, useMemo, useEffect } from 'react';
+﻿import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Alert, Pressable, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -35,20 +35,66 @@ const CATEGORY_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
 
 // Material icon name for each sound
 const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
+  // Rain & Water
+  'rain-light': 'water-drop',
+  'rain-heavy': 'thunderstorm',
   'thunder': 'bolt',
+  'rain-eaves': 'roofing',
+  'rain-umbrella': 'umbrella',
+  'rain-tent': 'holiday-village',
+  'rain-car': 'directions-car',
+  'stream': 'water',
+  // Ocean & Beach
   'wave-gentle': 'waves',
+  'wave-rough': 'waves',
+  'beach-sand': 'beach-access',
+  'sea-wind': 'air',
+  // Wind & Weather
   'wind-gentle': 'air',
+  'wind-strong': 'storm',
+  'leaves-rustle': 'eco',
+  'hail': 'grain',
+  // Forest & Nature
   'birds-morning': 'flutter-dash',
+  'cuckoo': 'flutter-dash',
+  'owl': 'visibility',
+  'crow': 'flutter-dash',
   'crickets': 'grass',
+  'frogs': 'pest-control',
+  'grass-insects': 'grass',
+  // Fire & Warmth
   'campfire': 'local-fire-department',
   'fireplace': 'fireplace',
-  'cafe-chatter': 'local-cafe',
-  'white-noise': 'graphic-eq',
-  'owl': 'visibility',
-  'singing-bowl': 'notifications',
-  'jazz-piano': 'piano',
+  'candle': 'local-fire-department',
+  'wood-crackling': 'local-fire-department',
+  // Indoor & Ambient
+  'air-conditioner': 'ac-unit',
+  'fan': 'mode-fan-off',
+  'clock-tick': 'schedule',
+  'keyboard-typing': 'keyboard',
   'cat-purr': 'pets',
-  'rain-car': 'directions-car',
+  'fridge-hum': 'kitchen',
+  // Urban & Transport
+  'traffic-distant': 'traffic',
+  'train-rails': 'train',
+  'cafe-chatter': 'local-cafe',
+  'airplane-cabin': 'flight',
+  'subway': 'subway',
+  // Musical & Tonal
+  'white-noise': 'graphic-eq',
+  'pink-noise': 'graphic-eq',
+  'brown-noise': 'graphic-eq',
+  'binaural-beats': 'psychology',
+  'singing-bowl': 'notifications',
+  'wind-chime': 'notifications-active',
+  'music-box': 'music-note',
+  // Special Environments
+  'cave-echo': 'landscape',
+  'temple-bells': 'temple-buddhist',
+  'hot-spring': 'hot-tub',
+  // Seasonal & Special
+  'cherry-blossom': 'local-florist',
+  'snow-walking': 'ac-unit',
 };
 
 export default function MixerScreen() {
@@ -73,13 +119,6 @@ export default function MixerScreen() {
 
   const categorySounds = getSoundsByCategory(selectedCategory);
   const activeSoundIds = new Set(activeSoundsMap.keys());
-
-  // 재생 중인 프리셋 소리는 믹서에서 잠금 처리
-  const activePresetId = useAudioStore((s) => s.activePresetId);
-  const lockedSoundIds = useMemo(() => {
-    if (!isPlaying || !activePresetId) return new Set<string>();
-    return new Set(activeSoundsMap.keys());
-  }, [isPlaying, activePresetId, activeSoundsMap]);
 
   const visibleCategories = useMemo(
     () => categories.filter((cat) => getSoundsByCategory(cat.id).length > 0),
@@ -241,7 +280,6 @@ export default function MixerScreen() {
             {categorySounds.map((sound) => {
               const isActive = activeSoundIds.has(sound.id);
               const isLocked = sound.isPremium && !isSubscribed;
-              const isPresetLocked = lockedSoundIds.has(sound.id);
 
               return (
                 <View
@@ -249,26 +287,26 @@ export default function MixerScreen() {
                   style={[
                     styles.trackItem,
                     isActive && styles.trackItemActive,
-                    (isLocked || isPresetLocked) && styles.trackItemLocked,
+                    isLocked && styles.trackItemLocked,
                   ]}
                 >
-                  {(isLocked || isPresetLocked) && <View style={styles.trackLockedOverlay} />}
+                  {isLocked && <View style={styles.trackLockedOverlay} />}
                   <View
                     style={[
                       styles.trackIcon,
-                      (isLocked || isPresetLocked) && { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.05)' },
+                      isLocked && { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.05)' },
                     ]}
                   >
                     <MaterialIcons
                       name={SOUND_ICONS[sound.id] ?? 'music-note'}
                       size={22}
-                      color={(isLocked || isPresetLocked) ? 'rgba(255,255,255,0.3)' : '#ffffff'}
+                      color={isLocked ? 'rgba(255,255,255,0.3)' : '#ffffff'}
                     />
                   </View>
                   <View style={styles.trackInfo}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <Text
-                        style={[styles.trackName, (isLocked || isPresetLocked) && { color: 'rgba(255,255,255,0.5)' }]}
+                        style={[styles.trackName, isLocked && { color: 'rgba(255,255,255,0.5)' }]}
                         numberOfLines={1}
                       >
                         {t(`sounds.${sound.id}`, { defaultValue: sound.name })}
@@ -289,16 +327,6 @@ export default function MixerScreen() {
                   <View style={styles.trackActions}>
                     {isLocked ? (
                       <MaterialIcons name="lock" size={20} color="rgba(255,255,255,0.3)" />
-                    ) : isPresetLocked ? (
-                      <>
-                        <Pressable
-                          style={[styles.trackActionBtn, previewingSoundId === sound.id && styles.trackActionBtnActive]}
-                          onPress={() => togglePreview(sound.id)}
-                        >
-                          <MaterialIcons name={previewingSoundId === sound.id ? 'stop' : 'play-arrow'} size={20} color={previewingSoundId === sound.id ? '#ffffff' : 'rgba(255,255,255,0.7)'} />
-                        </Pressable>
-                        <MaterialIcons name="lock-outline" size={18} color="rgba(255,255,255,0.3)" />
-                      </>
                     ) : isActive ? (
                       <>
                         <Pressable

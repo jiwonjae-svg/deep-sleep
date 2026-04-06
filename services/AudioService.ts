@@ -258,7 +258,7 @@ function startVolumeAnimator(soundId: string, speed: VolumeChangeSpeed) {
     }
 
     const store = useAudioStore.getState();
-    const state = store.activeSounds.get(soundId);
+    const state = store.activeSounds.get(soundId) ?? store.presetSounds.get(soundId);
     if (!state) {
       clearVolumeAnimator(soundId);
       return;
@@ -304,7 +304,7 @@ function scheduleIntermittent(soundId: string) {
   const meta = getSoundById(soundId);
   if (!meta || meta.type !== 'intermittent') return;
 
-  const state = useAudioStore.getState().activeSounds.get(soundId);
+  const state = useAudioStore.getState().activeSounds.get(soundId) ?? useAudioStore.getState().presetSounds.get(soundId);
   if (!state || state.frequency === 'continuous') return;
 
   const [min, max] = getIntervalRange(state.frequency);
@@ -317,7 +317,7 @@ function scheduleIntermittent(soundId: string) {
     const source = getSoundAsset(soundId);
     if (!source) return;
 
-    const currentState = useAudioStore.getState().activeSounds.get(soundId);
+    const currentState = useAudioStore.getState().activeSounds.get(soundId) ?? useAudioStore.getState().presetSounds.get(soundId);
     if (!currentState) return;
 
     try {
@@ -358,7 +358,11 @@ export async function startMix(): Promise<void> {
   isPausedForPreview = false;
 
   const store = useAudioStore.getState();
-  const entries = Array.from(store.activeSounds.values());
+  // 프리셋 소리 + 믹서 소리 모두 재생 (중복 시 프리셋 설정 우선)
+  const merged = new Map<string, ActiveSoundState>();
+  for (const [id, state] of store.activeSounds) merged.set(id, state);
+  for (const [id, state] of store.presetSounds) merged.set(id, state);
+  const entries = Array.from(merged.values());
 
   if (entries.length === 0) return;
 
@@ -395,7 +399,9 @@ export async function startMix(): Promise<void> {
 /** 즉시 정지: UI 즉시 반영, 페이드아웃은 백그라운드 */
 export async function stopAll(): Promise<void> {
   // UI 즉시 업데이트
-  useAudioStore.getState().setPlaying(false);
+  const store = useAudioStore.getState();
+  store.setPlaying(false);
+  store.clearPresetSounds();
   stopTimerCheck();
 
   // 페이드아웃 후 정리 (백그라운드)
@@ -414,8 +420,8 @@ export async function applyPreset(sounds: ActiveSoundState[], presetId: string):
     await cleanupSoundPool();
   }
 
-  // 새 소리 설정
-  store.setActiveSounds(sounds);
+  // 프리셋 소리는 presetSounds에 설정 (activeSounds는 건드리지 않음)
+  store.setPresetSounds(sounds);
   store.setActivePresetId(presetId);
 
   // 재생 시작 (페이드인 포함)

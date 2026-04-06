@@ -1,18 +1,17 @@
 import { Preset } from '@/types';
 
 /**
- * v1.0 기본 프리셋 5개.
- * rain-light 제거 → wave-gentle 대체, jazz-piano → white-noise 대체.
- * rain-car 추가 (빗소리 프리셋).
+ * v1.1 기본 프리셋 5개.
+ * rain-light 추가, 빗속 드라이브 프리셋 제거.
  */
 export const defaultPresets: Preset[] = [
   {
     id: 'preset-rain-night',
     name: '비 오는 밤',
-    description: '파도 소리와 천둥이 어우러진 밤',
+    description: '빗소리와 천둥이 어우러진 밤',
     isDefault: true,
     sounds: [
-      { soundId: 'wave-gentle', volumeMin: 40, volumeMax: 70, frequency: 'continuous', pan: 0 },
+      { soundId: 'rain-light', volumeMin: 40, volumeMax: 70, frequency: 'continuous', pan: 0 },
       { soundId: 'thunder', volumeMin: 20, volumeMax: 50, frequency: 'rare', pan: 0 },
     ],
     createdAt: 0,
@@ -25,7 +24,7 @@ export const defaultPresets: Preset[] = [
     isDefault: true,
     sounds: [
       { soundId: 'birds-morning', volumeMin: 15, volumeMax: 30, frequency: 'continuous', pan: 0.3 },
-      { soundId: 'crickets', volumeMin: 30, volumeMax: 50, frequency: 'continuous', pan: -0.2 },
+      { soundId: 'crickets', volumeMin: 15, volumeMax: 25, frequency: 'continuous', pan: -0.2 },
       { soundId: 'wind-gentle', volumeMin: 15, volumeMax: 30, frequency: 'continuous', pan: 0 },
     ],
     createdAt: 0,
@@ -38,7 +37,7 @@ export const defaultPresets: Preset[] = [
     isDefault: true,
     sounds: [
       { soundId: 'campfire', volumeMin: 40, volumeMax: 65, frequency: 'continuous', pan: 0 },
-      { soundId: 'crickets', volumeMin: 20, volumeMax: 40, frequency: 'continuous', pan: -0.4 },
+      { soundId: 'crickets', volumeMin: 10, volumeMax: 20, frequency: 'continuous', pan: -0.4 },
       { soundId: 'wind-gentle', volumeMin: 15, volumeMax: 30, frequency: 'continuous', pan: 0.2 },
     ],
     createdAt: 0,
@@ -65,18 +64,6 @@ export const defaultPresets: Preset[] = [
     sounds: [
       { soundId: 'cafe-chatter', volumeMin: 30, volumeMax: 50, frequency: 'continuous', pan: 0 },
       { soundId: 'white-noise', volumeMin: 10, volumeMax: 20, frequency: 'continuous', pan: 0.2 },
-    ],
-    createdAt: 0,
-    updatedAt: 0,
-  },
-  {
-    id: 'preset-rainy-drive',
-    name: '빗속 드라이브',
-    description: '차 안에서 듣는 빗소리',
-    isDefault: true,
-    sounds: [
-      { soundId: 'rain-car', volumeMin: 40, volumeMax: 65, frequency: 'continuous', pan: 0 },
-      { soundId: 'thunder', volumeMin: 10, volumeMax: 30, frequency: 'rare', pan: 0 },
     ],
     createdAt: 0,
     updatedAt: 0,

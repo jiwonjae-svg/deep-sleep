@@ -60,6 +60,13 @@ const soundVariants: Record<string, AVPlaybackSource[]> = {
     require('@/assets/sounds/rain-car-4.mp3'),
     require('@/assets/sounds/rain-car-5.mp3'),
   ],
+
+  // 빗소리 — 3개 배리언트 (10분 원본 분할)
+  'rain-light': [
+    require('@/assets/sounds/rain-light-1.mp3'),
+    require('@/assets/sounds/rain-light-2.mp3'),
+    require('@/assets/sounds/rain-light-3.mp3'),
+  ],
 };
 
 /** 랜덤 배리언트 에셋 반환 */
