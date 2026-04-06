@@ -21,6 +21,7 @@ import { useThemeColors, spacing, layout } from '@/theme';
 import { useTranslation } from 'react-i18next';
 import { formatRemainingTimeLong, formatTimerPrecise, msUntilAlarm, msUntilSpecificDate } from '@/utils/formatTime';
 import { Preset } from '@/types';
+import { SleepDebtCard } from '@/components/sleep/SleepDebtCard';
 
 // 프리셋 ID → 이미지 매핑
 const PRESET_IMAGES: Record<string, ImageSourcePropType> = {
@@ -326,13 +327,25 @@ export default function HomeScreen() {
         </View>
 
         {/* Breathing Guide Button */}
-        <Pressable
-          style={styles.breathingBtn}
-          onPress={() => router.push('/breathing')}
-        >
-          <MaterialIcons name="self-improvement" size={20} color="rgba(255,255,255,0.8)" />
-          <Text style={styles.breathingBtnText}>{t('breathing.title', { defaultValue: '호흡 가이드' })}</Text>
-        </Pressable>
+        <View style={styles.quickActions}>
+          <Pressable
+            style={styles.breathingBtn}
+            onPress={() => router.push('/breathing')}
+          >
+            <MaterialIcons name="self-improvement" size={20} color="rgba(255,255,255,0.8)" />
+            <Text style={styles.breathingBtnText}>{t('breathing.title', { defaultValue: '호흡 가이드' })}</Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.breathingBtn}
+            onPress={() => router.push('/focus')}
+          >
+            <MaterialIcons name="center-focus-strong" size={20} color="rgba(255,255,255,0.8)" />
+            <Text style={styles.breathingBtnText}>{t('focus.title', { defaultValue: '집중 모드' })}</Text>
+          </Pressable>
+        </View>
+
+        <SleepDebtCard />
       </View>
 
       {/* Timer Modal */}
@@ -567,6 +580,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
+    flex: 1,
+  },
+  quickActions: {
+    flexDirection: 'row',
+    gap: 10,
   },
   breathingBtnText: {
     fontSize: 14,

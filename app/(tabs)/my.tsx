@@ -10,6 +10,8 @@ import { WeeklyChart } from '@/components/sleep/WeeklyChart';
 import { SoundInsights } from '@/components/sleep/SoundInsights';
 import { CoachingCard } from '@/components/sleep/CoachingCard';
 import { SleepReportCard } from '@/components/sleep/SleepReport';
+import { SnoringReport } from '@/components/sleep/SnoringReport';
+import { SnoringTimeline } from '@/components/sleep/SnoringTimeline';
 import { analyzeSleepPattern, generateCoachingTips, generateMonthlyReport } from '@/services/SleepCoachingService';
 
 export default function MyScreen() {
@@ -17,6 +19,7 @@ export default function MyScreen() {
   const { t } = useTranslation();
   const isTracking = useSleepStore((s) => s.isTracking);
   const records = useSleepStore((s) => s.records);
+  const snoringRecords = useSleepStore((s) => s.snoringRecords);
   const addSurvey = useSleepStore((s) => s.addSurvey);
 
   const [surveyRecordId, setSurveyRecordId] = useState<string | null>(null);
@@ -25,6 +28,7 @@ export default function MyScreen() {
 
   const latestRecord = records.length > 0 ? records[0] : null;
   const recentRecords = records.slice(0, 7);
+  const latestSnoring = snoringRecords.length > 0 ? snoringRecords[0] : null;
 
   // Phase 4: AI coaching & report
   const sleepPattern = useMemo(() => analyzeSleepPattern(records), [records]);
@@ -274,6 +278,18 @@ export default function MyScreen() {
               })}
             </Text>
           </View>
+        )}
+
+        {latestSnoring && latestSnoring.events.length > 0 && (
+          <SnoringReport record={latestSnoring} />
+        )}
+
+        {latestSnoring && latestSnoring.events.length > 0 && latestRecord && (
+          <SnoringTimeline
+            events={latestSnoring.events}
+            trackingStart={latestRecord.trackingStart}
+            trackingEnd={latestRecord.trackingEnd}
+          />
         )}
 
         {/* Sounds Used in Latest Record */}

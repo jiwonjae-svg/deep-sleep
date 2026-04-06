@@ -456,5 +456,68 @@
     "scoreDown": "지난달 대비 {{diff}}점 하락",
     "bestDay": "최고의 밤: {{date}} ({{score}}점)",
     "topSound": "가장 많이 사용: {{sound}}"
+  },
+  "smartAlarm": {
+    "title": "스마트 알람",
+    "desc": "가벼운 수면에서 자연스럽게 깨워줍니다",
+    "window": "감지 윈도우",
+    "windowMin": "{{min}}분",
+    "sensitivity": "민감도",
+    "sensitivityLow": "낮음",
+    "sensitivityMedium": "보통",
+    "sensitivityHigh": "높음",
+    "placementHint": "스마트폰을 매트리스 위에 놓아주세요. 충전 중 사용을 권장합니다."
+  },
+  "snoring": {
+    "report": "코골이 리포트",
+    "totalMinutes": "분 (총 시간)",
+    "eventCount": "회",
+    "avgIntensity": "평균 강도",
+    "intensity_light": "약함",
+    "intensity_moderate": "보통",
+    "intensity_heavy": "심함",
+    "heavy": "심함",
+    "moderate": "보통",
+    "light": "약함",
+    "worstTime": "가장 심한 시간대: {{time}}",
+    "timeline": "코골이 타임라인",
+    "disclaimer": "이 기능은 정보 제공 목적이며 의료 진단 도구가 아닙니다."
+  },
+  "sleepDebt": {
+    "title": "수면 부채",
+    "none": "없음",
+    "noDebt": "수면 부채가 없습니다!",
+    "recoverySoon": "{{min}}분만 더 자면 해소됩니다",
+    "recoveryWeek": "매일 {{min}}분 일찍 자면 1주일 후 해소",
+    "recoveryGradual": "점진적으로 수면 시간을 늘려보세요",
+    "trend_increasing": "증가 중",
+    "trend_stable": "유지",
+    "trend_decreasing": "감소 중"
+  },
+  "focus": {
+    "title": "집중 모드",
+    "focusing": "집중 중",
+    "shortBreak": "짧은 휴식",
+    "longBreak": "긴 휴식",
+    "ready": "준비",
+    "sessionsCompleted": "{{count}}세션 완료",
+    "timerPreset": "타이머",
+    "soundPreset": "집중 사운드",
+    "noSound": "없음",
+    "stats": "집중 통계",
+    "today": "오늘",
+    "thisWeek": "이번 주"
+  },
+  "focusPresets": {
+    "cafe": "카페 집중",
+    "cafe-desc": "카페의 아늑한 분위기",
+    "rain": "비 오는 날 작업",
+    "rain-desc": "빗소리와 함께 집중",
+    "brown": "브라운 노이즈",
+    "brown-desc": "깊은 집중을 위한 노이즈",
+    "nature": "자연 속 작업",
+    "nature-desc": "새소리와 시냇물",
+    "library": "도서관",
+    "library-desc": "조용한 도서관 분위기"
   }
 }

@@ -22,7 +22,8 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Button } from '@/components/ui/Button';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { useTranslation } from 'react-i18next';
-import { Alarm, MathDifficulty } from '@/types';
+import { Alarm, MathDifficulty, SmartAlarmConfig } from '@/types';
+import { SmartAlarmConfigView } from '@/components/alarm/SmartAlarmConfig';
 
 const FADE_VALUES = [0, 1, 3, 5];
 const SNOOZE_VALUES = [3, 5, 10];
@@ -171,6 +172,9 @@ export default function AlarmEditScreen() {
   const [mathIdx, setMathIdx] = useState(
     MATH_VALUES.indexOf((existingAlarm?.mathDifficulty as MathDifficulty) ?? 'easy'),
   );
+  const [smartAlarm, setSmartAlarm] = useState<SmartAlarmConfig | null>(
+    existingAlarm?.smartAlarm ?? null,
+  );
 
   const handleSave = async () => {
     const now = Date.now();
@@ -186,6 +190,7 @@ export default function AlarmEditScreen() {
       snoozeMinutes: SNOOZE_VALUES[snoozeIdx] ?? 5,
       mathDismiss,
       mathDifficulty: MATH_VALUES[mathIdx] ?? 'easy',
+      smartAlarm,
       notificationId: existingAlarm?.notificationId ?? null,
     };
 
@@ -295,6 +300,9 @@ export default function AlarmEditScreen() {
               />
             </>
           )}
+
+          {/* Smart alarm */}
+          <SmartAlarmConfigView config={smartAlarm} onChange={setSmartAlarm} />
 
           {/* Buttons */}
           <View style={styles.buttonGroup}>

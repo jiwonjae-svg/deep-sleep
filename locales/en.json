@@ -456,5 +456,68 @@
     "scoreDown": "{{diff}} points down from last month",
     "bestDay": "Best night: {{date}} ({{score}}pts)",
     "topSound": "Most used: {{sound}}"
+  },
+  "smartAlarm": {
+    "title": "Smart Alarm",
+    "desc": "Wakes you gently during light sleep",
+    "window": "Detection Window",
+    "windowMin": "{{min}}min",
+    "sensitivity": "Sensitivity",
+    "sensitivityLow": "Low",
+    "sensitivityMedium": "Medium",
+    "sensitivityHigh": "High",
+    "placementHint": "Place your phone on the mattress. Charging is recommended."
+  },
+  "snoring": {
+    "report": "Snoring Report",
+    "totalMinutes": "min (total)",
+    "eventCount": "events",
+    "avgIntensity": "Avg Intensity",
+    "intensity_light": "Light",
+    "intensity_moderate": "Moderate",
+    "intensity_heavy": "Heavy",
+    "heavy": "Heavy",
+    "moderate": "Moderate",
+    "light": "Light",
+    "worstTime": "Worst time: {{time}}",
+    "timeline": "Snoring Timeline",
+    "disclaimer": "This feature is for informational purposes only and is not a medical diagnostic tool."
+  },
+  "sleepDebt": {
+    "title": "Sleep Debt",
+    "none": "None",
+    "noDebt": "No sleep debt!",
+    "recoverySoon": "Sleep {{min}} more minutes to clear it",
+    "recoveryWeek": "Sleep {{min}} min earlier daily to clear in a week",
+    "recoveryGradual": "Try gradually increasing your sleep time",
+    "trend_increasing": "Increasing",
+    "trend_stable": "Stable",
+    "trend_decreasing": "Decreasing"
+  },
+  "focus": {
+    "title": "Focus Mode",
+    "focusing": "Focusing",
+    "shortBreak": "Short Break",
+    "longBreak": "Long Break",
+    "ready": "Ready",
+    "sessionsCompleted": "{{count}} sessions done",
+    "timerPreset": "Timer",
+    "soundPreset": "Focus Sounds",
+    "noSound": "None",
+    "stats": "Focus Stats",
+    "today": "Today",
+    "thisWeek": "This Week"
+  },
+  "focusPresets": {
+    "cafe": "Cafe Focus",
+    "cafe-desc": "Cozy cafe ambience",
+    "rain": "Rainy Day Work",
+    "rain-desc": "Focus with rain sounds",
+    "brown": "Brown Noise",
+    "brown-desc": "Noise for deep focus",
+    "nature": "Nature Work",
+    "nature-desc": "Birds and streams",
+    "library": "Library",
+    "library-desc": "Quiet library ambience"
   }
 }

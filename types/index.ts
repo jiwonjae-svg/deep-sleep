@@ -70,6 +70,7 @@ export interface Alarm {
   mathDifficulty: MathDifficulty;
   label: string;
   notificationId: string | null;
+  smartAlarm?: SmartAlarmConfig | null;
 }
 
 export interface MathProblem {
@@ -154,4 +155,69 @@ export interface TimerPhase {
 export interface TimerSchedule {
   phases: TimerPhase[];
   loopLastPhase: boolean;
+}
+
+// ──────────────────────────────────────────────
+// Smart Alarm (3.7)
+// ──────────────────────────────────────────────
+
+export type SleepStage = 'wake' | 'light' | 'deep' | 'rem';
+
+export type SmartAlarmSensitivity = 'low' | 'medium' | 'high';
+
+export interface SmartAlarmConfig {
+  enabled: boolean;
+  windowMinutes: number; // 10, 20, 30
+  sensitivity: SmartAlarmSensitivity;
+}
+
+// ──────────────────────────────────────────────
+// Snoring Detection (3.8)
+// ──────────────────────────────────────────────
+
+export type SnoringIntensity = 'light' | 'moderate' | 'heavy';
+
+export interface SnoringEvent {
+  timestamp: number;
+  durationSec: number;
+  intensity: SnoringIntensity;
+  peakDb: number;
+}
+
+export interface SnoringRecord {
+  date: string; // YYYY-MM-DD
+  events: SnoringEvent[];
+  totalSnoringMinutes: number;
+  avgIntensity: SnoringIntensity;
+}
+
+// ──────────────────────────────────────────────
+// Sleep Debt (3.9)
+// ──────────────────────────────────────────────
+
+export interface DailyDebtRecord {
+  date: string; // YYYY-MM-DD
+  actualSleepMinutes: number;
+  debtChangeMinutes: number; // positive = deficit, negative = recovery
+}
+
+export type DebtTrend = 'increasing' | 'stable' | 'decreasing';
+
+// ──────────────────────────────────────────────
+// Focus Mode (3.10)
+// ──────────────────────────────────────────────
+
+export type FocusPhase = 'focus' | 'short-break' | 'long-break' | 'idle';
+
+export interface FocusConfig {
+  focusMinutes: number;
+  shortBreakMinutes: number;
+  longBreakMinutes: number;
+  sessionsBeforeLongBreak: number;
+}
+
+export interface FocusSessionRecord {
+  date: string; // YYYY-MM-DD
+  totalFocusMinutes: number;
+  sessionsCompleted: number;
 }

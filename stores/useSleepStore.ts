@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { SnoringEvent, SnoringRecord, SnoringIntensity } from '@/types';
 
 // ──────────────────────────────────────────────
 // Types
@@ -64,15 +65,21 @@ interface SleepState {
   trackingSounds: string[];
   /** Noise events collected during current session */
   trackingNoiseEvents: NoiseEvent[];
+  /** Snoring events collected during current session */
+  trackingSnoringEvents: SnoringEvent[];
+  /** All snoring records */
+  snoringRecords: SnoringRecord[];
 
   // Actions
   startTracking: (soundIds?: string[]) => void;
   stopTracking: () => SleepRecord | null;
   addEpoch: (magnitude: number) => void;
   addNoiseEvent: (event: NoiseEvent) => void;
+  addSnoringEvent: (event: SnoringEvent) => void;
   addSurvey: (recordId: string, survey: MorningSurvey) => void;
   getRecordByDate: (date: string) => SleepRecord | undefined;
   getRecentRecords: (days: number) => SleepRecord[];
+  getRecentSnoringRecords: (days: number) => SnoringRecord[];
 }
 
 // ──────────────────────────────────────────────
@@ -173,6 +180,22 @@ function computeSleepMetrics(epochs: number[], trackingStart: number, trackingEn
 }
 
 // ──────────────────────────────────────────────
+// Snoring Record Builder
+// ──────────────────────────────────────────────
+
+function buildSnoringRecord(date: string, events: SnoringEvent[]): SnoringRecord {
+  const totalSnoringMinutes = Math.round(
+    events.reduce((sum, e) => sum + e.durationSec, 0) / 60,
+  );
+
+  const intensityOrder: Record<SnoringIntensity, number> = { light: 0, moderate: 1, heavy: 2 };
+  const avgScore = events.reduce((sum, e) => sum + intensityOrder[e.intensity], 0) / events.length;
+  const avgIntensity: SnoringIntensity = avgScore >= 1.5 ? 'heavy' : avgScore >= 0.5 ? 'moderate' : 'light';
+
+  return { date, events, totalSnoringMinutes, avgIntensity };
+}
+
+// ──────────────────────────────────────────────
 // Store
 // ──────────────────────────────────────────────
 
@@ -185,6 +208,8 @@ export const useSleepStore = create<SleepState>()(
       epochs: [],
       trackingSounds: [],
       trackingNoiseEvents: [],
+      trackingSnoringEvents: [],
+      snoringRecords: [],
 
       startTracking: (soundIds?: string[]) => {
         set({
@@ -193,6 +218,7 @@ export const useSleepStore = create<SleepState>()(
           epochs: [],
           trackingSounds: soundIds ?? [],
           trackingNoiseEvents: [],
+          trackingSnoringEvents: [],
         });
       },
 
@@ -241,7 +267,11 @@ export const useSleepStore = create<SleepState>()(
           epochs: [],
           trackingSounds: [],
           trackingNoiseEvents: [],
-          records: [record, ...state.records].slice(0, 365), // keep 1 year
+          trackingSnoringEvents: [],
+          records: [record, ...state.records].slice(0, 365),
+          snoringRecords: state.trackingSnoringEvents.length > 0
+            ? [buildSnoringRecord(date, state.trackingSnoringEvents), ...state.snoringRecords].slice(0, 365)
+            : state.snoringRecords,
         }));
 
         return record;
@@ -256,6 +286,12 @@ export const useSleepStore = create<SleepState>()(
       addNoiseEvent: (event: NoiseEvent) => {
         set((state) => ({
           trackingNoiseEvents: [...state.trackingNoiseEvents, event],
+        }));
+      },
+
+      addSnoringEvent: (event: SnoringEvent) => {
+        set((state) => ({
+          trackingSnoringEvents: [...state.trackingSnoringEvents, event],
         }));
       },
 
@@ -275,12 +311,19 @@ export const useSleepStore = create<SleepState>()(
         const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
         return get().records.filter((r) => r.trackingStart >= cutoff);
       },
+
+      getRecentSnoringRecords: (days: number) => {
+        const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+          .toISOString().split('T')[0];
+        return get().snoringRecords.filter((r) => r.date >= cutoffDate);
+      },
     }),
     {
       name: 'deep-sleep-sleep-store',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         records: state.records,
+        snoringRecords: state.snoringRecords,
       }),
     },
   ),
