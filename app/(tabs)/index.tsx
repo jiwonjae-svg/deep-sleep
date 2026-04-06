@@ -66,6 +66,12 @@ export default function HomeScreen() {
 
   // Timer remaining
   const [timerRemaining, setTimerRemaining] = useState(0);
+
+  // 앱 기동 시 마지막 타이머 상태 복원
+  useEffect(() => {
+    timer.restoreSnapshot();
+  }, []);
+
   useEffect(() => {
     if (!timer.isActive) {
       setTimerRemaining(0);
@@ -82,19 +88,26 @@ export default function HomeScreen() {
     return () => clearInterval(id);
   }, [timer.isActive, isPlaying]);
 
-  const timerPrecise = formatTimerPrecise(timerRemaining);
+  // 표시용 시간: 재생 중이면 실시간 잔여, 아니면 마지막 스냅샷
+  const displayMs = timer.isActive ? timerRemaining : timer.lastRemainingMs;
+  const displayDuration = timer.isActive ? timer.durationMinutes : timer.lastDurationMinutes;
+
+  const timerPrecise = formatTimerPrecise(displayMs);
   const isUnlimited = timer.isActive && timer.durationMinutes >= 99999;
   const isAlarmSync = timer.isActive && timer.isAlarmSync;
-  const timerUnitLabel = timerRemaining > 0 && !isUnlimited && !isAlarmSync
-    ? (timerRemaining >= 3600000 ? t('home.hourMinLabel') : t('home.minSecLabel'))
+  const timerUnitLabel = displayMs > 0 && !isUnlimited && !isAlarmSync
+    ? (displayMs >= 3600000 ? t('home.hourMinLabel') : t('home.minSecLabel'))
     : '';
 
-  // Progress for circular ring (0 to 1)
+  // Progress for circular ring (1 → 0, drain style)
+  // 시간 무제한이면 프로그래스바 숨김 (progress = 0)
   const timerProgress = useMemo(() => {
-    if (!timer.isActive || isUnlimited || isAlarmSync || timer.durationMinutes <= 0) return 0;
-    const totalMs = timer.durationMinutes * 60_000;
-    return Math.max(0, Math.min(1, 1 - timerRemaining / totalMs));
-  }, [timer.isActive, isUnlimited, isAlarmSync, timer.durationMinutes, timerRemaining]);
+    if (isUnlimited || isAlarmSync) return 0;
+    const totalMs = displayDuration * 60_000;
+    if (totalMs <= 0) return 0;
+    // 남은 비율 (1 = 전체, 0 = 소진)
+    return Math.max(0, Math.min(1, displayMs / totalMs));
+  }, [isUnlimited, isAlarmSync, displayDuration, displayMs]);
 
   // Next alarm — recompute on alarm changes + every 60s
   const [alarmCountdownText, setAlarmCountdownText] = useState<string | null>(null);
@@ -123,7 +136,7 @@ export default function HomeScreen() {
   // Colon blink animation
   const colonOpacity = useSharedValue(1);
   useEffect(() => {
-    if (isPlaying && timerRemaining > 0) {
+    if (isPlaying && displayMs > 0) {
       colonOpacity.value = withRepeat(
         withTiming(0, { duration: 500, easing: Easing.inOut(Easing.ease) }),
         -1,
@@ -132,7 +145,7 @@ export default function HomeScreen() {
     } else {
       colonOpacity.value = withTiming(1, { duration: 200 });
     }
-  }, [isPlaying, timerRemaining > 0]);
+  }, [isPlaying, displayMs > 0]);
 
   // Pulse animation
   const scale = useSharedValue(1);

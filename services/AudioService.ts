@@ -409,6 +409,13 @@ export async function startMix(): Promise<void> {
 
 /** 즉시 정지: UI 즉시 반영, 페이드아웃은 백그라운드 */
 export async function stopAll(): Promise<void> {
+  // 타이머 잔여 시간 스냅샷 저장
+  const timerState = useTimerStore.getState();
+  if (timerState.isActive) {
+    const remaining = Math.max(0, timerState.endTime - Date.now());
+    timerState.saveSnapshot(remaining);
+  }
+
   // UI 즉시 업데이트
   const store = useAudioStore.getState();
   store.setPlaying(false);
@@ -486,6 +493,8 @@ function startTimerCheck() {
 
     const remaining = timer.endTime - Date.now();
     if (remaining <= 0) {
+      // 타이머 만료: 잔여 0 스냅샷 저장
+      timer.saveSnapshot(0);
       timer.cancelTimer();
       fadeFactor = 0;
       clearFadeTimer();

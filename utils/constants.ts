@@ -44,4 +44,5 @@ export const STORAGE_KEYS = {
   ONBOARDING_COMPLETED: '@onboarding/completed',
   LAST_AUDIO_STATE: '@audio/lastState',
   AI_USAGE: '@ai/usage',
+  LAST_TIMER_STATE: '@timer/lastState',
 } as const;
