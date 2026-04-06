@@ -32,7 +32,6 @@ const CATEGORY_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
 };
 
 const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
-  'rain-light': 'water-drop',
   'thunder': 'bolt',
   'wave-gentle': 'waves',
   'wind-gentle': 'air',
@@ -42,11 +41,11 @@ const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'fireplace': 'fireplace',
   'cafe-chatter': 'local-cafe',
   'white-noise': 'graphic-eq',
-  'rain-car': 'directions-car',
   'owl': 'visibility',
   'singing-bowl': 'notifications',
   'jazz-piano': 'piano',
   'cat-purr': 'pets',
+  'rain-car': 'directions-car',
 };
 
 export default function PresetSaveScreen() {

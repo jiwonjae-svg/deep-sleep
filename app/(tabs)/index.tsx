@@ -159,10 +159,16 @@ export default function HomeScreen() {
     if (isPlaying) {
       stop();
     } else if (currentPreset) {
-      // applyPreset이 내부에서 startMix 호출 — play() 별도 호출 불필요
       applyPreset(currentPreset);
+      // 타이머 미설정 시 자동으로 15분 타이머 시작
+      if (!timer.isActive) {
+        startTimer(15);
+      }
     } else {
       play();
+      if (!timer.isActive) {
+        startTimer(15);
+      }
     }
   };
 
@@ -170,8 +176,12 @@ export default function HomeScreen() {
     (preset: Preset, index: number) => {
       setSelectedPresetIndex(index);
       setPresetPickerVisible(false);
+      // 재생 중이면 새 프리셋으로 크로스페이드 전환
+      if (isPlaying) {
+        applyPreset(preset);
+      }
     },
-    [],
+    [isPlaying, applyPreset],
   );
 
   const handleTimerStart = (minutes: number, alarmSync?: boolean) => {

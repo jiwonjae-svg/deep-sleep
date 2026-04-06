@@ -35,7 +35,6 @@ const CATEGORY_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
 
 // Material icon name for each sound
 const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
-  'rain-light': 'water-drop',
   'thunder': 'bolt',
   'wave-gentle': 'waves',
   'wind-gentle': 'air',
@@ -45,11 +44,11 @@ const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'fireplace': 'fireplace',
   'cafe-chatter': 'local-cafe',
   'white-noise': 'graphic-eq',
-  'rain-car': 'directions-car',
   'owl': 'visibility',
   'singing-bowl': 'notifications',
   'jazz-piano': 'piano',
   'cat-purr': 'pets',
+  'rain-car': 'directions-car',
 };
 
 export default function MixerScreen() {
@@ -74,6 +73,13 @@ export default function MixerScreen() {
 
   const categorySounds = getSoundsByCategory(selectedCategory);
   const activeSoundIds = new Set(activeSoundsMap.keys());
+
+  // 재생 중인 프리셋 소리는 믹서에서 잠금 처리
+  const activePresetId = useAudioStore((s) => s.activePresetId);
+  const lockedSoundIds = useMemo(() => {
+    if (!isPlaying || !activePresetId) return new Set<string>();
+    return new Set(activeSoundsMap.keys());
+  }, [isPlaying, activePresetId, activeSoundsMap]);
 
   const visibleCategories = useMemo(
     () => categories.filter((cat) => getSoundsByCategory(cat.id).length > 0),
@@ -235,6 +241,7 @@ export default function MixerScreen() {
             {categorySounds.map((sound) => {
               const isActive = activeSoundIds.has(sound.id);
               const isLocked = sound.isPremium && !isSubscribed;
+              const isPresetLocked = lockedSoundIds.has(sound.id);
 
               return (
                 <View
@@ -242,26 +249,26 @@ export default function MixerScreen() {
                   style={[
                     styles.trackItem,
                     isActive && styles.trackItemActive,
-                    isLocked && styles.trackItemLocked,
+                    (isLocked || isPresetLocked) && styles.trackItemLocked,
                   ]}
                 >
-                  {isLocked && <View style={styles.trackLockedOverlay} />}
+                  {(isLocked || isPresetLocked) && <View style={styles.trackLockedOverlay} />}
                   <View
                     style={[
                       styles.trackIcon,
-                      isLocked && { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.05)' },
+                      (isLocked || isPresetLocked) && { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.05)' },
                     ]}
                   >
                     <MaterialIcons
                       name={SOUND_ICONS[sound.id] ?? 'music-note'}
                       size={22}
-                      color={isLocked ? 'rgba(255,255,255,0.3)' : '#ffffff'}
+                      color={(isLocked || isPresetLocked) ? 'rgba(255,255,255,0.3)' : '#ffffff'}
                     />
                   </View>
                   <View style={styles.trackInfo}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <Text
-                        style={[styles.trackName, isLocked && { color: 'rgba(255,255,255,0.5)' }]}
+                        style={[styles.trackName, (isLocked || isPresetLocked) && { color: 'rgba(255,255,255,0.5)' }]}
                         numberOfLines={1}
                       >
                         {t(`sounds.${sound.id}`, { defaultValue: sound.name })}
@@ -282,6 +289,16 @@ export default function MixerScreen() {
                   <View style={styles.trackActions}>
                     {isLocked ? (
                       <MaterialIcons name="lock" size={20} color="rgba(255,255,255,0.3)" />
+                    ) : isPresetLocked ? (
+                      <>
+                        <Pressable
+                          style={[styles.trackActionBtn, previewingSoundId === sound.id && styles.trackActionBtnActive]}
+                          onPress={() => togglePreview(sound.id)}
+                        >
+                          <MaterialIcons name={previewingSoundId === sound.id ? 'stop' : 'play-arrow'} size={20} color={previewingSoundId === sound.id ? '#ffffff' : 'rgba(255,255,255,0.7)'} />
+                        </Pressable>
+                        <MaterialIcons name="lock-outline" size={18} color="rgba(255,255,255,0.3)" />
+                      </>
                     ) : isActive ? (
                       <>
                         <Pressable

@@ -299,7 +299,9 @@
     "preset-warm-fireplace": "Warm Fireplace",
     "preset-warm-fireplace-desc": "Cozy winter night indoors",
     "preset-cafe": "Café",
-    "preset-cafe-desc": "Café ambience (sleep & focus)"
+    "preset-cafe-desc": "Café ambience (sleep & focus)",
+    "preset-rainy-drive": "Rainy Drive",
+    "preset-rainy-drive-desc": "Rain sounds from inside a car"
   },
   "activeSoundsBar": {
     "stop": "Stop",

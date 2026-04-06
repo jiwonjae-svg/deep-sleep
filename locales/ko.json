@@ -299,7 +299,9 @@
     "preset-warm-fireplace": "따뜻한 벽난로",
     "preset-warm-fireplace-desc": "따뜻한 실내에서 겨울 밤",
     "preset-cafe": "카페",
-    "preset-cafe-desc": "카페 분위기 (수면+집중 겸용)"
+    "preset-cafe-desc": "카페 분위기 (수면+집중 겄용)",
+    "preset-rainy-drive": "빗속 드라이브",
+    "preset-rainy-drive-desc": "차 안에서 듣는 빗소리"
   },
   "activeSoundsBar": {
     "stop": "정지",

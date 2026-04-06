@@ -19,7 +19,7 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
   const themeColors = useThemeColors();
   const { t } = useTranslation();
 
-  const [selectedQuick, setSelectedQuick] = useState<number>(45);
+  const [selectedQuick, setSelectedQuick] = useState<number>(15);
   const [useAlarmSync, setUseAlarmSync] = useState(false);
   const [useCustom, setUseCustom] = useState(false);
   const [useUnlimited, setUseUnlimited] = useState(false);

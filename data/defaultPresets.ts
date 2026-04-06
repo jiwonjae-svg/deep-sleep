@@ -2,17 +2,17 @@ import { Preset } from '@/types';
 
 /**
  * v1.0 기본 프리셋 5개.
- * v1.0 초기 릴리스 소리(15개)만 사용하여 구성.
- * 전체 10개 프리셋 계획은 01-project-plan.md 2.3.1 참조.
+ * rain-light 제거 → wave-gentle 대체, jazz-piano → white-noise 대체.
+ * rain-car 추가 (빗소리 프리셋).
  */
 export const defaultPresets: Preset[] = [
   {
     id: 'preset-rain-night',
     name: '비 오는 밤',
-    description: '전형적인 비 오는 밤',
+    description: '파도 소리와 천둥이 어우러진 밤',
     isDefault: true,
     sounds: [
-      { soundId: 'rain-light', volumeMin: 40, volumeMax: 70, frequency: 'continuous', pan: 0 },
+      { soundId: 'wave-gentle', volumeMin: 40, volumeMax: 70, frequency: 'continuous', pan: 0 },
       { soundId: 'thunder', volumeMin: 20, volumeMax: 50, frequency: 'rare', pan: 0 },
     ],
     createdAt: 0,
@@ -64,7 +64,19 @@ export const defaultPresets: Preset[] = [
     isDefault: true,
     sounds: [
       { soundId: 'cafe-chatter', volumeMin: 30, volumeMax: 50, frequency: 'continuous', pan: 0 },
-      { soundId: 'jazz-piano', volumeMin: 20, volumeMax: 35, frequency: 'continuous', pan: 0.2 },
+      { soundId: 'white-noise', volumeMin: 10, volumeMax: 20, frequency: 'continuous', pan: 0.2 },
+    ],
+    createdAt: 0,
+    updatedAt: 0,
+  },
+  {
+    id: 'preset-rainy-drive',
+    name: '빗속 드라이브',
+    description: '차 안에서 듣는 빗소리',
+    isDefault: true,
+    sounds: [
+      { soundId: 'rain-car', volumeMin: 40, volumeMax: 65, frequency: 'continuous', pan: 0 },
+      { soundId: 'thunder', volumeMin: 10, volumeMax: 30, frequency: 'rare', pan: 0 },
     ],
     createdAt: 0,
     updatedAt: 0,

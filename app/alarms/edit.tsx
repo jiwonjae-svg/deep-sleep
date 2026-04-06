@@ -180,7 +180,7 @@ export default function AlarmEditScreen() {
       days: useSpecificDate ? [false, false, false, false, false, false, false] : days,
       specificDate: useSpecificDate && specificDate ? specificDate : null,
       enabled: existingAlarm?.enabled ?? true,
-      soundId: existingAlarm?.soundId ?? 'rain-light',
+      soundId: existingAlarm?.soundId ?? 'wave-gentle',
       label: label.trim(),
       fadeInMinutes: FADE_VALUES[fadeInIdx] ?? 0,
       snoozeMinutes: SNOOZE_VALUES[snoozeIdx] ?? 5,
