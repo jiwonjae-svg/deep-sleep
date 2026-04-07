@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Alert, Modal, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -25,13 +25,15 @@ export default function MyScreen() {
   const records = useSleepStore((s) => s.records);
   const snoringRecords = useSleepStore((s) => s.snoringRecords);
   const addSurvey = useSleepStore((s) => s.addSurvey);
+  const deleteRecord = useSleepStore((s) => s.deleteRecord);
 
   const [surveyRecordId, setSurveyRecordId] = useState<string | null>(null);
   const [surveyStep, setSurveyStep] = useState(0);
   const [surveyData, setSurveyData] = useState<Partial<MorningSurvey>>({});
+  const [historyModalVisible, setHistoryModalVisible] = useState(false);
 
   const latestRecord = records.length > 0 ? records[0] : null;
-  const recentRecords = records.slice(0, 7);
+  const recentRecords = records.slice(0, 5);
   const latestSnoring = snoringRecords.length > 0 ? snoringRecords[0] : null;
   const breathingRecords = useBreathingStore((s) => s.records);
   const todayBreathingCount = useMemo(() => {
@@ -83,6 +85,21 @@ export default function MyScreen() {
     setSurveyRecordId(null);
     setSurveyStep(0);
   }, []);
+
+  const handleDeleteRecord = useCallback((recordId: string, date: string) => {
+    Alert.alert(
+      t('my.deleteRecordTitle', { defaultValue: '수면 기록 삭제' }),
+      t('my.deleteRecordMsg', { date, defaultValue: `${date} 기록을 삭제하시겠습니까?` }),
+      [
+        { text: t('common.cancel', { defaultValue: '취소' }), style: 'cancel' },
+        {
+          text: t('common.delete', { defaultValue: '삭제' }),
+          style: 'destructive',
+          onPress: () => deleteRecord(recordId),
+        },
+      ],
+    );
+  }, [deleteRecord, t]);
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return themeColors.success;
@@ -358,9 +375,10 @@ export default function MyScreen() {
           <View style={styles.historySection}>
             <Text style={[styles.sectionTitle, { color: themeColors.textSecondary }]}>{t('my.recentHistory')}</Text>
             {recentRecords.map((record) => (
-              <View
+              <Pressable
                 key={record.id}
                 style={[styles.historyItem, { backgroundColor: themeColors.glassLight, borderColor: themeColors.glassBorder }]}
+                onLongPress={() => handleDeleteRecord(record.id, record.date)}
               >
                 <View style={styles.historyLeft}>
                   <Text style={[styles.historyDate, { color: themeColors.textPrimary }]}>{record.date}</Text>
@@ -373,13 +391,84 @@ export default function MyScreen() {
                     {record.score}
                   </Text>
                 </View>
-              </View>
+              </Pressable>
             ))}
+            {records.length > 5 && (
+              <Pressable
+                style={[styles.viewAllBtn, { borderColor: themeColors.glassBorder }]}
+                onPress={() => setHistoryModalVisible(true)}
+              >
+                <Text style={[styles.viewAllBtnText, { color: themeColors.accent1 }]}>
+                  {t('my.viewAll', { defaultValue: '전체 보기' })} ({records.length})
+                </Text>
+                <MaterialIcons name="chevron-right" size={18} color={themeColors.accent1} />
+              </Pressable>
+            )}
           </View>
         )}
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Full History Modal */}
+      <Modal
+        visible={historyModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setHistoryModalVisible(false)}
+      >
+        <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
+          <View style={[styles.modalContent, { backgroundColor: themeColors.bgSecondary, borderColor: themeColors.glassBorder }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: themeColors.textPrimary }]}>
+                {t('my.allRecords', { defaultValue: '전체 수면 기록' })}
+              </Text>
+              <Pressable onPress={() => setHistoryModalVisible(false)}>
+                <MaterialIcons name="close" size={24} color={themeColors.textMuted} />
+              </Pressable>
+            </View>
+            <FlatList
+              data={records}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={true}
+              style={{ flex: 1 }}
+              renderItem={({ item: record }) => (
+                <Pressable
+                  style={[styles.historyItem, { backgroundColor: themeColors.glassLight, borderColor: themeColors.glassBorder }]}
+                  onLongPress={() => handleDeleteRecord(record.id, record.date)}
+                >
+                  <View style={styles.historyLeft}>
+                    <Text style={[styles.historyDate, { color: themeColors.textPrimary }]}>{record.date}</Text>
+                    <Text style={[styles.historyDuration, { color: themeColors.textMuted }]}>
+                      {formatDuration(record.tst)} · {t('my.efficiency')} {record.se}%
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View style={[styles.historyScore, { backgroundColor: `${getScoreColor(record.score)}20` }]}>
+                      <Text style={[styles.historyScoreText, { color: getScoreColor(record.score) }]}>
+                        {record.score}
+                      </Text>
+                    </View>
+                    <Pressable
+                      onPress={() => handleDeleteRecord(record.id, record.date)}
+                      hitSlop={8}
+                    >
+                      <MaterialIcons name="delete-outline" size={20} color={themeColors.textMuted} />
+                    </Pressable>
+                  </View>
+                </Pressable>
+              )}
+              ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+              contentContainerStyle={{ paddingBottom: 20 }}
+              ListEmptyComponent={
+                <Text style={[styles.emptyText, { color: themeColors.textMuted, textAlign: 'center', marginTop: 40 }]}>
+                  {t('my.noRecords')}
+                </Text>
+              }
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -623,5 +712,44 @@ const styles = StyleSheet.create({
   breathingBtnText: {
     fontSize: 12,
     fontWeight: '700',
+  },
+  // View All button
+  viewAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingVertical: 12,
+    marginTop: 4,
+  },
+  viewAllBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  // Full History Modal
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    height: '80%',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
 });

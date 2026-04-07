@@ -9,6 +9,7 @@ import { BreathingPatternSelector } from '@/components/breathing/BreathingPatter
 import { useBreathingStore, BREATHING_PATTERNS } from '@/stores/useBreathingStore';
 import { useThemeColors } from '@/theme';
 import { useTranslation } from 'react-i18next';
+import { GradientBackground } from '@/components/ui/GradientBackground';
 
 export default function BreathingScreen() {
   const router = useRouter();
@@ -48,69 +49,71 @@ export default function BreathingScreen() {
   }, [currentPhaseIndex, isSessionActive]);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
-        </Pressable>
-        <Text style={styles.headerTitle}>
-          {t('breathing.title', { defaultValue: '호흡 가이드' })}
-        </Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Breathing Circle */}
-        <View style={styles.circleWrapper}>
-          <BreathingCircle />
+    <GradientBackground overlay overlayOpacity={0.45}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+            <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+          </Pressable>
+          <Text style={styles.headerTitle}>
+            {t('breathing.title', { defaultValue: '호흡 가이드' })}
+          </Text>
+          <View style={{ width: 40 }} />
         </View>
 
-        {/* Cycle counter */}
-        {isSessionActive && (
-          <Text style={styles.cycleText}>
-            {completedCycles} / {targetCycles} {t('breathing.cycles', { defaultValue: '사이클' })}
-          </Text>
-        )}
-
-        {/* Session complete message */}
-        {!isSessionActive && completedCycles > 0 && (
-          <Text style={styles.completeText}>
-            {t('breathing.complete', { defaultValue: '호흡 운동 완료!' })}
-          </Text>
-        )}
-
-        {/* Pattern selector (hidden during session) */}
-        {!isSessionActive && (
-          <View style={styles.selectorWrapper}>
-            <Text style={styles.sectionTitle}>
-              {t('breathing.selectPattern', { defaultValue: '호흡 패턴' })}
-            </Text>
-            <BreathingPatternSelector />
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Breathing Circle */}
+          <View style={styles.circleWrapper}>
+            <BreathingCircle />
           </View>
-        )}
 
-        {/* Start / Stop button */}
-        <Pressable
-          style={[
-            styles.actionBtn,
-            { backgroundColor: isSessionActive ? '#ef4444' : themeColors.accent1 },
-          ]}
-          onPress={() => (isSessionActive ? stopSession() : startSession())}
-        >
-          <MaterialIcons
-            name={isSessionActive ? 'stop' : 'play-arrow'}
-            size={24}
-            color="#ffffff"
-          />
-          <Text style={styles.actionBtnText}>
-            {isSessionActive
-              ? t('breathing.stop', { defaultValue: '중지' })
-              : t('breathing.start', { defaultValue: '시작' })}
-          </Text>
-        </Pressable>
-      </ScrollView>
-    </SafeAreaView>
+          {/* Cycle counter */}
+          {isSessionActive && (
+            <Text style={styles.cycleText}>
+              {completedCycles} / {targetCycles} {t('breathing.cycles', { defaultValue: '사이클' })}
+            </Text>
+          )}
+
+          {/* Session complete message */}
+          {!isSessionActive && completedCycles > 0 && (
+            <Text style={styles.completeText}>
+              {t('breathing.complete', { defaultValue: '호흡 운동 완료!' })}
+            </Text>
+          )}
+
+          {/* Pattern selector (hidden during session) */}
+          {!isSessionActive && (
+            <View style={styles.selectorWrapper}>
+              <Text style={styles.sectionTitle}>
+                {t('breathing.selectPattern', { defaultValue: '호흡 패턴' })}
+              </Text>
+              <BreathingPatternSelector />
+            </View>
+          )}
+
+          {/* Start / Stop button */}
+          <Pressable
+            style={[
+              styles.actionBtn,
+              { backgroundColor: isSessionActive ? '#ef4444' : themeColors.accent1 },
+            ]}
+            onPress={() => (isSessionActive ? stopSession() : startSession())}
+          >
+            <MaterialIcons
+              name={isSessionActive ? 'stop' : 'play-arrow'}
+              size={24}
+              color="#ffffff"
+            />
+            <Text style={styles.actionBtnText}>
+              {isSessionActive
+                ? t('breathing.stop', { defaultValue: '중지' })
+                : t('breathing.start', { defaultValue: '시작' })}
+            </Text>
+          </Pressable>
+        </ScrollView>
+      </SafeAreaView>
+    </GradientBackground>
   );
 }
 

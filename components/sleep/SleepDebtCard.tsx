@@ -6,9 +6,9 @@ import { useThemeColors } from '@/theme';
 import { useTranslation } from 'react-i18next';
 import { DebtTrend } from '@/types';
 import { useSleepStore } from '@/stores/useSleepStore';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 import { calculateSleepDebt, generateRecoverySuggestion } from '@/services/SleepDebtService';
 
-const TARGET_SLEEP_MINUTES = 480; // 8시간 기본값
 const GAUGE_SIZE = 80;
 const GAUGE_STROKE = 8;
 const GAUGE_RADIUS = (GAUGE_SIZE - GAUGE_STROKE) / 2;
@@ -35,10 +35,12 @@ export function SleepDebtCard({ onPress }: Props) {
   const themeColors = useThemeColors();
   const { t } = useTranslation();
   const records = useSleepStore((s) => s.records);
+  const targetSleepHours = useSettingsStore((s) => s.settings.targetSleepHours);
+  const targetSleepMinutes = targetSleepHours * 60;
 
   const debtState = useMemo(
-    () => calculateSleepDebt(records, TARGET_SLEEP_MINUTES),
-    [records],
+    () => calculateSleepDebt(records, targetSleepMinutes),
+    [records, targetSleepMinutes],
   );
 
   const debtHours = Math.floor(debtState.currentDebtMinutes / 60);
@@ -50,8 +52,8 @@ export function SleepDebtCard({ onPress }: Props) {
   const progress = Math.max(0, 1 - debtState.currentDebtMinutes / maxDebtForGauge);
 
   const recoverySuggestion = useMemo(
-    () => generateRecoverySuggestion(debtState.currentDebtMinutes, TARGET_SLEEP_MINUTES),
-    [debtState.currentDebtMinutes],
+    () => generateRecoverySuggestion(debtState.currentDebtMinutes, targetSleepMinutes),
+    [debtState.currentDebtMinutes, targetSleepMinutes],
   );
 
   const recoveryText = useMemo(() => {
@@ -142,6 +144,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     gap: 8,
+    marginBottom: 20,
   },
   row: {
     flexDirection: 'row',

@@ -77,6 +77,8 @@ interface SleepState {
   addNoiseEvent: (event: NoiseEvent) => void;
   addSnoringEvent: (event: SnoringEvent) => void;
   addSurvey: (recordId: string, survey: MorningSurvey) => void;
+  deleteRecord: (recordId: string) => void;
+  clearAllRecords: () => void;
   getRecordByDate: (date: string) => SleepRecord | undefined;
   getRecentRecords: (days: number) => SleepRecord[];
   getRecentSnoringRecords: (days: number) => SnoringRecord[];
@@ -301,6 +303,16 @@ export const useSleepStore = create<SleepState>()(
             r.id === recordId ? { ...r, survey } : r,
           ),
         }));
+      },
+
+      deleteRecord: (recordId: string) => {
+        set((state) => ({
+          records: state.records.filter((r) => r.id !== recordId),
+        }));
+      },
+
+      clearAllRecords: () => {
+        set({ records: [], snoringRecords: [] });
       },
 
       getRecordByDate: (date: string) => {

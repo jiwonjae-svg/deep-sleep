@@ -102,6 +102,8 @@ export interface AppSettings {
   timerFadeOutEnabled: boolean;
   timerFadeOutMinutes: number; // 3, 5, 10
   intelligentTimerEnabled: boolean;
+  autoSleepTracking: boolean;
+  targetSleepHours: number;
 }
 
 // ──────────────────────────────────────────────

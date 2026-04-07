@@ -433,7 +433,8 @@ export async function startMix(): Promise<void> {
   startTimerCheck();
 
   const timer = useTimerStore.getState();
-  if (timer.isActive && !isTrackingActive()) {
+  const autoTrack = useSettingsStore.getState().settings.autoSleepTracking;
+  if (autoTrack && timer.isActive && !isTrackingActive()) {
     const soundIds = Array.from(store.activeSounds.keys());
     startSleepTracking(soundIds).catch(() => {});
   }
@@ -443,11 +444,12 @@ export async function startMix(): Promise<void> {
 export async function stopAll(): Promise<void> {
   isSystemStopping = true;
 
-  // 타이머 잔여 시간 스냅샷 저장
+  // 타이머 잔여 시간 스냅샷 저장 후 타이머 취소
   const timerState = useTimerStore.getState();
   if (timerState.isActive) {
     const remaining = Math.max(0, timerState.endTime - Date.now());
     timerState.saveSnapshot(remaining);
+    timerState.cancelTimer();
   }
 
   // UI 즉시 업데이트

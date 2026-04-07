@@ -60,6 +60,19 @@ export default function SettingsScreen() {
   const [termsModalVisible, setTermsModalVisible] = useState(false);
   const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
   const [themeColorModalVisible, setThemeColorModalVisible] = useState(false);
+  const [sleepGoalModalVisible, setSleepGoalModalVisible] = useState(false);
+
+  const SLEEP_GOAL_OPTIONS: OptionItem<string>[] = [
+    { value: '6', label: '6' + t('settings.hoursUnit', { defaultValue: '시간' }) },
+    { value: '6.5', label: '6.5' + t('settings.hoursUnit', { defaultValue: '시간' }) },
+    { value: '7', label: '7' + t('settings.hoursUnit', { defaultValue: '시간' }) },
+    { value: '7.5', label: '7.5' + t('settings.hoursUnit', { defaultValue: '시간' }) },
+    { value: '8', label: '8' + t('settings.hoursUnit', { defaultValue: '시간' }) },
+    { value: '8.5', label: '8.5' + t('settings.hoursUnit', { defaultValue: '시간' }) },
+    { value: '9', label: '9' + t('settings.hoursUnit', { defaultValue: '시간' }) },
+    { value: '9.5', label: '9.5' + t('settings.hoursUnit', { defaultValue: '시간' }) },
+    { value: '10', label: '10' + t('settings.hoursUnit', { defaultValue: '시간' }) },
+  ];
 
   return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -103,6 +116,28 @@ export default function SettingsScreen() {
                 onValueChange={(v) => updateSettings({ autoDimBrightness: v })}
               />
             </View>
+
+            <View style={styles.divider} />
+
+            {/* Auto Sleep Tracking */}
+            <View style={styles.row}>
+              <MaterialIcons name="bedtime" size={20} color="rgba(255,255,255,0.7)" />
+              <Text style={[styles.rowLabel, { flex: 1 }]}>{t('settings.autoSleepTracking', { defaultValue: '재생 시 수면 추적 자동 시작' })}</Text>
+              <Toggle
+                value={settings.autoSleepTracking}
+                onValueChange={(v) => updateSettings({ autoSleepTracking: v })}
+              />
+            </View>
+
+            <View style={styles.divider} />
+
+            {/* Target Sleep Hours */}
+            <SettingRow
+              icon="hotel"
+              label={t('settings.targetSleepHours', { defaultValue: '목표 수면 시간' })}
+              rightText={`${settings.targetSleepHours}${t('settings.hoursUnit', { defaultValue: '시간' })}`}
+              onPress={() => setSleepGoalModalVisible(true)}
+            />
           </View>
 
           {/* ────── AUDIO ────── */}
@@ -217,6 +252,14 @@ export default function SettingsScreen() {
           selected={settings.themeColor || '#456eea'}
           onSelect={(v) => updateSettings({ themeColor: v as any })}
           onClose={() => setThemeColorModalVisible(false)}
+        />
+        <OptionModal
+          visible={sleepGoalModalVisible}
+          title={t('settings.targetSleepHours', { defaultValue: '목표 수면 시간' })}
+          options={SLEEP_GOAL_OPTIONS}
+          selected={String(settings.targetSleepHours)}
+          onSelect={(v) => updateSettings({ targetSleepHours: parseFloat(v) })}
+          onClose={() => setSleepGoalModalVisible(false)}
         />
       </SafeAreaView>
   );

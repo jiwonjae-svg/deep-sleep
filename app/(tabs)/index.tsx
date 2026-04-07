@@ -173,14 +173,20 @@ export default function HomeScreen() {
       stop();
     } else if (currentPreset) {
       applyPreset(currentPreset);
-      // 타이머 미설정 시 자동으로 15분 타이머 시작
+      // 타이머 미설정 시 스냅샷 잔여 시간 또는 기본 15분 타이머 시작
       if (!timer.isActive) {
-        startTimer(15);
+        const snapshotMin = timer.lastRemainingMs > 0
+          ? Math.ceil(timer.lastRemainingMs / 60_000)
+          : 15;
+        startTimer(snapshotMin);
       }
     } else {
       play();
       if (!timer.isActive) {
-        startTimer(15);
+        const snapshotMin = timer.lastRemainingMs > 0
+          ? Math.ceil(timer.lastRemainingMs / 60_000)
+          : 15;
+        startTimer(snapshotMin);
       }
     }
   };
