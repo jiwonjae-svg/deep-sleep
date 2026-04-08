@@ -7,6 +7,8 @@ import {
   ScrollView,
   StyleSheet,
   Animated,
+  Dimensions,
+  Keyboard,
 } from 'react-native';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { useTranslation } from 'react-i18next';
@@ -40,6 +42,7 @@ export function TermsModal({ visible, onClose, mode = 'terms' }: TermsModalProps
   }, [visible]);
 
   const handleClose = useCallback(() => {
+    Keyboard.dismiss();
     Animated.parallel([
       Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
       Animated.timing(scaleAnim, { toValue: 0.92, duration: 150, useNativeDriver: true }),
@@ -48,6 +51,8 @@ export function TermsModal({ visible, onClose, mode = 'terms' }: TermsModalProps
       onClose();
     });
   }, [onClose, fadeAnim, scaleAnim]);
+
+  const windowHeight = Dimensions.get('window').height;
 
   const styles = useMemo(
     () =>
@@ -79,7 +84,7 @@ export function TermsModal({ visible, onClose, mode = 'terms' }: TermsModalProps
         title: { ...typography.h3, color: themeColors.textPrimary, flex: 1 },
         closeBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
         closeText: { color: themeColors.textMuted, fontSize: 18 },
-        scroll: { flex: 1 },
+        scroll: { maxHeight: windowHeight * 0.6 },
         scrollContent: { padding: layout.cardPadding },
         content: { ...typography.body, color: themeColors.textSecondary, lineHeight: 22 },
         confirmBtn: {

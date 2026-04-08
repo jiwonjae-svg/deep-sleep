@@ -5,9 +5,9 @@ import { useTimerStore } from '@/stores/useTimerStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { getPerlinVolume } from '@/utils/perlinNoise';
 import { getSoundById } from '@/data/sounds';
-import { getSoundAsset, getSoundVariants } from '@/data/soundAssets';
-import { ActiveSoundState, Frequency, VolumeChangeSpeed } from '@/types';
-import { MAX_SIMULTANEOUS_SOUNDS, TIMER_FADEOUT_DURATION } from '@/utils/constants';
+import { getSoundAsset } from '@/data/soundAssets';
+import { ActiveSoundState, Frequency } from '@/types';
+import { TIMER_FADEOUT_DURATION } from '@/utils/constants';
 import { useSleepStore } from '@/stores/useSleepStore';
 import { startSleepTracking, stopSleepTracking, isTrackingActive } from '@/services/SleepTrackingService';
 
@@ -16,7 +16,6 @@ import { startSleepTracking, stopSleepTracking, isTrackingActive } from '@/servi
 // ──────────────────────────────────────────────
 
 const soundPool = new Map<string, Audio.Sound>();
-const volumeAnimators = new Map<string, ReturnType<typeof setInterval>>();
 const frequencyTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const soundSeeds = new Map<string, number>();
 
@@ -31,66 +30,96 @@ let seedCounter = 0;
 let isPausedForPreview = false;
 
 // ──────────────────────────────────────────────
-// Global fade factor (0..1)
+// Unified master volume loop + fade
+// 단일 루프가 페르린 노이즈 볼륨 + 페이드를 모두 처리
 // ──────────────────────────────────────────────
 
 let fadeFactor = 1.0;
-let fadeTimer: ReturnType<typeof setInterval> | null = null;
 const FADE_IN_MS = 750;
 const FADE_OUT_MS = 750;
-const FADE_STEP_MS = 50;
-const CROSSFADE_MS = 750; // 0.75초 듀얼 레이어 크로스페이드
+const MASTER_LOOP_MS = 50; // 20fps — 페이드 + 볼륨 동시 처리
+const CROSSFADE_MS = 750;
+const CROSSFADE_STEP_MS = 50; // 배리언트 크로스페이드 스텝
+
+// 페이드 상태
+let fadeState: 'in' | 'out' | 'none' = 'none';
+let fadeStartTime = 0;
+let fadeDurationMs = 0;
+let fadeStartValue = 0;
+let fadeResolve: (() => void) | null = null;
+
+// 마스터 볼륨 루프
+let masterLoopInterval: ReturnType<typeof setInterval> | null = null;
 
 // 시스템 정지 플래그 + 크로스페이드 타이머 추적
 let isSystemStopping = false;
 const crossfadeTimerMap = new Map<string, ReturnType<typeof setInterval>>();
 
-function clearFadeTimer() {
-  if (fadeTimer) {
-    clearInterval(fadeTimer);
-    fadeTimer = null;
+/** 마스터 볼륨 루프 시작 — 페이드 + 페르린 볼륨을 단일 인터벌로 처리 */
+function startMasterLoop(): void {
+  stopMasterLoop();
+  masterLoopInterval = setInterval(() => {
+    // 1) 페이드 상태에 따라 fadeFactor 갱신
+    if (fadeState === 'in') {
+      const elapsed = Date.now() - fadeStartTime;
+      fadeFactor = Math.min(1, elapsed / fadeDurationMs);
+      if (fadeFactor >= 1) {
+        fadeFactor = 1;
+        fadeState = 'none';
+      }
+    } else if (fadeState === 'out') {
+      const elapsed = Date.now() - fadeStartTime;
+      fadeFactor = Math.max(0, fadeStartValue * (1 - elapsed / fadeDurationMs));
+      if (fadeFactor <= 0) {
+        fadeFactor = 0;
+        fadeState = 'none';
+        if (fadeResolve) { fadeResolve(); fadeResolve = null; }
+      }
+    }
+
+    // 2) 모든 사운드에 볼륨 적용 (페르린 노이즈 × masterVolume × fadeFactor × crossfade)
+    const store = useAudioStore.getState();
+    const masterVol = store.masterVolume / 100;
+    const speed = useSettingsStore.getState().settings.volumeChangeSpeed;
+
+    for (const [soundId, sound] of soundPool) {
+      const state = store.activeSounds.get(soundId) ?? store.presetSounds.get(soundId);
+      if (!state) continue;
+
+      const seed = soundSeeds.get(soundId) ?? 0;
+      const cf = soundCrossfadeFactor.get(soundId) ?? 1;
+      const vol = getPerlinVolume(Date.now() / 1000, seed, speed, state.volumeMin, state.volumeMax);
+      sound.setVolumeAsync(vol * masterVol * fadeFactor * cf).catch(() => {});
+    }
+  }, MASTER_LOOP_MS);
+}
+
+function stopMasterLoop(): void {
+  if (masterLoopInterval) {
+    clearInterval(masterLoopInterval);
+    masterLoopInterval = null;
   }
+  // 미완료 페이드 resolve 처리
+  if (fadeResolve) { fadeResolve(); fadeResolve = null; }
+  fadeState = 'none';
 }
 
 function fadeIn(durationMs: number = FADE_IN_MS): void {
-  clearFadeTimer();
   fadeFactor = 0;
-  const increment = FADE_STEP_MS / durationMs;
-  fadeTimer = setInterval(() => {
-    fadeFactor = Math.min(1, fadeFactor + increment);
-    applyFadeVolume();
-    if (fadeFactor >= 1) clearFadeTimer();
-  }, FADE_STEP_MS);
+  fadeState = 'in';
+  fadeStartTime = Date.now();
+  fadeDurationMs = durationMs;
 }
 
 function fadeOut(durationMs: number = FADE_OUT_MS): Promise<void> {
   return new Promise((resolve) => {
-    clearFadeTimer();
     if (fadeFactor <= 0) { resolve(); return; }
-    const startVal = fadeFactor;
-    const decrement = startVal * FADE_STEP_MS / durationMs;
-    fadeTimer = setInterval(() => {
-      fadeFactor = Math.max(0, fadeFactor - decrement);
-      applyFadeVolume();
-      if (fadeFactor <= 0) {
-        clearFadeTimer();
-        resolve();
-      }
-    }, FADE_STEP_MS);
+    fadeStartValue = fadeFactor;
+    fadeState = 'out';
+    fadeStartTime = Date.now();
+    fadeDurationMs = durationMs;
+    fadeResolve = resolve;
   });
-}
-
-/** 페이드 중 모든 사운드에 즉시 볼륨 적용 */
-function applyFadeVolume(): void {
-  const store = useAudioStore.getState();
-  const masterVol = store.masterVolume / 100;
-  for (const [soundId, sound] of soundPool) {
-    const state = store.activeSounds.get(soundId) ?? store.presetSounds.get(soundId);
-    if (!state) continue;
-    const cf = soundCrossfadeFactor.get(soundId) ?? 1;
-    const midVol = (state.volumeMin + state.volumeMax) / 2 / 100;
-    sound.setVolumeAsync(midVol * masterVol * fadeFactor * cf).catch(() => {});
-  }
 }
 
 // ──────────────────────────────────────────────
@@ -206,7 +235,7 @@ async function performVariantCrossfade(soundId: string, oldSound: Audio.Sound) {
 
     // 크로스페이드: 새 소리 페이드인 (soundCrossfadeFactor로 제어)
     soundCrossfadeFactor.set(soundId, 0);
-    const steps = CROSSFADE_MS / FADE_STEP_MS;
+    const steps = CROSSFADE_MS / CROSSFADE_STEP_MS;
     const increment = 1 / steps;
     let step = 0;
 
@@ -239,7 +268,7 @@ async function performVariantCrossfade(soundId: string, oldSound: Audio.Sound) {
         try { await oldSound.stopAsync(); } catch {}
         try { await oldSound.unloadAsync(); } catch {}
       }
-    }, FADE_STEP_MS);
+    }, CROSSFADE_STEP_MS);
 
     crossfadeTimerMap.set(soundId, crossfadeTimer);
     // 이전 소리를 추적 (정리 시 사용)
@@ -253,7 +282,6 @@ async function unloadSound(soundId: string): Promise<void> {
   const sound = soundPool.get(soundId);
   if (!sound) return;
 
-  clearVolumeAnimator(soundId);
   clearFrequencyTimer(soundId);
   crossfadeInProgress.delete(soundId);
   soundCrossfadeFactor.delete(soundId);
@@ -272,6 +300,9 @@ async function unloadSound(soundId: string): Promise<void> {
 
 /** 사운드 풀 전체 정리 (orphaned 인스턴스 포함) */
 async function cleanupSoundPool(): Promise<void> {
+  // 마스터 루프 정지
+  stopMasterLoop();
+
   // 모든 크로스페이드 타이머 선제 정리
   for (const [, timer] of crossfadeTimerMap) {
     clearInterval(timer);
@@ -289,46 +320,6 @@ async function cleanupSoundPool(): Promise<void> {
     try { await old.unloadAsync(); } catch {}
   }
   crossfadeOutSounds.length = 0;
-}
-
-// ──────────────────────────────────────────────
-// Volume animation (Perlin noise)
-// ──────────────────────────────────────────────
-
-function clearVolumeAnimator(soundId: string) {
-  const id = volumeAnimators.get(soundId);
-  if (id) {
-    clearInterval(id);
-    volumeAnimators.delete(soundId);
-  }
-}
-
-function startVolumeAnimator(soundId: string, speed: VolumeChangeSpeed) {
-  clearVolumeAnimator(soundId);
-
-  const seed = soundSeeds.get(soundId) ?? 0;
-
-  const id = setInterval(() => {
-    const sound = soundPool.get(soundId);
-    if (!sound) {
-      clearVolumeAnimator(soundId);
-      return;
-    }
-
-    const store = useAudioStore.getState();
-    const state = store.activeSounds.get(soundId) ?? store.presetSounds.get(soundId);
-    if (!state) {
-      clearVolumeAnimator(soundId);
-      return;
-    }
-
-    const masterVolume = store.masterVolume / 100;
-    const vol = getPerlinVolume(Date.now() / 1000, seed, speed, state.volumeMin, state.volumeMax);
-    const cf = soundCrossfadeFactor.get(soundId) ?? 1;
-    sound.setVolumeAsync(vol * masterVolume * fadeFactor * cf).catch(() => {});
-  }, 100); // 10fps
-
-  volumeAnimators.set(soundId, id);
 }
 
 // ──────────────────────────────────────────────
@@ -416,10 +407,6 @@ export async function startMix(): Promise<void> {
   await cleanupSoundPool();
   isPausedForPreview = false;
 
-  // 사운드 로딩 전에 fadeFactor를 0으로 초기화 → 볼륨 애니메이터가 0부터 시작
-  fadeFactor = 0;
-  clearFadeTimer();
-
   const store = useAudioStore.getState();
   // 프리셋 소리 + 믹서 소리 모두 재생 (중복 시 프리셋 설정 우선)
   const merged = new Map<string, ActiveSoundState>();
@@ -429,7 +416,8 @@ export async function startMix(): Promise<void> {
 
   if (entries.length === 0) return;
 
-  const volumeSpeed = useSettingsStore.getState().settings.volumeChangeSpeed;
+  // fadeFactor = 0 으로 시작 → 마스터 루프가 모든 사운드 볼륨을 0부터 시작
+  fadeFactor = 0;
 
   for (const state of entries) {
     const sound = await loadSound(state.soundId);
@@ -440,16 +428,16 @@ export async function startMix(): Promise<void> {
 
     await sound.setVolumeAsync(0);
     soundCrossfadeFactor.set(state.soundId, 1);
+    await sound.playAsync();
 
-    if (meta.type === 'continuous') {
-      await sound.playAsync();
-      startVolumeAnimator(state.soundId, volumeSpeed);
-    } else {
-      await sound.playAsync();
+    // 간헐적 소리는 별도 스케줄링
+    if (meta.type === 'intermittent') {
       scheduleIntermittent(state.soundId);
     }
   }
 
+  // 마스터 루프 시작 (페르린 볼륨 + 페이드를 단일 인터벌로 처리)
+  startMasterLoop();
   fadeIn(FADE_IN_MS);
   store.setPlaying(true);
   startTimerCheck();
@@ -462,7 +450,7 @@ export async function startMix(): Promise<void> {
   }
 }
 
-/** 즉시 정지: UI 즉시 반영, 페이드아웃은 백그라운드 */
+/** 즉시 정지: UI 즉시 반영, 페이드아웃은 마스터 루프에서 처리 */
 export function stopAll(): void {
   isSystemStopping = true;
 
@@ -474,12 +462,12 @@ export function stopAll(): void {
     timerState.cancelTimer();
   }
 
-  // UI 즉시 업데이트 (presetSounds는 페이드아웃 중 볼륨 애니메이터가 필요하므로 유지)
+  // UI 즉시 업데이트
   const store = useAudioStore.getState();
   store.setPlaying(false);
   stopTimerCheck();
 
-  // 페이드아웃 후 정리 (완전 백그라운드)
+  // 페이드아웃 → 정리 (마스터 루프가 볼륨 감소 처리)
   fadeOut(FADE_OUT_MS)
     .then(() => cleanupSoundPool())
     .then(() => {
@@ -562,7 +550,7 @@ function startTimerCheck() {
       timer.saveSnapshot(0);
       timer.cancelTimer();
       fadeFactor = 0;
-      clearFadeTimer();
+      fadeState = 'none';
       await cleanupSoundPool();
       useAudioStore.getState().setPlaying(false);
       stopTimerCheck();
@@ -592,7 +580,7 @@ function stopTimerCheck() {
 /** CleanUp: 앱 종료 시 호출 */
 export async function cleanupAudio(): Promise<void> {
   isSystemStopping = true;
-  clearFadeTimer();
+  stopMasterLoop();
   await cleanupSoundPool();
   isSystemStopping = false;
   useAudioStore.getState().setPlaying(false);
@@ -608,7 +596,7 @@ export async function cleanupAudio(): Promise<void> {
 
 AppState.addEventListener('change', (nextState) => {
   if (nextState !== 'active' && isSystemStopping) {
-    clearFadeTimer();
+    stopMasterLoop();
     fadeFactor = 0;
     for (const [, sound] of soundPool) {
       sound.setVolumeAsync(0).catch(() => {});

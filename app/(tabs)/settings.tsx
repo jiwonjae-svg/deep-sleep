@@ -11,20 +11,13 @@ import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
 import * as BillingService from '@/services/BillingService';
 import { spacing, layout } from '@/theme';
 import { useTranslation } from 'react-i18next';
-import { AppLanguage, AudioQuality, VolumeChangeSpeed, ThemeMode, ThemeColor } from '@/types';
+import { AppLanguage, VolumeChangeSpeed, ThemeMode, ThemeColor } from '@/types';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { settings, updateSettings } = useSettingsStore();
   const isPremium = useSubscriptionStore((s) => s.isPremium);
   const { t } = useTranslation();
-
-  const QUALITY_OPTIONS: OptionItem<AudioQuality>[] = [
-    { value: 'low', label: t('settings.qualityLow') },
-    { value: 'medium', label: t('settings.qualityMedium') },
-    { value: 'high', label: t('settings.qualityHigh') },
-  ];
-  const QUALITY_LABELS: Record<AudioQuality, string> = { low: t('settings.qualityLow'), medium: t('settings.qualityMedium'), high: t('settings.qualityHigh') };
 
   const SPEED_OPTIONS: OptionItem<VolumeChangeSpeed>[] = [
     { value: 'slow', label: t('settings.speedSlow') },
@@ -54,7 +47,6 @@ export default function SettingsScreen() {
     { value: '#06b6d4', label: t('colors.cyan') },
   ];
 
-  const [qualityModalVisible, setQualityModalVisible] = useState(false);
   const [speedModalVisible, setSpeedModalVisible] = useState(false);
   const [langModalVisible, setLangModalVisible] = useState(false);
   const [termsModalVisible, setTermsModalVisible] = useState(false);
@@ -112,13 +104,6 @@ export default function SettingsScreen() {
           {/* ────── AUDIO ────── */}
           <Text style={styles.sectionTitle}>AUDIO</Text>
           <View style={styles.group}>
-            <SettingRow
-              icon="music-note"
-              label={t('settings.audioQuality')}
-              rightText={QUALITY_LABELS[settings.audioQuality]}
-              onPress={() => setQualityModalVisible(true)}
-            />
-            <View style={styles.divider} />
             <SettingRow
               icon="tune"
               label={t('settings.volumeChangeSpeed')}
@@ -182,14 +167,6 @@ export default function SettingsScreen() {
         </ScrollView>
 
         {/* Modals */}
-        <OptionModal
-          visible={qualityModalVisible}
-          title={t('settings.audioQuality')}
-          options={QUALITY_OPTIONS}
-          selected={settings.audioQuality}
-          onSelect={(v) => updateSettings({ audioQuality: v })}
-          onClose={() => setQualityModalVisible(false)}
-        />
         <OptionModal
           visible={speedModalVisible}
           title={t('settings.volumeChangeSpeed')}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet, Vibration, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
@@ -7,6 +7,8 @@ import Animated, {
   withSpring,
   runOnJS,
 } from 'react-native-reanimated';
+import { Audio } from 'expo-av';
+import { getSoundAsset } from '@/data/soundAssets';
 import { useAlarm } from '@/hooks/useAlarm';
 import { useAlarmStore } from '@/stores/useAlarmStore';
 import { useTimerStore } from '@/stores/useTimerStore';
@@ -46,6 +48,56 @@ export default function AlarmDismissScreen() {
     [themeColors],
   );
 
+  // 알람 페이드인 오디오
+  const alarmSoundRef = useRef<Audio.Sound | null>(null);
+  const fadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    const fadeInMinutes = alarm?.fadeInMinutes ?? 0;
+    if (fadeInMinutes <= 0) return; // 페이드인 비활성
+
+    let cancelled = false;
+    const FADE_DURATION_MS = fadeInMinutes * 60 * 1000;
+    const FADE_STEP_MS = 500; // 0.5초 간격
+    const startTime = Date.now();
+
+    (async () => {
+      try {
+        // 알람의 soundId 또는 기본 사운드 사용
+        const source = getSoundAsset(alarm?.soundId ?? 'singing-bowl')
+          ?? require('@/assets/sounds/singing-bowl-1.mp3');
+        const { sound } = await Audio.Sound.createAsync(
+          source,
+          { shouldPlay: false, isLooping: true, volume: 0 },
+        );
+        if (cancelled) { await sound.unloadAsync(); return; }
+        alarmSoundRef.current = sound;
+        await sound.playAsync();
+
+        // 페이드인: 볼륨 0→1 로 서서히 증가
+        fadeIntervalRef.current = setInterval(async () => {
+          const elapsed = Date.now() - startTime;
+          const vol = Math.min(1, elapsed / FADE_DURATION_MS);
+          try { await sound.setVolumeAsync(vol); } catch {}
+          if (vol >= 1 && fadeIntervalRef.current) {
+            clearInterval(fadeIntervalRef.current);
+            fadeIntervalRef.current = null;
+          }
+        }, FADE_STEP_MS);
+      } catch {}
+    })();
+
+    return () => {
+      cancelled = true;
+      if (fadeIntervalRef.current) { clearInterval(fadeIntervalRef.current); fadeIntervalRef.current = null; }
+      if (alarmSoundRef.current) {
+        alarmSoundRef.current.stopAsync().catch(() => {});
+        alarmSoundRef.current.unloadAsync().catch(() => {});
+        alarmSoundRef.current = null;
+      }
+    };
+  }, [alarm?.fadeInMinutes]);
+
   // 진동
   useEffect(() => {
     const id = setInterval(() => Vibration.vibrate([500, 500]), 1500);
@@ -67,6 +119,13 @@ export default function AlarmDismissScreen() {
 
   const dismiss = () => {
     Vibration.cancel();
+    // 알람 페이드인 오디오 정리
+    if (fadeIntervalRef.current) { clearInterval(fadeIntervalRef.current); fadeIntervalRef.current = null; }
+    if (alarmSoundRef.current) {
+      alarmSoundRef.current.stopAsync().catch(() => {});
+      alarmSoundRef.current.unloadAsync().catch(() => {});
+      alarmSoundRef.current = null;
+    }
     // Stop sleep timer if alarm-sync mode
     const timerState = useTimerStore.getState();
     if (timerState.isActive && timerState.isAlarmSync) {
@@ -133,6 +192,12 @@ export default function AlarmDismissScreen() {
               await snooze(alarm, alarm.snoozeMinutes);
             }
             Vibration.cancel();
+            if (fadeIntervalRef.current) { clearInterval(fadeIntervalRef.current); fadeIntervalRef.current = null; }
+            if (alarmSoundRef.current) {
+              alarmSoundRef.current.stopAsync().catch(() => {});
+              alarmSoundRef.current.unloadAsync().catch(() => {});
+              alarmSoundRef.current = null;
+            }
             router.back();
           }}
         />
