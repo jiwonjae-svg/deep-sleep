@@ -278,7 +278,7 @@ export default function PresetSaveScreen() {
               title={t('presetEditor.saveBtn')}
               variant="primary"
               onPress={handleSave}
-              disabled={name.trim().length === 0}
+              disabled={name.trim().length === 0 || soundsList.length === 0}
             />
             <Button
               title={t('common.cancel')}

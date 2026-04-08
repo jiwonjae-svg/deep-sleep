@@ -14,7 +14,10 @@ import { SleepReportCard } from '@/components/sleep/SleepReport';
 import { SnoringReport } from '@/components/sleep/SnoringReport';
 import { SnoringTimeline } from '@/components/sleep/SnoringTimeline';
 import { SleepDebtCard } from '@/components/sleep/SleepDebtCard';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useBreathingStore } from '@/stores/useBreathingStore';
+import { Toggle } from '@/components/ui/Toggle';
+import { OptionModal, OptionItem } from '@/components/ui/OptionModal';
 import { analyzeSleepPattern, generateCoachingTips, generateMonthlyReport } from '@/services/SleepCoachingService';
 
 export default function MyScreen() {
@@ -31,6 +34,21 @@ export default function MyScreen() {
   const [surveyStep, setSurveyStep] = useState(0);
   const [surveyData, setSurveyData] = useState<Partial<MorningSurvey>>({});
   const [historyModalVisible, setHistoryModalVisible] = useState(false);
+  const [sleepGoalModalVisible, setSleepGoalModalVisible] = useState(false);
+
+  const { settings, updateSettings } = useSettingsStore();
+
+  const SLEEP_GOAL_OPTIONS: OptionItem<string>[] = [
+    { value: '6', label: `6${t('settings.hoursUnit', { defaultValue: '시간' })}` },
+    { value: '6.5', label: `6.5${t('settings.hoursUnit', { defaultValue: '시간' })}` },
+    { value: '7', label: `7${t('settings.hoursUnit', { defaultValue: '시간' })}` },
+    { value: '7.5', label: `7.5${t('settings.hoursUnit', { defaultValue: '시간' })}` },
+    { value: '8', label: `8${t('settings.hoursUnit', { defaultValue: '시간' })}` },
+    { value: '8.5', label: `8.5${t('settings.hoursUnit', { defaultValue: '시간' })}` },
+    { value: '9', label: `9${t('settings.hoursUnit', { defaultValue: '시간' })}` },
+    { value: '9.5', label: `9.5${t('settings.hoursUnit', { defaultValue: '시간' })}` },
+    { value: '10', label: `10${t('settings.hoursUnit', { defaultValue: '시간' })}` },
+  ];
 
   const latestRecord = records.length > 0 ? records[0] : null;
   const recentRecords = records.slice(0, 5);
@@ -243,6 +261,18 @@ export default function MyScreen() {
           </Text>
         </Pressable>
 
+        {/* Auto Sleep Tracking Toggle */}
+        <View style={[styles.settingRow, { backgroundColor: themeColors.glassLight, borderColor: themeColors.glassBorder }]}>
+          <MaterialIcons name="bedtime" size={20} color="rgba(255,255,255,0.7)" />
+          <Text style={[styles.settingRowLabel, { color: themeColors.textPrimary }]}>
+            {t('settings.autoSleepTracking', { defaultValue: '재생 시 수면 추적 자동 시작' })}
+          </Text>
+          <Toggle
+            value={settings.autoSleepTracking}
+            onValueChange={(v) => updateSettings({ autoSleepTracking: v })}
+          />
+        </View>
+
         {/* Sleep Metrics */}
         {latestRecord && (
           <View style={styles.metricsGrid}>
@@ -277,6 +307,21 @@ export default function MyScreen() {
         {/* Sleep Debt */}
         <SleepDebtCard />
 
+        {/* Target Sleep Hours */}
+        <Pressable
+          style={[styles.settingRow, { backgroundColor: themeColors.glassLight, borderColor: themeColors.glassBorder }]}
+          onPress={() => setSleepGoalModalVisible(true)}
+        >
+          <MaterialIcons name="hotel" size={20} color="rgba(255,255,255,0.7)" />
+          <Text style={[styles.settingRowLabel, { color: themeColors.textPrimary, flex: 1 }]}>
+            {t('settings.targetSleepHours', { defaultValue: '목표 수면 시간' })}
+          </Text>
+          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: '600', marginRight: 4 }}>
+            {settings.targetSleepHours}{t('settings.hoursUnit', { defaultValue: '시간' })}
+          </Text>
+          <MaterialIcons name="chevron-right" size={20} color="rgba(255,255,255,0.3)" />
+        </Pressable>
+
         {/* Breathing */}
         <View style={[styles.breathingCard, { backgroundColor: themeColors.glassLight, borderColor: themeColors.glassBorder }]}>
           <View style={styles.breathingHeader}>
@@ -304,6 +349,9 @@ export default function MyScreen() {
               </Text>
             </Pressable>
           </View>
+          <Text style={[styles.breathingDesc, { color: themeColors.textMuted }]}>
+            {t('my.breathingDesc', { defaultValue: '호흡 패턴을 따라하며 긴장을 풀고 수면에 들어가세요. 4-7-8, 박스 호흡 등의 다양한 패턴을 제공합니다.' })}
+          </Text>
         </View>
 
         {/* Sound-Sleep Insights */}
@@ -469,6 +517,16 @@ export default function MyScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Sleep Goal Modal */}
+      <OptionModal
+        visible={sleepGoalModalVisible}
+        title={t('settings.targetSleepHours', { defaultValue: '목표 수면 시간' })}
+        options={SLEEP_GOAL_OPTIONS}
+        selected={String(settings.targetSleepHours)}
+        onSelect={(v) => updateSettings({ targetSleepHours: parseFloat(v) })}
+        onClose={() => setSleepGoalModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -712,6 +770,27 @@ const styles = StyleSheet.create({
   breathingBtnText: {
     fontSize: 12,
     fontWeight: '700',
+  },
+  breathingDesc: {
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 18,
+    marginTop: 10,
+  },
+  // Setting row (inline toggle / selector)
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    marginBottom: 20,
+  },
+  settingRowLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
   },
   // View All button
   viewAllBtn: {

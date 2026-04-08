@@ -69,7 +69,7 @@ export const BREATHING_PATTERNS: BreathingPattern[] = [
     ],
     totalCycleSec: 20,
     recommendedCycles: 4,
-    isPremium: true,
+    isPremium: false,
   },
 ];
 

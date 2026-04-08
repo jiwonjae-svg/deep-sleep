@@ -87,7 +87,10 @@ export default function HomeScreen() {
   }, [timer.isActive, isPlaying]);
 
   // 표시용 시간: 재생 중이면 실시간 잔여, 아니면 마지막 스냅샷
-  const displayMs = timer.isActive ? timerRemaining : timer.lastRemainingMs;
+  // timerRemaining이 아직 0인 경우 (useEffect 전) endTime에서 직접 계산
+  const displayMs = timer.isActive
+    ? (timerRemaining > 0 ? timerRemaining : Math.max(0, timer.endTime - Date.now()))
+    : timer.lastRemainingMs;
   const displayDuration = timer.isActive ? timer.durationMinutes : timer.lastDurationMinutes;
 
   const timerPrecise = formatTimerPrecise(displayMs);
@@ -131,19 +134,8 @@ export default function HomeScreen() {
     return () => clearInterval(id);
   }, [alarms, t]);
 
-  // Colon blink animation
+  // Colon blink animation — 상시 불투명 (깜박임 없음)
   const colonOpacity = useSharedValue(1);
-  useEffect(() => {
-    if (isPlaying && displayMs > 0) {
-      colonOpacity.value = withRepeat(
-        withTiming(0, { duration: 500, easing: Easing.inOut(Easing.ease) }),
-        -1,
-        true,
-      );
-    } else {
-      colonOpacity.value = withTiming(1, { duration: 200 });
-    }
-  }, [isPlaying, displayMs > 0]);
 
   // Pulse animation
   const scale = useSharedValue(1);
@@ -173,20 +165,22 @@ export default function HomeScreen() {
       stop();
     } else if (currentPreset) {
       applyPreset(currentPreset);
-      // 타이머 미설정 시 스냅샷 잔여 시간 또는 기본 15분 타이머 시작
+      // 타이머 미설정 시 스냅샷 잔여 시간(ms 정밀도) 또는 기본 15분 타이머 시작
       if (!timer.isActive) {
-        const snapshotMin = timer.lastRemainingMs > 0
-          ? Math.ceil(timer.lastRemainingMs / 60_000)
-          : 15;
-        startTimer(snapshotMin);
+        if (timer.lastRemainingMs > 0) {
+          useTimerStore.getState().startTimerFromMs(timer.lastRemainingMs, timer.lastDurationMinutes);
+        } else {
+          startTimer(15);
+        }
       }
     } else {
       play();
       if (!timer.isActive) {
-        const snapshotMin = timer.lastRemainingMs > 0
-          ? Math.ceil(timer.lastRemainingMs / 60_000)
-          : 15;
-        startTimer(snapshotMin);
+        if (timer.lastRemainingMs > 0) {
+          useTimerStore.getState().startTimerFromMs(timer.lastRemainingMs, timer.lastDurationMinutes);
+        } else {
+          startTimer(15);
+        }
       }
     }
   };
@@ -227,7 +221,7 @@ export default function HomeScreen() {
         {/* Timer Display — circular progress ring */}
         <Pressable style={styles.timerContainer} onPress={() => setTimerModalVisible(true)}>
           <View style={styles.ringWrapper}>
-            <Svg width={200} height={200} style={{ position: 'absolute' }}>
+            <Svg width={200} height={200} style={{ position: 'absolute', transform: [{ scaleY: -1 }] }}>
               {/* Background ring */}
               <Circle
                 cx={100}
@@ -249,7 +243,7 @@ export default function HomeScreen() {
                   strokeLinecap="round"
                   strokeDasharray={`${2 * Math.PI * 88}`}
                   strokeDashoffset={`${2 * Math.PI * 88 * (1 - timerProgress)}`}
-                  rotation={-90}
+                  rotation={90}
                   origin="100,100"
                 />
               )}

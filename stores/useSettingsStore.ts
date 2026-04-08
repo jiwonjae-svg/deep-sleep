@@ -18,7 +18,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   timerFadeOutEnabled: true,
   timerFadeOutMinutes: 5,
   intelligentTimerEnabled: false,
-  autoSleepTracking: true,
+  autoSleepTracking: false,
   targetSleepHours: 8,
 };
 

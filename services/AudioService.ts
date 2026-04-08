@@ -1,4 +1,5 @@
 import { Audio, AVPlaybackStatus } from 'expo-av';
+import { AppState } from 'react-native';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useTimerStore } from '@/stores/useTimerStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
@@ -400,6 +401,10 @@ export async function startMix(): Promise<void> {
   await cleanupSoundPool();
   isPausedForPreview = false;
 
+  // 사운드 로딩 전에 fadeFactor를 0으로 초기화 → 볼륨 애니메이터가 0부터 시작
+  fadeFactor = 0;
+  clearFadeTimer();
+
   const store = useAudioStore.getState();
   // 프리셋 소리 + 믹서 소리 모두 재생 (중복 시 프리셋 설정 우선)
   const merged = new Map<string, ActiveSoundState>();
@@ -441,7 +446,7 @@ export async function startMix(): Promise<void> {
 }
 
 /** 즉시 정지: UI 즉시 반영, 페이드아웃은 백그라운드 */
-export async function stopAll(): Promise<void> {
+export function stopAll(): void {
   isSystemStopping = true;
 
   // 타이머 잔여 시간 스냅샷 저장 후 타이머 취소
@@ -452,16 +457,22 @@ export async function stopAll(): Promise<void> {
     timerState.cancelTimer();
   }
 
-  // UI 즉시 업데이트
+  // UI 즉시 업데이트 (presetSounds는 페이드아웃 중 볼륨 애니메이터가 필요하므로 유지)
   const store = useAudioStore.getState();
   store.setPlaying(false);
-  store.clearPresetSounds();
   stopTimerCheck();
 
-  // 페이드아웃 후 정리 (백그라운드)
-  await fadeOut(FADE_OUT_MS);
-  await cleanupSoundPool();
-  isSystemStopping = false;
+  // 페이드아웃 후 정리 (완전 백그라운드)
+  fadeOut(FADE_OUT_MS)
+    .then(() => cleanupSoundPool())
+    .then(() => {
+      useAudioStore.getState().clearPresetSounds();
+      isSystemStopping = false;
+    })
+    .catch(() => {
+      useAudioStore.getState().clearPresetSounds();
+      isSystemStopping = false;
+    });
 }
 
 /** 프리셋 적용 — 재생 중이면 크로스페이드 전환 */
@@ -568,7 +579,28 @@ export async function cleanupAudio(): Promise<void> {
   await cleanupSoundPool();
   isSystemStopping = false;
   useAudioStore.getState().setPlaying(false);
+  useAudioStore.getState().clearPresetSounds();
   stopTimerCheck();
   soundSeeds.clear();
   seedCounter = 0;
 }
+
+// ──────────────────────────────────────────────
+// 앱 백그라운드 전환 시 페이드아웃 중이면 즉시 정리
+// ──────────────────────────────────────────────
+
+AppState.addEventListener('change', (nextState) => {
+  if (nextState !== 'active' && isSystemStopping) {
+    clearFadeTimer();
+    fadeFactor = 0;
+    for (const [, sound] of soundPool) {
+      sound.setVolumeAsync(0).catch(() => {});
+    }
+    cleanupSoundPool()
+      .then(() => {
+        useAudioStore.getState().clearPresetSounds();
+        isSystemStopping = false;
+      })
+      .catch(() => { isSystemStopping = false; });
+  }
+});

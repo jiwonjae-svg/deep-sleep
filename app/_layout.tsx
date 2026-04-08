@@ -27,7 +27,7 @@ export default function RootLayout() {
     async function bootstrap() {
       await initAudioMode();
       // Ensure no stale playback from previous session
-      await stopAllAudio();
+      stopAllAudio();
       configureNotifications();
       await Promise.all([
         usePresetStore.getState().loadPresets(),

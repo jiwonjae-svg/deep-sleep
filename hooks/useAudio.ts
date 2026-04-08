@@ -49,8 +49,8 @@ export function useAudio() {
   }, [soundCount]);
 
   /** 정지 */
-  const stop = useCallback(async () => {
-    await AudioService.stopAll();
+  const stop = useCallback(() => {
+    AudioService.stopAll();
   }, []);
 
   /** 프리셋 적용 */

@@ -16,7 +16,7 @@ const TAB_KEYS = [
   { name: 'mixer', key: 'tabs.mixer', iconFocused: 'musical-notes' as IconName, iconDefault: 'musical-notes-outline' as IconName },
   { name: 'presets', key: 'tabs.presets', iconFocused: 'albums' as IconName, iconDefault: 'albums-outline' as IconName },
   { name: 'alarms', key: 'tabs.alarms', iconFocused: 'alarm' as IconName, iconDefault: 'alarm-outline' as IconName },
-  { name: 'my', key: 'tabs.my', iconFocused: 'moon' as IconName, iconDefault: 'moon-outline' as IconName },
+  { name: 'my', key: 'tabs.my', iconFocused: 'person' as IconName, iconDefault: 'person-outline' as IconName },
   { name: 'settings', key: 'tabs.settings', iconFocused: 'settings' as IconName, iconDefault: 'settings-outline' as IconName },
 ];
 

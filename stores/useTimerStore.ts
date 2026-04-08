@@ -31,6 +31,8 @@ interface TimerStoreState {
 
 interface TimerStoreActions {
   startTimer: (minutes: number, alarmSync?: boolean) => void;
+  /** 밀리초 단위로 타이머 시작 (스냅샷 복원용, 초 단위 정밀도 유지) */
+  startTimerFromMs: (ms: number, originalDurationMinutes?: number) => void;
   cancelTimer: () => void;
   setSchedule: (schedule: TimerSchedule | null) => void;
   advancePhase: () => void;
@@ -61,6 +63,15 @@ export const useTimerStore = create<TimerStoreState & TimerStoreActions>((set, g
       durationMinutes: minutes,
       isActive: true,
       isAlarmSync: alarmSync,
+      currentPhaseIndex: 0,
+    }),
+
+  startTimerFromMs: (ms, originalDurationMinutes) =>
+    set({
+      endTime: Date.now() + ms,
+      durationMinutes: originalDurationMinutes ?? Math.ceil(ms / 60_000),
+      isActive: true,
+      isAlarmSync: false,
       currentPhaseIndex: 0,
     }),
 

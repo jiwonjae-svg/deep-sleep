@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 interface TermsModalProps {
   visible: boolean;
   onClose: () => void;
-  mode?: 'terms' | 'privacy';
+  mode?: 'terms' | 'privacy' | 'medical';
 }
 
 export function TermsModal({ visible, onClose, mode = 'terms' }: TermsModalProps) {
@@ -106,7 +106,7 @@ export function TermsModal({ visible, onClose, mode = 'terms' }: TermsModalProps
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
         <Animated.View style={[styles.sheet, { transform: [{ scale: scaleAnim }], opacity: fadeAnim }]}>
           <View style={styles.header}>
-            <Text style={styles.title}>{mode === 'privacy' ? t('settings.privacyTitle') : t('settings.termsTitle')}</Text>
+            <Text style={styles.title}>{mode === 'privacy' ? t('settings.privacyTitle') : mode === 'medical' ? t('settings.medicalDisclaimerTitle') : t('settings.termsTitle')}</Text>
             <Pressable onPress={handleClose} style={styles.closeBtn}>
               <Text style={styles.closeText}>✕</Text>
             </Pressable>
@@ -116,7 +116,7 @@ export function TermsModal({ visible, onClose, mode = 'terms' }: TermsModalProps
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.content}>{mode === 'privacy' ? t('settings.privacyContent') : t('settings.termsContent')}</Text>
+            <Text style={styles.content}>{mode === 'privacy' ? t('settings.privacyContent') : mode === 'medical' ? t('settings.medicalDisclaimerContent') : t('settings.termsContent')}</Text>
           </ScrollView>
           <Pressable style={styles.confirmBtn} onPress={handleClose}>
             <Text style={styles.confirmText}>{t('common.ok')}</Text>

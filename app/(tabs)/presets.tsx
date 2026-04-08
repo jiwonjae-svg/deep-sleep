@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { usePresetStore } from '@/stores/usePresetStore';
+import { useAudioStore } from '@/stores/useAudioStore';
 import { useAudio } from '@/hooks/useAudio';
 import { Preset } from '@/types';
 import { getSoundById } from '@/data/sounds';
@@ -43,13 +44,16 @@ export default function PresetsScreen() {
   }, [allPresets, searchText]);
 
   const handlePresetPress = useCallback(
-    async (preset: Preset) => {
+    (preset: Preset) => {
       if (AdService.canShowInterstitial()) {
         AdService.recordInterstitialShown();
       }
-      await applyPreset(preset);
+      // 프리셋 소리만 로드 (자동 재생하지 않음)
+      const store = useAudioStore.getState();
+      store.setPresetSounds(preset.sounds);
+      store.setActivePresetId(preset.id);
     },
-    [applyPreset],
+    [],
   );
 
   const handleDeletePreset = useCallback(
@@ -168,15 +172,13 @@ export default function PresetsScreen() {
           })}
         </ScrollView>
 
-        {/* FAB */}
-        {soundCount > 0 && (
-          <Pressable
-            style={[styles.fab, { backgroundColor: themeColors.accent1, shadowColor: themeColors.accent1 }]}
-            onPress={() => router.push('/presets/save')}
-          >
-            <MaterialIcons name="add" size={28} color="#ffffff" />
-          </Pressable>
-        )}
+        {/* FAB — 항상 표시 */}
+        <Pressable
+          style={[styles.fab, { backgroundColor: themeColors.accent1, shadowColor: themeColors.accent1 }]}
+          onPress={() => router.push('/presets/save')}
+        >
+          <MaterialIcons name="add" size={28} color="#ffffff" />
+        </Pressable>
       </SafeAreaView>
   );
 }
