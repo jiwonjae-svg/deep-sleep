@@ -58,6 +58,7 @@ function fadeIn(durationMs: number = FADE_IN_MS): void {
   const increment = FADE_STEP_MS / durationMs;
   fadeTimer = setInterval(() => {
     fadeFactor = Math.min(1, fadeFactor + increment);
+    applyFadeVolume();
     if (fadeFactor >= 1) clearFadeTimer();
   }, FADE_STEP_MS);
 }
@@ -70,12 +71,26 @@ function fadeOut(durationMs: number = FADE_OUT_MS): Promise<void> {
     const decrement = startVal * FADE_STEP_MS / durationMs;
     fadeTimer = setInterval(() => {
       fadeFactor = Math.max(0, fadeFactor - decrement);
+      applyFadeVolume();
       if (fadeFactor <= 0) {
         clearFadeTimer();
         resolve();
       }
     }, FADE_STEP_MS);
   });
+}
+
+/** 페이드 중 모든 사운드에 즉시 볼륨 적용 */
+function applyFadeVolume(): void {
+  const store = useAudioStore.getState();
+  const masterVol = store.masterVolume / 100;
+  for (const [soundId, sound] of soundPool) {
+    const state = store.activeSounds.get(soundId) ?? store.presetSounds.get(soundId);
+    if (!state) continue;
+    const cf = soundCrossfadeFactor.get(soundId) ?? 1;
+    const midVol = (state.volumeMin + state.volumeMax) / 2 / 100;
+    sound.setVolumeAsync(midVol * masterVol * fadeFactor * cf).catch(() => {});
+  }
 }
 
 // ──────────────────────────────────────────────
@@ -414,6 +429,8 @@ export async function startMix(): Promise<void> {
 
   if (entries.length === 0) return;
 
+  const volumeSpeed = useSettingsStore.getState().settings.volumeChangeSpeed;
+
   for (const state of entries) {
     const sound = await loadSound(state.soundId);
     if (!sound) continue;
@@ -426,7 +443,7 @@ export async function startMix(): Promise<void> {
 
     if (meta.type === 'continuous') {
       await sound.playAsync();
-      startVolumeAnimator(state.soundId, 'medium');
+      startVolumeAnimator(state.soundId, volumeSpeed);
     } else {
       await sound.playAsync();
       scheduleIntermittent(state.soundId);

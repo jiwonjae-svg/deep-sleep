@@ -6,13 +6,16 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
+import * as Brightness from 'expo-brightness';
 import { useAudio } from '@/hooks/useAudio';
 import { useTimerStore } from '@/stores/useTimerStore';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useThemeColors, typography } from '@/theme';
 import { formatRemainingTime, getCurrentTimeString } from '@/utils/formatTime';
 import { useTranslation } from 'react-i18next';
 
 const SHOW_DURATION = 3000; // 3초 후 다시 어두워짐
+const DIM_BRIGHTNESS = 0.01; // 수면 화면 최소 밝기
 
 export default function PlayingScreen() {
   const router = useRouter();
@@ -20,6 +23,7 @@ export default function PlayingScreen() {
   const timer = useTimerStore();
   const themeColors = useThemeColors();
   const { t } = useTranslation();
+  const autoDim = useSettingsStore((s) => s.settings.autoDimBrightness);
 
   const [clock, setClock] = useState(getCurrentTimeString());
   const [timerText, setTimerText] = useState('');
@@ -63,6 +67,28 @@ export default function PlayingScreen() {
     }, 1000);
     return () => clearInterval(id);
   }, [timer.isActive, timer.endTime]);
+
+  // 자동 밝기 감소: 수면 화면 진입 시 밝기 최소화, 이탈 시 복원
+  const savedBrightness = useRef<number | null>(null);
+  useEffect(() => {
+    if (!autoDim) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const current = await Brightness.getBrightnessAsync();
+        if (cancelled) return;
+        savedBrightness.current = current;
+        await Brightness.setBrightnessAsync(DIM_BRIGHTNESS);
+      } catch {}
+    })();
+    return () => {
+      cancelled = true;
+      if (savedBrightness.current !== null) {
+        Brightness.setBrightnessAsync(savedBrightness.current).catch(() => {});
+        savedBrightness.current = null;
+      }
+    };
+  }, [autoDim]);
 
   // 재생이 중지되면 자동으로 나가기
   useEffect(() => {

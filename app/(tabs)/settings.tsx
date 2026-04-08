@@ -130,20 +130,18 @@ export default function SettingsScreen() {
           {/* ────── ACCOUNT ────── */}
           <Text style={styles.sectionTitle}>ACCOUNT</Text>
           <View style={styles.group}>
-            <View style={styles.row}>
+            <Pressable style={styles.row} onPress={() => router.push('/subscription')}>
               <MaterialIcons
                 name="workspace-premium"
                 size={20}
                 color="#FFD700"
               />
               <Text style={[styles.rowLabel, { flex: 1 }]}>{t('settings.subscriptionStatus')}</Text>
-              <Pressable
-                style={styles.badge}
-                onPress={() => router.push('/subscription')}
-              >
+              <View style={styles.badge}>
                 <Text style={styles.badgeText}>{isPremium ? 'PREMIUM' : 'FREE'}</Text>
-              </Pressable>
-            </View>
+              </View>
+              <MaterialIcons name="chevron-right" size={20} color="rgba(255,255,255,0.3)" />
+            </Pressable>
             <View style={styles.divider} />
             <SettingRow
               icon="restore"
