@@ -39,7 +39,7 @@ const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'rain-light': 'water-drop',
   'rain-heavy': 'thunderstorm',
   'thunder': 'bolt',
-  'rain-eaves': 'roofing',
+
   'rain-umbrella': 'umbrella',
   'rain-tent': 'holiday-village',
   'rain-car': 'directions-car',
@@ -47,8 +47,7 @@ const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   // Ocean & Beach
   'wave-gentle': 'waves',
   'wave-rough': 'waves',
-  'beach-sand': 'beach-access',
-  'sea-wind': 'air',
+
   // Wind & Weather
   'wind-gentle': 'air',
   'wind-strong': 'storm',
@@ -66,7 +65,7 @@ const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'campfire': 'local-fire-department',
   'fireplace': 'fireplace',
   'candle': 'local-fire-department',
-  'wood-crackling': 'local-fire-department',
+
   // Indoor & Ambient
   'air-conditioner': 'ac-unit',
   'fan': 'mode-fan-off',
@@ -79,7 +78,7 @@ const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'train-rails': 'train',
   'cafe-chatter': 'local-cafe',
   'airplane-cabin': 'flight',
-  'subway': 'subway',
+
   // Musical & Tonal
   'white-noise': 'graphic-eq',
   'pink-noise': 'graphic-eq',

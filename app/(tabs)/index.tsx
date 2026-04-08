@@ -70,21 +70,19 @@ export default function HomeScreen() {
     timer.restoreSnapshot();
   }, []);
 
+  // 타이머 활성 시 endTime에서 직접 잔여 시간 계산 (1초 간격)
+  // endTime 기반이므로 앱 백그라운드 복귀 시에도 정확한 시간 표시
   useEffect(() => {
     if (!timer.isActive) {
       setTimerRemaining(0);
       return;
     }
     setTimerRemaining(Math.max(0, timer.endTime - Date.now()));
-  }, [timer.isActive, timer.endTime]);
-
-  useEffect(() => {
-    if (!timer.isActive || !isPlaying) return;
     const id = setInterval(() => {
-      setTimerRemaining((r) => Math.max(0, r - 1000));
+      setTimerRemaining(Math.max(0, timer.endTime - Date.now()));
     }, 1000);
     return () => clearInterval(id);
-  }, [timer.isActive, isPlaying]);
+  }, [timer.isActive, timer.endTime]);
 
   // 표시용 시간: 재생 중이면 실시간 잔여, 아니면 마지막 스냅샷
   // timerRemaining이 아직 0인 경우 (useEffect 전) endTime에서 직접 계산

@@ -1,19 +1,19 @@
 import { SoundConfig } from '@/types';
 
 /**
- * v1.2 소리 메타데이터 (63개).
+ * v1.3 소리 메타데이터 (58개).
  * 배리언트 시스템: 같은 종류의 소리는 soundAssets.ts에서 배리언트 배열로 관리.
  * 파일명은 assets/sounds/ 아래에 위치한다고 가정.
  * isPremium=true 인 소리는 ★ 유료 전용.
  */
 export const sounds: SoundConfig[] = [
   // ──────────────────────────────────────────────
-  // 비 & 물 (Rain & Water) — 10개 (무료 8 / 유료 2)
+  // 비 & 물 (Rain & Water) — 9개 (무료 7 / 유료 2)
   // ──────────────────────────────────────────────
   { id: 'rain-light', name: '가벼운 빗소리', category: 'rain-water', type: 'continuous', isPremium: false, iconEmoji: '🌧️', fileName: 'rain-light-1.mp3' },
   { id: 'rain-heavy', name: '폭우', category: 'rain-water', type: 'continuous', isPremium: false, iconEmoji: '🌧️', fileName: 'rain-heavy-1.mp3' },
   { id: 'thunder', name: '천둥번개', category: 'rain-water', type: 'intermittent', isPremium: false, iconEmoji: '⛈️', fileName: 'thunder-1.mp3' },
-  { id: 'rain-eaves', name: '처마 빗물', category: 'rain-water', type: 'continuous', isPremium: false, iconEmoji: '🏚️', fileName: 'rain-eaves-1.mp3' },
+
   { id: 'rain-umbrella', name: '우산 위 빗소리', category: 'rain-water', type: 'continuous', isPremium: false, iconEmoji: '☂️', fileName: 'rain-umbrella-1.mp3' },
   { id: 'rain-tent', name: '텐트 위 빗소리', category: 'rain-water', type: 'continuous', isPremium: false, iconEmoji: '⛺', fileName: 'rain-tent-1.mp3' },
   { id: 'rain-car', name: '차 안 빗소리', category: 'rain-water', type: 'continuous', isPremium: true, iconEmoji: '🚗', fileName: 'rain-car-1.mp3' },
@@ -22,12 +22,11 @@ export const sounds: SoundConfig[] = [
   { id: 'fountain', name: '분수', category: 'rain-water', type: 'continuous', isPremium: false, iconEmoji: '⛲', fileName: 'fountain-1.mp3' },
 
   // ──────────────────────────────────────────────
-  // 바다 & 해변 (Ocean & Beach) — 5개 (무료 4 / 유료 1)
+  // 바다 & 해변 (Ocean & Beach) — 3개 (무료 2 / 유료 1)
   // ──────────────────────────────────────────────
   { id: 'wave-gentle', name: '잔잔한 파도', category: 'ocean-beach', type: 'continuous', isPremium: false, iconEmoji: '🌊', fileName: 'wave-gentle-1.mp3' },
   { id: 'wave-rough', name: '거친 파도', category: 'ocean-beach', type: 'continuous', isPremium: false, iconEmoji: '🌊', fileName: 'wave-rough-1.mp3' },
-  { id: 'beach-sand', name: '해변 모래 위 파도', category: 'ocean-beach', type: 'continuous', isPremium: false, iconEmoji: '🏖️', fileName: 'beach-sand-1.mp3' },
-  { id: 'sea-wind', name: '바닷바람', category: 'ocean-beach', type: 'continuous', isPremium: false, iconEmoji: '🌬️', fileName: 'sea-wind-1.mp3' },
+
   { id: 'whale', name: '고래 소리', category: 'ocean-beach', type: 'intermittent', isPremium: true, iconEmoji: '🐋', fileName: 'whale-1.mp3' },
 
   // ──────────────────────────────────────────────
@@ -53,12 +52,12 @@ export const sounds: SoundConfig[] = [
   { id: 'dolphin', name: '돌고래', category: 'forest-nature', type: 'intermittent', isPremium: true, iconEmoji: '🐬', fileName: 'dolphin-1.mp3' },
 
   // ──────────────────────────────────────────────
-  // 불 & 따뜻함 (Fire & Warmth) — 4개 (무료 2 / 유료 2)
+  // 불 & 따뜻함 (Fire & Warmth) — 3개 (무료 2 / 유료 1)
   // ──────────────────────────────────────────────
   { id: 'campfire', name: '모닥불', category: 'fire-warmth', type: 'continuous', isPremium: false, iconEmoji: '🔥', fileName: 'campfire-1.mp3' },
   { id: 'fireplace', name: '벽난로', category: 'fire-warmth', type: 'continuous', isPremium: false, iconEmoji: '🏠', fileName: 'fireplace-1.mp3' },
   { id: 'candle', name: '촛불', category: 'fire-warmth', type: 'continuous', isPremium: true, iconEmoji: '🕯️', fileName: 'candle-1.mp3' },
-  { id: 'wood-crackling', name: '장작 타는 소리', category: 'fire-warmth', type: 'intermittent', isPremium: true, iconEmoji: '🪵', fileName: 'wood-crackling-1.mp3' },
+
 
   // ──────────────────────────────────────────────
   // 실내 & 일상 (Indoor & Ambient) — 9개 (무료 7 / 유료 2)
@@ -74,13 +73,13 @@ export const sounds: SoundConfig[] = [
   { id: 'page-turning', name: '페이지 넘김', category: 'indoor-ambient', type: 'intermittent', isPremium: true, iconEmoji: '📖', fileName: 'page-turning-1.mp3' },
 
   // ──────────────────────────────────────────────
-  // 도시 & 교통 (Urban & Transport) — 6개 (무료 3 / 유료 3)
+  // 도시 & 교통 (Urban & Transport) — 5개 (무료 3 / 유료 2)
   // ──────────────────────────────────────────────
   { id: 'traffic-distant', name: '먼 교통 소리', category: 'urban-transport', type: 'continuous', isPremium: false, iconEmoji: '🚗', fileName: 'traffic-distant-1.mp3' },
   { id: 'train-rails', name: '기차 레일 소리', category: 'urban-transport', type: 'continuous', isPremium: false, iconEmoji: '🚂', fileName: 'train-rails-1.mp3' },
   { id: 'cafe-chatter', name: '카페 잡담', category: 'urban-transport', type: 'continuous', isPremium: false, iconEmoji: '☕', fileName: 'cafe-chatter-1.mp3' },
   { id: 'airplane-cabin', name: '비행기 내부', category: 'urban-transport', type: 'continuous', isPremium: true, iconEmoji: '✈️', fileName: 'airplane-cabin-1.mp3' },
-  { id: 'subway', name: '지하철 내부', category: 'urban-transport', type: 'continuous', isPremium: true, iconEmoji: '🚇', fileName: 'subway-1.mp3' },
+
   { id: 'bus', name: '버스 내부', category: 'urban-transport', type: 'continuous', isPremium: true, iconEmoji: '🚌', fileName: 'bus-1.mp3' },
 
   // ──────────────────────────────────────────────

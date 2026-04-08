@@ -12,8 +12,7 @@ import { usePresetStore } from '@/stores/usePresetStore';
 import { useAlarmStore } from '@/stores/useAlarmStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAIStore } from '@/stores/useAIStore';
-import { initAudioMode } from '@/services/AudioService';
-import { useAudioStore } from '@/stores/useAudioStore';
+import { initAudioMode, cleanupAudio } from '@/services/AudioService';
 import { configureNotifications } from '@/services/AlarmService';
 import { ThemeProvider, useThemeColors, useIsDarkTheme } from '@/theme';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
@@ -27,10 +26,9 @@ export default function RootLayout() {
   useEffect(() => {
     async function bootstrap() {
       await initAudioMode();
-      // 이전 세션의 재생 상태만 초기화 (JS 재시작으로 오디오 인스턴스는 이미 없음)
-      // stopAll()을 호출하면 마스터 루프 없이 fadeOut이 걸려 이후 재생에 간섭하는 레이스 컨디션 발생
-      useAudioStore.getState().setPlaying(false);
-      useAudioStore.getState().clearPresetSounds();
+      // 이전 세션(또는 Fast Refresh)에서 남은 오디오 인스턴스 완전 정리
+      // cleanupAudio()는 fadeOut 없이 즉시 정리하므로 레이스 컨디션 없음
+      await cleanupAudio();
       configureNotifications();
       await Promise.all([
         usePresetStore.getState().loadPresets(),
