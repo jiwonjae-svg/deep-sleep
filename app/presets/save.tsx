@@ -57,7 +57,6 @@ const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'crow': 'flutter-dash',
   'crickets': 'grass',
   'frogs': 'pest-control',
-  'grass-insects': 'grass',
   // Fire & Warmth
   'campfire': 'local-fire-department',
   'fireplace': 'fireplace',
@@ -91,6 +90,17 @@ const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   // Seasonal & Special
   'cherry-blossom': 'local-florist',
   'snow-walking': 'ac-unit',
+  // New sounds
+  'waterfall': 'water',
+  'fountain': 'water',
+  'whale': 'waves',
+  'cicadas': 'grass',
+  'wolf': 'pets',
+  'washing-machine': 'local-laundry-service',
+  'dryer': 'air',
+  'page-turning': 'menu-book',
+  'bus': 'directions-bus',
+  'lofi-beats': 'headphones',
 };
 
 export default function PresetSaveScreen() {

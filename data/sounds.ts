@@ -1,7 +1,7 @@
 import { SoundConfig } from '@/types';
 
 /**
- * v1.3 소리 메타데이터 (58개).
+ * v1.4 소리 메타데이터 (56개).
  * 배리언트 시스템: 같은 종류의 소리는 soundAssets.ts에서 배리언트 배열로 관리.
  * 파일명은 assets/sounds/ 아래에 위치한다고 가정.
  * isPremium=true 인 소리는 ★ 유료 전용.
@@ -38,18 +38,16 @@ export const sounds: SoundConfig[] = [
   { id: 'hail', name: '우박', category: 'wind-weather', type: 'continuous', isPremium: false, iconEmoji: '🧊', fileName: 'hail-1.mp3' },
 
   // ──────────────────────────────────────────────
-  // 숲 & 자연 (Forest & Nature) — 10개 (무료 8 / 유료 2)
+  // 숨 & 자연 (Forest & Nature) — 8개 (무료 7 / 유료 1)
   // ──────────────────────────────────────────────
   { id: 'birds-morning', name: '새소리 (아침)', category: 'forest-nature', type: 'continuous', isPremium: false, iconEmoji: '🐦', fileName: 'birds-morning-1.mp3' },
   { id: 'cuckoo', name: '뻐꾸기', category: 'forest-nature', type: 'intermittent', isPremium: false, iconEmoji: '🐦‍⬛', fileName: 'cuckoo-1.mp3' },
   { id: 'owl', name: '올빼미', category: 'forest-nature', type: 'intermittent', isPremium: false, iconEmoji: '🦉', fileName: 'owl-1.mp3' },
   { id: 'crow', name: '까마귀', category: 'forest-nature', type: 'intermittent', isPremium: false, iconEmoji: '🐦‍⬛', fileName: 'crow-1.mp3' },
-  { id: 'crickets', name: '귀뚜라미', category: 'forest-nature', type: 'continuous', isPremium: false, iconEmoji: '🦗', fileName: 'crickets-1.mp3' },
+  { id: 'crickets', name: '풀벌레', category: 'forest-nature', type: 'continuous', isPremium: false, iconEmoji: '🪲', fileName: 'crickets-1.mp3' },
   { id: 'frogs', name: '개구리', category: 'forest-nature', type: 'continuous', isPremium: false, iconEmoji: '🐸', fileName: 'frogs-1.mp3' },
-  { id: 'grass-insects', name: '풀벌레', category: 'forest-nature', type: 'continuous', isPremium: false, iconEmoji: '🦗', fileName: 'grass-insects-1.mp3' },
   { id: 'cicadas', name: '매미', category: 'forest-nature', type: 'continuous', isPremium: false, iconEmoji: '🪲', fileName: 'cicadas-1.mp3' },
   { id: 'wolf', name: '늑대 울음', category: 'forest-nature', type: 'intermittent', isPremium: true, iconEmoji: '🐺', fileName: 'wolf-1.mp3' },
-  { id: 'dolphin', name: '돌고래', category: 'forest-nature', type: 'intermittent', isPremium: true, iconEmoji: '🐬', fileName: 'dolphin-1.mp3' },
 
   // ──────────────────────────────────────────────
   // 불 & 따뜻함 (Fire & Warmth) — 3개 (무료 2 / 유료 1)

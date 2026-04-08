@@ -57,6 +57,8 @@ export function RangeSlider({
   const trackWidth = useSharedValue(0);
   const minX = useSharedValue(0);
   const maxX = useSharedValue(0);
+  const startMinX = useSharedValue(0);
+  const startMaxX = useSharedValue(0);
 
   const onLayout = useCallback(
     (e: LayoutChangeEvent) => {
@@ -98,19 +100,29 @@ export function RangeSlider({
   );
 
   const minPan = Gesture.Pan()
+    .onStart(() => {
+      startMinX.value = minX.value;
+    })
     .onUpdate((e) => {
-      const newX = Math.max(0, Math.min(e.x, trackWidth.value));
+      const newX = Math.max(0, Math.min(startMinX.value + e.translationX, trackWidth.value));
       minX.value = newX;
       runOnJS(updateMin)(newX);
     })
+    .activeOffsetX([-5, 5])
+    .failOffsetY([-20, 20])
     .hitSlop({ top: 16, bottom: 16, left: 8, right: 8 });
 
   const maxPan = Gesture.Pan()
+    .onStart(() => {
+      startMaxX.value = maxX.value;
+    })
     .onUpdate((e) => {
-      const newX = Math.max(0, Math.min(e.x, trackWidth.value));
+      const newX = Math.max(0, Math.min(startMaxX.value + e.translationX, trackWidth.value));
       maxX.value = newX;
       runOnJS(updateMax)(newX);
     })
+    .activeOffsetX([-5, 5])
+    .failOffsetY([-20, 20])
     .hitSlop({ top: 16, bottom: 16, left: 8, right: 8 });
 
   const activeWidth = useDerivedValue(() => maxX.value - minX.value);

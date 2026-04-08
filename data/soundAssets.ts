@@ -67,6 +67,69 @@ const soundVariants: Record<string, AVPlaybackSource[]> = {
     require('@/assets/sounds/rain-light-2.mp3'),
     require('@/assets/sounds/rain-light-3.mp3'),
   ],
+
+  // 새로 추가된 소리들
+  'traffic-distant': [
+    require('@/assets/sounds/traffic-distant-1.mp3'),
+  ],
+  'air-conditioner': [
+    require('@/assets/sounds/air-conditioner-1.mp3'),
+  ],
+  'train-rails': [
+    require('@/assets/sounds/train-rails-1.mp3'),
+  ],
+  'frogs': [
+    require('@/assets/sounds/frogs-1.mp3'),
+  ],
+  'whale': [
+    require('@/assets/sounds/whale-1.mp3'),
+    require('@/assets/sounds/whale-2.mp3'),
+  ],
+  'clock-tick': [
+    require('@/assets/sounds/clock-tick-1.mp3'),
+  ],
+  'keyboard-typing': [
+    require('@/assets/sounds/keyboard-typing-1.mp3'),
+  ],
+  'wolf': [
+    require('@/assets/sounds/wolf-1.mp3'),
+    require('@/assets/sounds/wolf-2.mp3'),
+    require('@/assets/sounds/wolf-3.mp3'),
+  ],
+  'washing-machine': [
+    require('@/assets/sounds/washing-machine-1.mp3'),
+  ],
+  'airplane-cabin': [
+    require('@/assets/sounds/airplane-cabin-1.mp3'),
+  ],
+  'page-turning': [
+    require('@/assets/sounds/page-turning-1.mp3'),
+  ],
+  'bus': [
+    require('@/assets/sounds/bus-1.mp3'),
+  ],
+  'crow': [
+    require('@/assets/sounds/crow-1.mp3'),
+    require('@/assets/sounds/crow-2.mp3'),
+  ],
+  'dryer': [
+    require('@/assets/sounds/dryer-1.mp3'),
+  ],
+  'fridge-hum': [
+    require('@/assets/sounds/fridge-hum-1.mp3'),
+  ],
+  'fan': [
+    require('@/assets/sounds/fan-1.mp3'),
+  ],
+  'owl': [
+    require('@/assets/sounds/owl-1.mp3'),
+  ],
+  'cicadas': [
+    require('@/assets/sounds/cicadas-1.mp3'),
+  ],
+  'cat-purr': [
+    require('@/assets/sounds/cat-purr-1.mp3'),
+  ],
 };
 
 /** 랜덤 배리언트 에셋 반환 */

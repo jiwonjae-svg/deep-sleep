@@ -60,7 +60,6 @@ const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'crow': 'flutter-dash',
   'crickets': 'grass',
   'frogs': 'pest-control',
-  'grass-insects': 'grass',
   // Fire & Warmth
   'campfire': 'local-fire-department',
   'fireplace': 'fireplace',
@@ -103,7 +102,6 @@ const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'whale': 'waves',
   'cicadas': 'grass',
   'wolf': 'pets',
-  'dolphin': 'waves',
   'washing-machine': 'local-laundry-service',
   'dryer': 'air',
   'page-turning': 'menu-book',

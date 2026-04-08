@@ -8,7 +8,7 @@ import { useAudioStore } from '@/stores/useAudioStore';
  * Lightweight singleton for independent sound preview.
  * Manages a single Audio.Sound instance — starting a new preview
  * automatically stops the previous one.
- * 메인 재생 중이면 자동으로 일시정지 후 프리뷰, 종료 시 재개.
+ * 메인 재생 중이면 자동으로 정지 후 프리뷰 (타이머도 취소됨).
  * 페이드인(0→0.7, 750ms) / 페이드아웃(→0, 750ms) 지원.
  */
 
@@ -19,7 +19,6 @@ const FADE_STEP_MS = 50;
 let currentSound: Audio.Sound | null = null;
 let currentSoundId: string | null = null;
 let listeners: Set<() => void> = new Set();
-let didPauseMain = false;
 let fadeTimer: ReturnType<typeof setInterval> | null = null;
 
 function notify() {
@@ -68,11 +67,10 @@ export async function startPreview(soundId: string): Promise<void> {
     const source = getSoundAsset(soundId);
     if (!source) return;
 
-    // 메인 재생 중이면 일시정지
+    // 메인 재생 중이면 정지 (타이머도 함께 취소됨)
     const isMainPlaying = useAudioStore.getState().isPlaying;
-    if (isMainPlaying && !AudioService.isPaused() && !didPauseMain) {
-      await AudioService.pauseForPreview();
-      didPauseMain = true;
+    if (isMainPlaying) {
+      AudioService.stopAll();
     }
 
     const { sound } = await Audio.Sound.createAsync(
@@ -113,12 +111,10 @@ export async function stopPreview(): Promise<void> {
   clearFadeTimer();
 
   const sound = currentSound;
-  const wasPausedMain = didPauseMain;
 
   // UI 즉시 업데이트 (버튼 토글)
   currentSound = null;
   currentSoundId = null;
-  didPauseMain = false;
   notify();
 
   if (sound) {
@@ -148,10 +144,5 @@ export async function stopPreview(): Promise<void> {
 
     try { await sound.stopAsync(); } catch {}
     try { await sound.unloadAsync(); } catch {}
-  }
-
-  // 메인 재생 일시정지했었으면 재개
-  if (wasPausedMain) {
-    await AudioService.resumeFromPreview();
   }
 }
