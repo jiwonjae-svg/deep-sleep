@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, Image, FlatList, ImageSourcePropType } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
 import Animated, {
   useSharedValue,
+  useAnimatedStyle,
   withRepeat,
   withTiming,
   Easing,
@@ -158,7 +159,19 @@ export default function HomeScreen() {
     });
   }, [currentPresetImage]);
 
+  // Animated styles (Reanimated v4: useAnimatedStyle 필수)
+  const bgAnimatedStyle = useAnimatedStyle(() => ({ opacity: bgOpacity.value }));
+  const colonAnimatedStyle = useAnimatedStyle(() => ({ opacity: colonOpacity.value }));
+  const scaleAnimatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+
+  // 재생/정지 연타 방지 (debounce lock)
+  const playLockRef = useRef(false);
+
   const handlePlayToggle = () => {
+    if (playLockRef.current) return;
+    playLockRef.current = true;
+    setTimeout(() => { playLockRef.current = false; }, 300);
+
     if (isPlaying) {
       stop();
     } else if (currentPreset) {
@@ -202,7 +215,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Background: preset image — center-crop, no margins */}
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: bgOpacity }]} pointerEvents="none">
+      <Animated.View style={[StyleSheet.absoluteFill, bgAnimatedStyle]} pointerEvents="none">
         {currentPresetImage != null && (
           <>
             <Image
@@ -255,7 +268,7 @@ export default function HomeScreen() {
               ) : (
                 <View style={styles.timerRow}>
                   <Text style={styles.timerTime}>{timerPrecise.left}</Text>
-                  <Animated.Text style={[styles.timerColon, { opacity: colonOpacity }]}>:</Animated.Text>
+                  <Animated.Text style={[styles.timerColon, colonAnimatedStyle]}>:</Animated.Text>
                   <Text style={styles.timerTime}>{timerPrecise.right}</Text>
                 </View>
               )}
@@ -288,7 +301,7 @@ export default function HomeScreen() {
               {currentPreset ? (currentPreset.isDefault ? t(`defaultPresets.${currentPreset.id}-desc`, { defaultValue: currentPreset.description }) : currentPreset.description) : t('home.tapToSelect')}
             </Text>
           </Pressable>
-          <Animated.View style={{ transform: [{ scale }] }}>
+          <Animated.View style={scaleAnimatedStyle}>
             <Pressable
               style={[
                 styles.playBtn,

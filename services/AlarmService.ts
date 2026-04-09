@@ -1,22 +1,32 @@
-import * as Notifications from 'expo-notifications';
 import { Alarm, MathProblem } from '@/types';
 import { useAlarmStore } from '@/stores/useAlarmStore';
 import { generateMathProblem } from '@/utils/mathProblem';
+import { Platform } from 'react-native';
+
+// expo-notifications: Expo Go SDK 53+에서 import 시
+// DevicePushTokenAutoRegistration 사이드이펙트로 ERROR 발생.
+// 실제 사용 시점에만 lazy require하여 사이드이펙트 회피.
+function getNotifications() {
+  return require('expo-notifications') as typeof import('expo-notifications');
+}
 
 // ──────────────────────────────────────────────
 // Notification configuration
 // ──────────────────────────────────────────────
 
 export function configureNotifications(): void {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowBanner: true,
-      shouldShowList: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-      priority: Notifications.AndroidNotificationPriority.MAX,
-    }),
-  });
+  try {
+    const Notifications = getNotifications();
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        priority: Notifications.AndroidNotificationPriority.MAX,
+      }),
+    });
+  } catch {}
 }
 
 // ──────────────────────────────────────────────
@@ -24,6 +34,7 @@ export function configureNotifications(): void {
 // ──────────────────────────────────────────────
 
 export async function requestNotificationPermission(): Promise<boolean> {
+  const Notifications = getNotifications();
   const { status: existing } = await Notifications.getPermissionsAsync();
   if (existing === 'granted') return true;
   const { status } = await Notifications.requestPermissionsAsync();
@@ -45,6 +56,7 @@ function toNotifWeekday(dayIndex: number): number {
 
 export async function scheduleAlarm(alarm: Alarm): Promise<string | null> {
   if (!alarm.enabled) return null;
+  const Notifications = getNotifications();
 
   // 활성 요일이 있으면 각 요일별로 예약, 없으면 단일 예약
   const activeDays = alarm.days
@@ -61,6 +73,7 @@ export async function scheduleAlarm(alarm: Alarm): Promise<string | null> {
           sound: 'alarm-default.wav',
           priority: Notifications.AndroidNotificationPriority.MAX,
           data: { alarmId: alarm.id, type: 'alarm' },
+          ...(Platform.OS === 'android' ? { channelId: 'alarm-channel' } : {}),
         },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
@@ -79,6 +92,7 @@ export async function scheduleAlarm(alarm: Alarm): Promise<string | null> {
             sound: 'alarm-default.wav',
             priority: Notifications.AndroidNotificationPriority.MAX,
             data: { alarmId: alarm.id, type: 'alarm' },
+            ...(Platform.OS === 'android' ? { channelId: 'alarm-channel' } : {}),
           },
           trigger: {
             type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
@@ -99,6 +113,7 @@ export async function scheduleAlarm(alarm: Alarm): Promise<string | null> {
           sound: 'alarm-default.wav',
           priority: Notifications.AndroidNotificationPriority.MAX,
           data: { alarmId: alarm.id, type: 'alarm' },
+          ...(Platform.OS === 'android' ? { channelId: 'alarm-channel' } : {}),
         },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -114,6 +129,7 @@ export async function scheduleAlarm(alarm: Alarm): Promise<string | null> {
 }
 
 export async function cancelAlarmNotifications(alarm: Alarm): Promise<void> {
+  const Notifications = getNotifications();
   if (alarm.notificationId) {
     await Notifications.cancelScheduledNotificationAsync(alarm.notificationId).catch(() => {});
   }
@@ -127,6 +143,7 @@ export async function cancelAlarmNotifications(alarm: Alarm): Promise<void> {
 }
 
 export async function snooze(alarm: Alarm, minutes: number): Promise<void> {
+  const Notifications = getNotifications();
   await Notifications.scheduleNotificationAsync({
     content: {
       title: '⏰ Deep Sleep 스누즈',
@@ -134,6 +151,7 @@ export async function snooze(alarm: Alarm, minutes: number): Promise<void> {
       sound: 'alarm-default.wav',
       priority: Notifications.AndroidNotificationPriority.MAX,
       data: { alarmId: alarm.id, type: 'snooze' },
+      ...(Platform.OS === 'android' ? { channelId: 'alarm-channel' } : {}),
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
@@ -144,3 +162,71 @@ export async function snooze(alarm: Alarm, minutes: number): Promise<void> {
 
 /** 수학 문제 생성 (AlarmService를 통해 노출) */
 export { generateMathProblem };
+
+// ──────────────────────────────────────────────
+// Alarm notification listeners
+// ──────────────────────────────────────────────
+
+/**
+ * 알림 리스너 설정: 알림 터치 시 alarm-dismiss 페이지로 이동.
+ * @param onAlarmTriggered 알람 ID를 받아 네비게이션하는 콜백
+ * @returns cleanup 함수
+ */
+export function setupAlarmListeners(
+  onAlarmTriggered: (alarmId: string) => void,
+): () => void {
+  const Notifications = getNotifications();
+
+  // 알림 수신 시 (앱이 포그라운드일 때): 바로 alarm-dismiss로 이동
+  const receivedSub = Notifications.addNotificationReceivedListener((notification) => {
+    const data = notification.request.content.data;
+    if (data?.type === 'alarm' || data?.type === 'snooze') {
+      const alarmId = data.alarmId as string;
+      onAlarmTriggered(alarmId);
+    }
+  });
+
+  // 알림 응답 시 (사용자가 알림을 탭할 때): alarm-dismiss로 이동
+  const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
+    const data = response.notification.request.content.data;
+    if (data?.type === 'alarm' || data?.type === 'snooze') {
+      const alarmId = data.alarmId as string;
+      onAlarmTriggered(alarmId);
+    }
+  });
+
+  return () => {
+    receivedSub.remove();
+    responseSub.remove();
+  };
+}
+
+// ──────────────────────────────────────────────
+// Alarm permissions
+// ──────────────────────────────────────────────
+
+/**
+ * 알람에 필요한 모든 권한 요청:
+ * - 알림 권한 (Android + iOS)
+ * - Android 정확한 알람 (SCHEDULE_EXACT_ALARM)
+ * - Android 알림 채널 (알람용 높은 우선순위)
+ */
+export async function requestAlarmPermissions(): Promise<void> {
+  const Notifications = getNotifications();
+
+  // 알림 권한
+  await requestNotificationPermission();
+
+  // Android: 알람 전용 알림 채널 설정
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('alarm-channel', {
+      name: '알람',
+      importance: Notifications.AndroidImportance.MAX,
+      sound: 'alarm-default.wav',
+      vibrationPattern: [0, 500, 500, 500],
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      bypassDnd: true,
+      enableVibrate: true,
+    });
+  }
+}

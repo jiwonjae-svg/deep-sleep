@@ -1,11 +1,13 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alarm } from '@/types';
+import { Alarm, CustomAlarmSound } from '@/types';
 
 const STORAGE_KEY = '@alarms';
+const CUSTOM_SOUNDS_KEY = '@alarm_custom_sounds';
 
 interface AlarmStoreState {
   alarms: Alarm[];
+  customAlarmSounds: CustomAlarmSound[];
   loaded: boolean;
 }
 
@@ -15,19 +17,26 @@ interface AlarmStoreActions {
   updateAlarm: (id: string, partial: Partial<Alarm>) => Promise<void>;
   deleteAlarm: (id: string) => Promise<void>;
   toggleAlarm: (id: string) => Promise<void>;
+  addCustomAlarmSound: (sound: CustomAlarmSound) => Promise<void>;
+  removeCustomAlarmSound: (id: string) => Promise<void>;
 }
 
 export const useAlarmStore = create<AlarmStoreState & AlarmStoreActions>((set, get) => ({
   alarms: [],
+  customAlarmSounds: [],
   loaded: false,
 
   loadAlarms: async () => {
     try {
-      const json = await AsyncStorage.getItem(STORAGE_KEY);
-      const alarms: Alarm[] = json ? JSON.parse(json) : [];
-      set({ alarms, loaded: true });
+      const [alarmJson, soundsJson] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEY),
+        AsyncStorage.getItem(CUSTOM_SOUNDS_KEY),
+      ]);
+      const alarms: Alarm[] = alarmJson ? JSON.parse(alarmJson) : [];
+      const customAlarmSounds: CustomAlarmSound[] = soundsJson ? JSON.parse(soundsJson) : [];
+      set({ alarms, customAlarmSounds, loaded: true });
     } catch {
-      set({ alarms: [], loaded: true });
+      set({ alarms: [], customAlarmSounds: [], loaded: true });
     }
   },
 
@@ -57,5 +66,17 @@ export const useAlarmStore = create<AlarmStoreState & AlarmStoreActions>((set, g
     );
     set({ alarms: updated });
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  },
+
+  addCustomAlarmSound: async (sound) => {
+    const updated = [...get().customAlarmSounds, sound];
+    set({ customAlarmSounds: updated });
+    await AsyncStorage.setItem(CUSTOM_SOUNDS_KEY, JSON.stringify(updated));
+  },
+
+  removeCustomAlarmSound: async (id) => {
+    const updated = get().customAlarmSounds.filter((s) => s.id !== id);
+    set({ customAlarmSounds: updated });
+    await AsyncStorage.setItem(CUSTOM_SOUNDS_KEY, JSON.stringify(updated));
   },
 }));

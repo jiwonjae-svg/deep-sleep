@@ -64,6 +64,7 @@ export interface Alarm {
   specificDate?: string | null; // ISO date string (YYYY-MM-DD), alternative to repeat days
   enabled: boolean;
   soundId: string;
+  vibration: boolean;
   fadeInMinutes: number; // 0 = disabled
   snoozeMinutes: number; // 0 = disabled
   mathDismiss: boolean;
@@ -71,6 +72,14 @@ export interface Alarm {
   label: string;
   notificationId: string | null;
   smartAlarm?: SmartAlarmConfig | null;
+}
+
+/** 사용자 추가 알람 소리 */
+export interface CustomAlarmSound {
+  id: string;
+  name: string;
+  uri: string; // 로컬 파일 URI
+  addedAt: number;
 }
 
 export interface MathProblem {

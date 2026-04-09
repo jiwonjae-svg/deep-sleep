@@ -1,12 +1,10 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import { BenefitList } from '@/components/subscription/BenefitList';
 import { PlanCard } from '@/components/subscription/PlanCard';
 import { Button } from '@/components/ui/Button';
-import { GradientBackground } from '@/components/ui/GradientBackground';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { useTranslation } from 'react-i18next';
@@ -25,11 +23,26 @@ export default function SubscriptionScreen() {
   const [selectedPlan, setSelectedPlan] = useState('yearly');
   const themeColors = useThemeColors();
   const { t } = useTranslation();
-  const titleOpacity = useRef(new Animated.Value(0)).current;
+
+  // 중앙 fade-in/out 애니메이션 (SoundDetailSheet와 동일)
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.92)).current;
 
   useEffect(() => {
-    Animated.timing(titleOpacity, { toValue: 1, duration: 600, useNativeDriver: true }).start();
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 180, useNativeDriver: true }),
+      Animated.spring(scaleAnim, { toValue: 1, tension: 220, friction: 22, useNativeDriver: true }),
+    ]).start();
   }, []);
+
+  const animateClose = (cb: () => void) => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 0.92, duration: 150, useNativeDriver: true }),
+    ]).start(cb);
+  };
+
+  const handleClose = () => animateClose(() => router.back());
 
   const PLANS: PlanInfo[] = [
     { id: 'monthly', title: t('subscription.monthly'), price: t('subscription.monthlyPrice'), period: t('subscription.monthlyPeriod') },
@@ -39,14 +52,42 @@ export default function SubscriptionScreen() {
   const styles = useMemo(
     () =>
       StyleSheet.create({
-        container: { flex: 1 },
-        closeBtn: { position: 'absolute', top: 56, right: layout.screenPaddingH, width: 44, height: 44, alignItems: 'center', justifyContent: 'center', zIndex: 10 },
-        content: { alignItems: 'center', padding: layout.screenPaddingH, paddingTop: spacing['2xl'], gap: spacing.lg },
+        overlay: {
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.6)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: layout.screenPaddingH,
+        },
+        dialog: {
+          width: '100%',
+          maxHeight: '82%',
+          backgroundColor: themeColors.bgSecondary,
+          borderRadius: layout.borderRadiusLg,
+          padding: layout.screenPaddingH,
+          borderWidth: 1,
+          borderColor: themeColors.glassBorder,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.4,
+          shadowRadius: 24,
+          elevation: 10,
+        },
+        header: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: spacing.sm,
+        },
+        closeBtn: {
+          padding: spacing.xs,
+        },
+        content: { alignItems: 'center', gap: spacing.lg },
         title: { ...typography.display, color: themeColors.textPrimary, textAlign: 'center' },
         subtitle: { ...typography.body, color: themeColors.textSecondary, textAlign: 'center' },
         plans: { width: '100%', gap: spacing.md },
         restoreText: { ...typography.bodyMedium, color: themeColors.accent1, textDecorationLine: 'underline' },
-        legal: { ...typography.caption, color: themeColors.textMuted, textAlign: 'center', lineHeight: 18, paddingHorizontal: spacing.md, paddingBottom: spacing['2xl'] },
+        legal: { ...typography.caption, color: themeColors.textMuted, textAlign: 'center', lineHeight: 18, paddingHorizontal: spacing.md, paddingBottom: spacing.md },
       }),
     [themeColors],
   );
@@ -64,63 +105,70 @@ export default function SubscriptionScreen() {
   };
 
   return (
-    <GradientBackground overlay overlayOpacity={0.45}>
-      <SafeAreaView style={styles.container} edges={['top']}>
-        {/* Close button */}
-        <Pressable style={styles.closeBtn} onPress={() => router.back()}>
-          <Ionicons name="close" size={28} color={themeColors.textSecondary} />
-        </Pressable>
+    <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
+      {/* 백드롭 탭으로 닫기 */}
+      <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
 
-        <ScrollView contentContainerStyle={styles.content}>
-          <Animated.Text style={[styles.title, { opacity: titleOpacity }]}>
-            Deep Sleep Plus
-          </Animated.Text>
-          <Text style={styles.subtitle}>{t('subscription.subtitle')}</Text>
-
-          <BenefitList />
-
-          {/* Plan cards */}
-          <View style={styles.plans}>
-            {PLANS.map((plan) => (
-              <PlanCard
-                key={plan.id}
-                title={plan.title}
-                price={plan.price}
-                period={plan.period}
-                recommended={plan.recommended}
-                selected={selectedPlan === plan.id}
-                onPress={() => setSelectedPlan(plan.id)}
-              />
-            ))}
+      <Animated.View
+        style={[styles.dialog, { transform: [{ scale: scaleAnim }], opacity: fadeAnim }]}
+      >
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Deep Sleep Plus</Text>
+            <Pressable style={styles.closeBtn} onPress={handleClose}>
+              <MaterialIcons name="close" size={22} color={themeColors.textMuted} />
+            </Pressable>
           </View>
 
-          {/* Yearly savings text */}
-          {selectedPlan === 'yearly' && (
-            <Text style={{ fontSize: 13, fontWeight: '600', color: themeColors.accent1, textAlign: 'center' }}>
-              {t('subscription.yearlySavings')}
+          <View style={styles.content}>
+            <Text style={styles.subtitle}>{t('subscription.subtitle')}</Text>
+
+            <BenefitList />
+
+            {/* Plan cards */}
+            <View style={styles.plans}>
+              {PLANS.map((plan) => (
+                <PlanCard
+                  key={plan.id}
+                  title={plan.title}
+                  price={plan.price}
+                  period={plan.period}
+                  recommended={plan.recommended}
+                  selected={selectedPlan === plan.id}
+                  onPress={() => setSelectedPlan(plan.id)}
+                />
+              ))}
+            </View>
+
+            {/* Yearly savings text */}
+            {selectedPlan === 'yearly' && (
+              <Text style={{ fontSize: 13, fontWeight: '600', color: themeColors.accent1, textAlign: 'center' }}>
+                {t('subscription.yearlySavings')}
+              </Text>
+            )}
+
+            {/* Purchase */}
+            <Button
+              title={isPurchasing ? t('subscription.processing') : t('subscription.subscribe')}
+              variant="primary"
+              onPress={handlePurchase}
+              disabled={isPurchasing}
+            />
+
+            {/* Restore */}
+            <Pressable onPress={restore}>
+              <Text style={styles.restoreText}>{t('subscription.restore')}</Text>
+            </Pressable>
+
+            {/* Legal */}
+            <Text style={styles.legal}>
+              {t('subscription.legal')}
             </Text>
-          )}
-
-          {/* Purchase */}
-          <Button
-            title={isPurchasing ? t('subscription.processing') : t('subscription.subscribe')}
-            variant="primary"
-            onPress={handlePurchase}
-            disabled={isPurchasing}
-          />
-
-          {/* Restore */}
-          <Pressable onPress={restore}>
-            <Text style={styles.restoreText}>{t('subscription.restore')}</Text>
-          </Pressable>
-
-          {/* Legal */}
-          <Text style={styles.legal}>
-            {t('subscription.legal')}
-          </Text>
+          </View>
         </ScrollView>
-      </SafeAreaView>
-    </GradientBackground>
+      </Animated.View>
+    </Animated.View>
   );
 }
 

@@ -24,6 +24,7 @@ import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { useTranslation } from 'react-i18next';
 import { Alarm, MathDifficulty, SmartAlarmConfig } from '@/types';
 import { SmartAlarmConfigView } from '@/components/alarm/SmartAlarmConfig';
+import { AlarmSoundModal } from '@/components/alarm/AlarmSoundModal';
 
 const FADE_VALUES = [0, 1, 3, 5];
 const SNOOZE_VALUES = [3, 5, 10];
@@ -175,6 +176,9 @@ export default function AlarmEditScreen() {
   const [smartAlarm, setSmartAlarm] = useState<SmartAlarmConfig | null>(
     existingAlarm?.smartAlarm ?? null,
   );
+  const [soundId, setSoundId] = useState(existingAlarm?.soundId ?? 'alarm-classic');
+  const [vibration, setVibration] = useState(existingAlarm?.vibration ?? true);
+  const [soundModalVisible, setSoundModalVisible] = useState(false);
 
   const handleSave = async () => {
     const now = Date.now();
@@ -184,7 +188,8 @@ export default function AlarmEditScreen() {
       days: useSpecificDate ? [false, false, false, false, false, false, false] : days,
       specificDate: useSpecificDate && specificDate ? specificDate : null,
       enabled: existingAlarm?.enabled ?? true,
-      soundId: existingAlarm?.soundId ?? 'wave-gentle',
+      soundId,
+      vibration,
       label: label.trim(),
       fadeInMinutes: FADE_VALUES[fadeInIdx] ?? 0,
       snoozeMinutes: SNOOZE_VALUES[snoozeIdx] ?? 5,
@@ -265,6 +270,26 @@ export default function AlarmEditScreen() {
             maxLength={30}
           />
 
+          {/* Alarm Sound */}
+          <Text style={styles.sectionTitle}>{t('alarms.alarmSound')}</Text>
+          <Pressable style={styles.soundRow} onPress={() => setSoundModalVisible(true)}>
+            <MaterialIcons name="music-note" size={20} color="rgba(255,255,255,0.7)" />
+            <Text style={styles.soundName} numberOfLines={1}>
+              {soundId.startsWith('custom_')
+                ? (useAlarmStore.getState().customAlarmSounds.find((s) => s.id === soundId)?.name ?? soundId)
+                : t(`alarms.defaultSounds.${soundId}`, { defaultValue: soundId })}
+            </Text>
+            <MaterialIcons name="chevron-right" size={20} color="rgba(255,255,255,0.3)" />
+          </Pressable>
+
+          {/* Vibration */}
+          <View style={styles.toggleRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sectionTitle}>{t('alarms.vibration')}</Text>
+            </View>
+            <Toggle value={vibration} onValueChange={setVibration} />
+          </View>
+
           {/* Fade in */}
           <Text style={styles.sectionTitle}>{t('alarms.fadeIn')}</Text>
           <SegmentedControl
@@ -315,6 +340,12 @@ export default function AlarmEditScreen() {
         </ScrollView>
       </Animated.View>
     </KeyboardAvoidingView>
+    <AlarmSoundModal
+      visible={soundModalVisible}
+      selected={soundId}
+      onSelect={setSoundId}
+      onClose={() => setSoundModalVisible(false)}
+    />
     </Animated.View>
   );
 }
@@ -372,6 +403,22 @@ const styles = StyleSheet.create({
   },
   toggleRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
   buttonGroup: { gap: 12, marginTop: 20 },
+  soundRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    padding: 12,
+    gap: 10,
+  },
+  soundName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
   modeRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
   modeBtn: {
     flex: 1,

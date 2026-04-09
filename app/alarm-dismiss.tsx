@@ -98,14 +98,15 @@ export default function AlarmDismissScreen() {
     };
   }, [alarm?.fadeInMinutes]);
 
-  // 진동
+  // 진동 (알람에서 진동 설정이 꺼져 있으면 건너뜀)
   useEffect(() => {
+    if (alarm && alarm.vibration === false) return;
     const id = setInterval(() => Vibration.vibrate([500, 500]), 1500);
     return () => {
       clearInterval(id);
       Vibration.cancel();
     };
-  }, []);
+  }, [alarm]);
 
   // 현재 시각
   const [now, setNow] = useState(new Date());

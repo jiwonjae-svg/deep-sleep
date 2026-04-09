@@ -108,7 +108,20 @@
     "mathLabels": ["Easy", "Medium", "Hard"],
     "countdownSuffix": "until\nalarm rings",
     "searchPlaceholder": "Search alarms...",
-    "deleteAlarmTitle": "Delete Alarm"
+    "deleteAlarmTitle": "Delete Alarm",
+    "alarmSound": "Alarm Sound",
+    "selectSound": "Select Alarm Sound",
+    "vibration": "Vibration",
+    "addCustomSound": "Add Custom Sound",
+    "deleteSound": "Delete Sound",
+    "deleteSoundConfirm": "Delete this sound?",
+    "defaultSounds": {
+      "alarm-classic": "Classic Alarm",
+      "alarm-gentle": "Gentle Wake",
+      "alarm-birds": "Morning Birds",
+      "alarm-chime": "Soft Chime",
+      "alarm-melody": "Sunrise Melody"
+    }
   },
   "playing": {
     "longPressToStop": "Long press to stop"

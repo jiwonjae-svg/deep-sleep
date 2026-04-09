@@ -25,7 +25,7 @@ export const sounds: SoundConfig[] = [
   // 바다 & 해변 (Ocean & Beach) — 3개 (무료 2 / 유료 1)
   // ──────────────────────────────────────────────
   { id: 'wave-gentle', name: '잔잔한 파도', category: 'ocean-beach', type: 'continuous', isPremium: false, iconEmoji: '🌊', fileName: 'wave-gentle-1.mp3' },
-  { id: 'wave-rough', name: '거친 파도', category: 'ocean-beach', type: 'continuous', isPremium: false, iconEmoji: '🌊', fileName: 'wave-rough-1.mp3' },  // wave-gentle-3.mp3 → wave-rough-1.mp3 재연결
+  { id: 'wave-rough', name: '거친 파도', category: 'ocean-beach', type: 'continuous', isPremium: false, iconEmoji: '🌊', fileName: 'wave-rough-1.mp3' },
 
   { id: 'whale', name: '고래 소리', category: 'ocean-beach', type: 'intermittent', isPremium: true, iconEmoji: '🐋', fileName: 'whale-1.mp3' },
 

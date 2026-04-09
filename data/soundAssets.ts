@@ -20,6 +20,7 @@ const soundVariants: Record<string, AVPlaybackSource[]> = {
   'wave-gentle': [
     require('@/assets/sounds/wave-gentle-1.mp3'),
     require('@/assets/sounds/wave-gentle-2.mp3'),
+    require('@/assets/sounds/wave-gentle-3.mp3'),
   ],
   'wave-rough': [
     require('@/assets/sounds/wave-rough-1.mp3'),
@@ -131,6 +132,36 @@ const soundVariants: Record<string, AVPlaybackSource[]> = {
   ],
   'cat-purr': [
     require('@/assets/sounds/cat-purr-1.mp3'),
+  ],
+  'rain-heavy': [
+    require('@/assets/sounds/rain-heavy-1.mp3'),
+  ],
+  'rain-umbrella': [
+    require('@/assets/sounds/rain-umbrella-1.mp3'),
+  ],
+  'rain-tent': [
+    require('@/assets/sounds/rain-tent-1.mp3'),
+  ],
+  'stream': [
+    require('@/assets/sounds/stream-1.mp3'),
+  ],
+  'waterfall': [
+    require('@/assets/sounds/waterfall-1.mp3'),
+  ],
+  'fountain': [
+    require('@/assets/sounds/fountain-1.mp3'),
+  ],
+  'wind-strong': [
+    require('@/assets/sounds/wind-strong-1.mp3'),
+  ],
+  'leaves-rustle': [
+    require('@/assets/sounds/leaves-rustle-1.mp3'),
+  ],
+  'hail': [
+    require('@/assets/sounds/hail-1.mp3'),
+  ],
+  'cuckoo': [
+    require('@/assets/sounds/cuckoo-1.mp3'),
   ],
 };
 

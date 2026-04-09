@@ -7,9 +7,7 @@ import { useAudioStore } from '@/stores/useAudioStore';
 import { usePresetStore } from '@/stores/usePresetStore';
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore';
 import { Button } from '@/components/ui/Button';
-import { RangeSlider } from '@/components/ui/RangeSlider';
-import { SegmentedControl } from '@/components/ui/SegmentedControl';
-import { Slider } from '@/components/ui/Slider';
+import { SoundDetailSheet } from '@/components/sound/SoundDetailSheet';
 import { getSoundById, getSoundsByCategory, sounds as allSounds } from '@/data/sounds';
 import { categories } from '@/data/categories';
 import { useThemeColors, typography, spacing, layout } from '@/theme';
@@ -133,12 +131,6 @@ export default function PresetSaveScreen() {
   const [editorCategory, setEditorCategory] = useState<SoundCategory>('rain-water');
   const [detailSoundId, setDetailSoundId] = useState<string | null>(null);
   const { previewingSoundId, togglePreview } = useSoundPreview();
-
-  const FREQ_OPTIONS = [
-    t('frequency.continuous'), t('frequency.frequent'),
-    t('frequency.occasional'), t('frequency.rare'),
-  ];
-  const FREQ_VALUES: ('continuous' | 'frequent' | 'occasional' | 'rare')[] = ['continuous', 'frequent', 'occasional', 'rare'];
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.92)).current;
@@ -505,82 +497,24 @@ export default function PresetSaveScreen() {
               }}
             />
 
-            {/* Sound Detail Modal */}
-            {detailSoundId && (() => {
-              const detailSound = getSoundById(detailSoundId);
-              const detailState = tempSounds.find((s) => s.soundId === detailSoundId);
-              if (!detailSound || !detailState) return null;
-              const isContinuous = detailSound.type === 'continuous';
-              const freqIdx = FREQ_VALUES.indexOf(detailState.frequency);
-              const updateDetail = (updates: Partial<ActiveSoundState>) => {
-                setTempSounds((prev) => prev.map((s) => s.soundId === detailSoundId ? { ...s, ...updates } : s));
-              };
-              return (
-                <Modal visible transparent animationType="fade" onRequestClose={() => setDetailSoundId(null)}>
-                  <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 24 }} onPress={() => setDetailSoundId(null)}>
-                    <Pressable style={{ width: '100%', backgroundColor: 'rgba(17,21,31,0.97)', borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', gap: 16 }} onPress={(e) => e.stopPropagation()}>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 16, fontWeight: '700', color: '#ffffff' }}>{t('presetEditor.soundSettings', { name: t(`sounds.${detailSound.id}`, { defaultValue: detailSound.name }) })}</Text>
-                        <Pressable onPress={() => setDetailSoundId(null)}>
-                          <MaterialIcons name="close" size={20} color="rgba(255,255,255,0.5)" />
-                        </Pressable>
-                      </View>
-                      <View>
-                        <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>{t('soundDetail.volumeRange')}</Text>
-                        <RangeSlider
-                          min={detailState.volumeMin}
-                          max={detailState.volumeMax}
-                          onMinChange={(v) => updateDetail({ volumeMin: v })}
-                          onMaxChange={(v) => updateDetail({ volumeMax: v })}
-                        />
-                      </View>
-                      <View>
-                        <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>{t('soundDetail.frequency')}</Text>
-                        <SegmentedControl
-                          options={FREQ_OPTIONS}
-                          selectedIndex={freqIdx >= 0 ? freqIdx : 0}
-                          onSelect={(i) => updateDetail({ frequency: FREQ_VALUES[i] })}
-                          disabled={isContinuous}
-                        />
-                        {isContinuous && (
-                          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{t('soundDetail.continuousHint')}</Text>
-                        )}
-                      </View>
-                      <View>
-                        <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>{t('soundDetail.pan')}</Text>
-                        <Slider
-                          value={Math.round((detailState.pan + 1) * 50)}
-                          onValueChange={(v) => updateDetail({ pan: v / 50 - 1 })}
-                          showLabel={false}
-                        />
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
-                          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>L</Text>
-                          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>C</Text>
-                          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>R</Text>
-                        </View>
-                      </View>
-                      <View style={{ flexDirection: 'row', gap: 12, marginTop: 8 }}>
-                        <Pressable
-                          style={{ flex: 1, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' }}
-                          onPress={() => {
-                            setTempSounds((prev) => prev.filter((s) => s.soundId !== detailSoundId));
-                            setDetailSoundId(null);
-                          }}
-                        >
-                          <Text style={{ fontSize: 12, fontWeight: '700', color: '#ef4444' }}>{t('soundDetail.remove')}</Text>
-                        </Pressable>
-                        <Pressable
-                          style={{ flex: 1, height: 48, borderRadius: 24, backgroundColor: themeColors.accent1, alignItems: 'center', justifyContent: 'center' }}
-                          onPress={() => setDetailSoundId(null)}
-                        >
-                          <Text style={{ fontSize: 12, fontWeight: '700', color: '#ffffff' }}>{t('soundDetail.done')}</Text>
-                        </Pressable>
-                      </View>
-                    </Pressable>
-                  </Pressable>
-                </Modal>
-              );
-            })()}
+            {/* Sound Detail Sheet (믹서와 동일한 공유 컴포넌트) */}
+            <SoundDetailSheet
+              visible={!!detailSoundId}
+              onClose={() => setDetailSoundId(null)}
+              sound={detailSoundId ? getSoundById(detailSoundId) ?? null : null}
+              externalState={detailSoundId ? tempSounds.find((s) => s.soundId === detailSoundId) ?? null : null}
+              onExternalUpdate={(updates) => {
+                if (detailSoundId) {
+                  setTempSounds((prev) => prev.map((s) => s.soundId === detailSoundId ? { ...s, ...updates } : s));
+                }
+              }}
+              onExternalRemove={() => {
+                if (detailSoundId) {
+                  setTempSounds((prev) => prev.filter((s) => s.soundId !== detailSoundId));
+                  setDetailSoundId(null);
+                }
+              }}
+            />
 
             {/* Buttons */}
             <View style={{ padding: 16, gap: 10 }}>

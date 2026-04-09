@@ -159,11 +159,6 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          {/* Footer Branding */}
-          <View style={styles.footer}>
-            <Text style={styles.footerTitle}>NOCTURNE GLASS V1.0.0</Text>
-            <Text style={styles.footerSub}>Celestial Sanctuary Design System</Text>
-          </View>
         </ScrollView>
 
         {/* Modals */}
@@ -437,24 +432,5 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
     textTransform: 'uppercase',
     color: 'rgba(255,255,255,0.7)',
-  },
-  // Footer
-  footer: {
-    paddingTop: 32,
-    alignItems: 'center',
-    gap: 4,
-    opacity: 0.3,
-  },
-  footerTitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 3,
-    textTransform: 'uppercase',
-    color: '#ffffff',
-  },
-  footerSub: {
-    fontSize: 10,
-    fontWeight: '500',
-    color: '#ffffff',
   },
 });

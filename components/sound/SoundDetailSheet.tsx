@@ -8,6 +8,7 @@ import {
   ScrollView,
   Animated,
 } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useThemeColors } from '@/theme';
 import { typography, spacing, layout } from '@/theme';
 import { RangeSlider } from '@/components/ui/RangeSlider';
@@ -24,9 +25,13 @@ interface SoundDetailSheetProps {
   visible: boolean;
   onClose: () => void;
   sound: SoundConfig | null;
+  /** 외부 상태 관리 (프리셋 에디터용) — 제공하면 useAudioStore 대신 사용 */
+  externalState?: ActiveSoundState | null;
+  onExternalUpdate?: (updates: Partial<ActiveSoundState>) => void;
+  onExternalRemove?: () => void;
 }
 
-export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetProps) {
+export function SoundDetailSheet({ visible, onClose, sound, externalState, onExternalUpdate, onExternalRemove }: SoundDetailSheetProps) {
   const themeColors = useThemeColors();
   const { t } = useTranslation();
   const FREQUENCY_OPTIONS = [
@@ -199,8 +204,19 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
   );
 
   if (!sound) return null;
-  const state = activeSounds.get(sound.id);
+  // 외부 상태가 제공되면 사용, 아니면 useAudioStore에서 조회
+  const isExternal = !!externalState;
+  const state = isExternal ? externalState : activeSounds.get(sound.id);
   if (!state) return null;
+
+  const handleUpdate = (updates: Partial<ActiveSoundState>) => {
+    if (isExternal && onExternalUpdate) onExternalUpdate(updates);
+    else updateSoundState(sound.id, updates);
+  };
+  const handleRemove = () => {
+    if (isExternal && onExternalRemove) { onExternalRemove(); handleClose(); }
+    else { removeSound(sound.id); handleClose(); }
+  };
 
   const FREQUENCY_VALUES: Frequency[] = ['continuous', 'frequent', 'occasional', 'rare'];
   const isContinuous = sound.type === 'continuous';
@@ -208,6 +224,7 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
 
   return (
     <Modal visible={modalVisible} transparent animationType="none" onRequestClose={handleClose}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
       <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
         {/* 백드롭 탭으로 닫기 */}
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
@@ -240,8 +257,8 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
               <RangeSlider
                 min={state.volumeMin}
                 max={state.volumeMax}
-                onMinChange={(v) => updateSoundState(sound.id, { volumeMin: v })}
-                onMaxChange={(v) => updateSoundState(sound.id, { volumeMax: v })}
+                onMinChange={(v) => handleUpdate({ volumeMin: v })}
+                onMaxChange={(v) => handleUpdate({ volumeMax: v })}
               />
             </View>
 
@@ -251,7 +268,7 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
               <SegmentedControl
                 options={FREQUENCY_OPTIONS}
                 selectedIndex={freqIndex >= 0 ? freqIndex : 0}
-                onSelect={(i) => updateSoundState(sound.id, { frequency: FREQUENCY_VALUES[i] })}
+                onSelect={(i) => handleUpdate({ frequency: FREQUENCY_VALUES[i] })}
                 disabled={isContinuous}
               />
               {isContinuous && (
@@ -268,7 +285,7 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
               <Slider
                 value={Math.round((state.pan + 1) * 50)}
                 onValueChange={(v) => {
-                  if (isPremium) updateSoundState(sound.id, { pan: v / 50 - 1 });
+                  if (isPremium) handleUpdate({ pan: v / 50 - 1 });
                 }}
                 activeColor={isPremium ? themeColors.accent1 : themeColors.textMuted}
                 showLabel={false}
@@ -284,10 +301,7 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
             <View style={styles.actions}>
               <Pressable
                 style={styles.removeBtn}
-                onPress={() => {
-                  removeSound(sound.id);
-                  handleClose();
-                }}
+                onPress={handleRemove}
               >
                 <Text style={styles.removeText}>{t('soundDetail.remove')}</Text>
               </Pressable>
@@ -298,6 +312,7 @@ export function SoundDetailSheet({ visible, onClose, sound }: SoundDetailSheetPr
           </ScrollView>
         </Animated.View>
       </Animated.View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }

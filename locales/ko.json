@@ -108,7 +108,20 @@
     "mathLabels": ["쉬움", "보통", "어려움"],
     "countdownSuffix": "뒤에\n알람이 울립니다",
     "searchPlaceholder": "알람 검색...",
-    "deleteAlarmTitle": "알람 삭제"
+    "deleteAlarmTitle": "알람 삭제",
+    "alarmSound": "알람 소리",
+    "selectSound": "알람 소리 선택",
+    "vibration": "진동",
+    "addCustomSound": "사용자 소리 추가",
+    "deleteSound": "소리 삭제",
+    "deleteSoundConfirm": "이 소리를 삭제하시겠습니까?",
+    "defaultSounds": {
+      "alarm-classic": "클래식 알람",
+      "alarm-gentle": "부드러운 기상",
+      "alarm-birds": "새벽 새소리",
+      "alarm-chime": "부드러운 종소리",
+      "alarm-melody": "일출 멜로디"
+    }
   },
   "playing": {
     "longPressToStop": "길게 눌러서 정지"

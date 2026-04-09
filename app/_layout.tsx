@@ -1,11 +1,12 @@
 // ⚠️ 첫 번째 import여야 함: Expo Go 콘솔 억제 설정 (LogBox + console 인터셉터)
 // Babel이 모든 import를 hoist하므로 파일 내 순서가 로드 순서를 결정한다.
 import '@/utils/setupDevSuppressions';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Stack } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import '@/i18n'; // i18n 초기화
 import { usePresetStore } from '@/stores/usePresetStore';
@@ -13,7 +14,7 @@ import { useAlarmStore } from '@/stores/useAlarmStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAIStore } from '@/stores/useAIStore';
 import { initAudioMode, cleanupAudio } from '@/services/AudioService';
-import { configureNotifications } from '@/services/AlarmService';
+import { configureNotifications, setupAlarmListeners, requestAlarmPermissions } from '@/services/AlarmService';
 import { ThemeProvider, useThemeColors, useIsDarkTheme } from '@/theme';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { STORAGE_KEYS } from '@/utils/constants';
@@ -55,6 +56,21 @@ export default function RootLayout() {
 function ThemedApp() {
   const appColors = useThemeColors();
   const isDark = useIsDarkTheme();
+  const router = useRouter();
+  const listenerCleanupRef = useRef<(() => void) | null>(null);
+
+  // 알람 알림 리스너: 알림 탭/스와이프 시 alarm-dismiss 페이지로 이동
+  useEffect(() => {
+    listenerCleanupRef.current = setupAlarmListeners((alarmId) => {
+      router.push({ pathname: '/alarm-dismiss', params: { alarmId } });
+    });
+    return () => { listenerCleanupRef.current?.(); };
+  }, [router]);
+
+  // Android: 정확한 알람 + 알림 권한 요청
+  useEffect(() => {
+    requestAlarmPermissions().catch(() => {});
+  }, []);
 
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -70,8 +86,22 @@ function ThemedApp() {
         <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
         <Stack.Screen name="playing" options={{ animation: 'fade' }} />
         <Stack.Screen name="alarm-dismiss" options={{ animation: 'fade', gestureEnabled: false }} />
-        <Stack.Screen name="subscription" options={{ animation: 'slide_from_right', presentation: 'transparentModal', contentStyle: { backgroundColor: 'transparent' } }} />
-        <Stack.Screen name="breathing" options={{ animation: 'slide_from_right', contentStyle: { backgroundColor: 'transparent' } }} />
+        <Stack.Screen
+          name="subscription"
+          options={{
+            animation: 'fade',
+            presentation: 'transparentModal',
+            contentStyle: { backgroundColor: 'transparent' },
+          }}
+        />
+        <Stack.Screen
+          name="breathing"
+          options={{
+            animation: 'fade',
+            presentation: 'transparentModal',
+            contentStyle: { backgroundColor: 'transparent' },
+          }}
+        />
         <Stack.Screen
           name="presets/save"
           options={{
