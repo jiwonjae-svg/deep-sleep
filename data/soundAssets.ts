@@ -20,7 +20,9 @@ const soundVariants: Record<string, AVPlaybackSource[]> = {
   'wave-gentle': [
     require('@/assets/sounds/wave-gentle-1.mp3'),
     require('@/assets/sounds/wave-gentle-2.mp3'),
-    require('@/assets/sounds/wave-gentle-3.mp3'),
+  ],
+  'wave-rough': [
+    require('@/assets/sounds/wave-rough-1.mp3'),
   ],
   'wind-gentle': [
     require('@/assets/sounds/wind-gentle-1.mp3'),

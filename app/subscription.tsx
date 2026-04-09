@@ -94,6 +94,13 @@ export default function SubscriptionScreen() {
             ))}
           </View>
 
+          {/* Yearly savings text */}
+          {selectedPlan === 'yearly' && (
+            <Text style={{ fontSize: 13, fontWeight: '600', color: themeColors.accent1, textAlign: 'center' }}>
+              {t('subscription.yearlySavings')}
+            </Text>
+          )}
+
           {/* Purchase */}
           <Button
             title={isPurchasing ? t('subscription.processing') : t('subscription.subscribe')}

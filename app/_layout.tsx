@@ -70,8 +70,8 @@ function ThemedApp() {
         <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
         <Stack.Screen name="playing" options={{ animation: 'fade' }} />
         <Stack.Screen name="alarm-dismiss" options={{ animation: 'fade', gestureEnabled: false }} />
-        <Stack.Screen name="subscription" options={{ animation: 'fade', presentation: 'modal' }} />
-        <Stack.Screen name="breathing" options={{ animation: 'fade', contentStyle: { backgroundColor: 'transparent' } }} />
+        <Stack.Screen name="subscription" options={{ animation: 'slide_from_right', presentation: 'transparentModal', contentStyle: { backgroundColor: 'transparent' } }} />
+        <Stack.Screen name="breathing" options={{ animation: 'slide_from_right', contentStyle: { backgroundColor: 'transparent' } }} />
         <Stack.Screen
           name="presets/save"
           options={{

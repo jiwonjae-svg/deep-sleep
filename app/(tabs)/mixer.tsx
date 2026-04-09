@@ -209,7 +209,8 @@ export default function MixerScreen() {
   return (
     <>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+        {/* Sticky Header */}
+        <View>
           {/* Status Header */}
           <Text style={styles.statusLabel}>
             {t('mixer.title')} {soundCount}/10 {t('mixer.activeCount', { count: soundCount }).split('/')[1]?.replace(/\d+\s*/, '') || ''}
@@ -289,7 +290,10 @@ export default function MixerScreen() {
               );
             })}
           </ScrollView>
+        </View>
 
+        {/* Scrollable Track List */}
+        <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
           {/* Track List */}
           <View style={styles.trackList}>
             {categorySounds.map((sound) => {
