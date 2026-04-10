@@ -335,11 +335,9 @@
     "binaural-beats": "Binaural Beats",
     "singing-bowl": "Singing Bowl",
     "wind-chime": "Wind Chime",
-    "music-box": "Music Box",
     "cave-echo": "Cave Echo",
     "temple-bells": "Temple Bells",
     "hot-spring": "Hot Spring",
-    "cherry-blossom": "Cherry Blossom",
     "snow-walking": "Walking on Snow",
     "waterfall": "Waterfall",
     "fountain": "Fountain",
@@ -350,8 +348,6 @@
     "dryer": "Dryer",
     "page-turning": "Page Turning",
     "bus": "Bus Interior",
-    "lofi-beats": "Lo-fi Beats",
-    "whispering": "Whispering",
     "hair-brushing": "Hair Brushing"
   },
   "categories": {

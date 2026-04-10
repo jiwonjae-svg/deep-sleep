@@ -10,6 +10,7 @@ import { ActiveSoundState, Frequency } from '@/types';
 import { TIMER_FADEOUT_DURATION } from '@/utils/constants';
 import { useSleepStore } from '@/stores/useSleepStore';
 import { startSleepTracking, stopSleepTracking, isTrackingActive } from '@/services/SleepTrackingService';
+import { isGeneratedNoise, getNoiseFileUri } from '@/services/NoiseGeneratorService';
 
 // ──────────────────────────────────────────────
 // Sound instance tracking
@@ -108,6 +109,8 @@ function startMasterLoop(): void {
     }
 
     // 4) 모든 사운드에 볼륨 적용 (페르린 노이즈 × masterVolume × fadeFactor × crossfade)
+    // isSystemStopping 중에는 볼륨 적용 스킵 (정리 중 setVolumeAsync 호출 방지)
+    if (isSystemStopping) return;
     const store = useAudioStore.getState();
     const masterVol = store.masterVolume / 100;
     const speed = useSettingsStore.getState().settings.volumeChangeSpeed;
@@ -129,6 +132,8 @@ function checkBackgroundSoundHealth(): void {
   if (isSystemStopping) return;
   for (const [soundId, sound] of soundPool) {
     if (crossfadeInProgress.has(soundId)) continue;
+    // 실시간 노이즈는 네이티브 루핑 — 크로스페이드 불필요
+    if (isGeneratedNoise(soundId)) continue;
     const meta = getSoundById(soundId);
     if (!meta || meta.type !== 'continuous') continue;
 
@@ -221,8 +226,16 @@ async function loadSound(soundId: string): Promise<Audio.Sound | null> {
   if (!meta) return null;
 
   try {
-    const source = getSoundAsset(soundId); // 랜덤 배리언트
-    if (!source) return null;
+    // 실시간 생성 노이즈 (핑크/브라운) vs 파일 기반 소리
+    let source: { uri: string } | number | null = null;
+    if (isGeneratedNoise(soundId)) {
+      const uri = await getNoiseFileUri(soundId as 'pink-noise' | 'brown-noise');
+      if (!uri) return null;
+      source = { uri };
+    } else {
+      source = getSoundAsset(soundId); // 랜덤 배리언트
+      if (!source) return null;
+    }
 
     // 연속 재생 소리: 백그라운드에서도 끊기지 않도록 isLooping 설정
     const shouldLoop = meta.type === 'continuous';
@@ -235,6 +248,9 @@ async function loadSound(soundId: string): Promise<Audio.Sound | null> {
     if (!soundSeeds.has(soundId)) {
       soundSeeds.set(soundId, ++seedCounter);
     }
+
+    // 실시간 노이즈: 단일 파일 루핑 (배리언트 크로스페이드 불필요)
+    if (isGeneratedNoise(soundId)) return sound;
 
     // 연속 재생 소리: 포그라운드일 때만 크로스페이드 루핑 모니터 설정
     if (meta.type === 'continuous' && isAppForeground) {
@@ -284,6 +300,8 @@ function setupCrossfadeMonitor(soundId: string, sound: Audio.Sound) {
 /** 배리언트 크로스페이드: 현재 소리 페이드아웃 + 새 배리언트 페이드인 */
 async function performVariantCrossfade(soundId: string, oldSound: Audio.Sound) {
   if (isSystemStopping) { crossfadeInProgress.delete(soundId); return; }
+  // 실시간 노이즈는 네이티브 루핑 사용 — 크로스페이드 불필요
+  if (isGeneratedNoise(soundId)) { crossfadeInProgress.delete(soundId); return; }
   const meta = getSoundById(soundId);
   if (!meta) { crossfadeInProgress.delete(soundId); return; }
 
@@ -533,7 +551,7 @@ export async function startMix(): Promise<void> {
   }
 }
 
-/** 즉시 정지: UI 즉시 반영, 페이드아웃 후 비동기 정리 */
+/** 즉시 정지: UI 즉시 반영, 모든 소리 즉시 음소거 후 비동기 정리 */
 export function stopAll(): void {
   isSystemStopping = true;
   stopCleanupCancelled = false;
@@ -551,33 +569,30 @@ export function stopAll(): void {
   store.setPlaying(false);
   timerExpiryHandled = true; // 마스터 루프의 타이머 체크 비활성화
 
-  // 리니어 페이드아웃 후 정리 (마스터 루프 유지)
-  fadeOut(FADE_OUT_MS).then(() => {
-    if (stopCleanupCancelled) return;
+  // 즉시 모든 소리 볼륨 0 + 마스터 루프 정지 (연타 시 잔류 음원 방지)
+  fadeFactor = 0;
+  fadeState = 'none';
+  if (fadeResolve) { fadeResolve(); fadeResolve = null; }
+  for (const [, sound] of soundPool) {
+    sound.setVolumeAsync(0).catch(() => {});
+  }
+  for (const old of crossfadeOutSounds) {
+    old.setVolumeAsync(0).catch(() => {});
+  }
+  stopMasterLoop();
 
-    // 페이드아웃 완료: 즉시 음소거 + 마스터 루프 정지
-    fadeFactor = 0;
-    for (const [, sound] of soundPool) {
-      sound.setVolumeAsync(0).catch(() => {});
-    }
-    for (const old of crossfadeOutSounds) {
-      old.setVolumeAsync(0).catch(() => {});
-    }
-    stopMasterLoop();
-
-    // 비동기 정리
-    cleanupSoundPool()
-      .then(() => {
-        if (stopCleanupCancelled) return;
-        useAudioStore.getState().clearPresetSounds();
-        isSystemStopping = false;
-      })
-      .catch(() => {
-        if (stopCleanupCancelled) return;
-        useAudioStore.getState().clearPresetSounds();
-        isSystemStopping = false;
-      });
-  });
+  // 비동기 정리
+  cleanupSoundPool()
+    .then(() => {
+      if (stopCleanupCancelled) return;
+      useAudioStore.getState().clearPresetSounds();
+      isSystemStopping = false;
+    })
+    .catch(() => {
+      if (stopCleanupCancelled) return;
+      useAudioStore.getState().clearPresetSounds();
+      isSystemStopping = false;
+    });
 }
 
 /** 프리셋 적용 — 재생 중이면 크로스페이드 전환 */
@@ -662,6 +677,8 @@ function checkTimerExpiry(): void {
       old.setVolumeAsync(0).catch(() => {});
     }
 
+    // 마스터 루프 즉시 정지 (정리 중 setVolumeAsync 호출 방지)
+    stopMasterLoop();
     useAudioStore.getState().setPlaying(false);
 
     cleanupSoundPool()
@@ -723,6 +740,8 @@ async function disableNativeLooping(): Promise<void> {
   for (const [soundId, sound] of soundPool) {
     const meta = getSoundById(soundId);
     if (!meta || meta.type !== 'continuous') continue;
+    // 실시간 노이즈는 항상 네이티브 루핑 유지
+    if (isGeneratedNoise(soundId)) continue;
     try {
       await sound.setIsLoopingAsync(false);
       setupCrossfadeMonitor(soundId, sound);

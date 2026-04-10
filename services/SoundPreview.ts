@@ -2,6 +2,7 @@ import { Audio } from 'expo-av';
 import { AppState } from 'react-native';
 import { getSoundById } from '@/data/sounds';
 import { getSoundAsset } from '@/data/soundAssets';
+import { isGeneratedNoise, getNoiseFileUri } from '@/services/NoiseGeneratorService';
 import * as AudioService from '@/services/AudioService';
 import { useAudioStore } from '@/stores/useAudioStore';
 
@@ -118,6 +119,9 @@ async function performPreviewCrossfade(soundId: string, oldSound: Audio.Sound) {
   if (currentSoundId !== soundId) { crossfadeInProgress = false; return; }
 
   try {
+    // 실시간 노이즈는 크로스페이드 불필요 (루프 재생)
+    if (isGeneratedNoise(soundId)) { crossfadeInProgress = false; return; }
+
     const source = getSoundAsset(soundId);
     if (!source) { crossfadeInProgress = false; return; }
 
@@ -187,8 +191,15 @@ export async function startPreview(soundId: string): Promise<void> {
   if (!meta) return;
 
   try {
-    const source = getSoundAsset(soundId);
-    if (!source) return;
+    let source: { uri: string } | number | null = null;
+    if (isGeneratedNoise(soundId)) {
+      const uri = await getNoiseFileUri(soundId as 'pink-noise' | 'brown-noise');
+      if (!uri) return;
+      source = { uri };
+    } else {
+      source = getSoundAsset(soundId);
+      if (!source) return;
+    }
 
     // 메인 재생 중이면 정지 (타이머도 함께 취소됨)
     const isMainPlaying = useAudioStore.getState().isPlaying;
@@ -196,9 +207,10 @@ export async function startPreview(soundId: string): Promise<void> {
       AudioService.stopAll();
     }
 
+    const shouldLoop = isGeneratedNoise(soundId);
     const { sound } = await Audio.Sound.createAsync(
       source,
-      { shouldPlay: true, isLooping: false, volume: 0 },
+      { shouldPlay: true, isLooping: shouldLoop, volume: 0 },
     );
 
     // 토큰 검증: createAsync 비동기 대기 중 새 작업이 시작됐으면 이 소리 폐기
@@ -207,8 +219,10 @@ export async function startPreview(soundId: string): Promise<void> {
       return;
     }
 
-    // 크로스페이드 루핑 모니터 설정 (배리언트 순환)
-    setupPreviewCrossfadeMonitor(soundId, sound);
+    // 크로스페이드 루핑 모니터 설정 (배리언트 순환, 실시간 노이즈는 스킵)
+    if (!isGeneratedNoise(soundId)) {
+      setupPreviewCrossfadeMonitor(soundId, sound);
+    }
 
     currentSound = sound;
     currentSoundId = soundId;

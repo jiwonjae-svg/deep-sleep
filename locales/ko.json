@@ -336,11 +336,9 @@
     "binaural-beats": "바이노럴 비트",
     "singing-bowl": "싱잉볼",
     "wind-chime": "풍경 (윈드차임)",
-    "music-box": "오르골",
     "cave-echo": "동굴 반향",
     "temple-bells": "사원 종소리",
     "hot-spring": "온천",
-    "cherry-blossom": "벚꽃 비",
     "snow-walking": "눈 밟는 소리",
     "waterfall": "폭포",
     "fountain": "분수",
@@ -351,8 +349,6 @@
     "dryer": "건조기",
     "page-turning": "페이지 넘김",
     "bus": "버스 내부",
-    "lofi-beats": "로파이 비트",
-    "whispering": "속삭임",
     "hair-brushing": "헤어 브러싱"
   },
   "categories": {

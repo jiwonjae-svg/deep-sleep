@@ -85,16 +85,13 @@ const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'binaural-beats': 'psychology',
   'singing-bowl': 'notifications',
   'wind-chime': 'notifications-active',
-  'music-box': 'music-note',
   // Special Environments
   'cave-echo': 'landscape',
   'temple-bells': 'temple-buddhist',
   'hot-spring': 'hot-tub',
   // ASMR
-  'whispering': 'record-voice-over',
   'hair-brushing': 'brush',
   // Seasonal & Special
-  'cherry-blossom': 'local-florist',
   'snow-walking': 'ac-unit',
   // New sounds
   'waterfall': 'water',
@@ -106,7 +103,6 @@ const SOUND_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'dryer': 'air',
   'page-turning': 'menu-book',
   'bus': 'directions-bus',
-  'lofi-beats': 'headphones',
 };
 
 export default function MixerScreen() {

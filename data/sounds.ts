@@ -1,7 +1,7 @@
 import { SoundConfig } from '@/types';
 
 /**
- * v1.4 소리 메타데이터 (56개).
+ * v1.4 소리 메타데이터 (52개).
  * 배리언트 시스템: 같은 종류의 소리는 soundAssets.ts에서 배리언트 배열로 관리.
  * 파일명은 assets/sounds/ 아래에 위치한다고 가정.
  * isPremium=true 인 소리는 ★ 유료 전용.
@@ -81,7 +81,7 @@ export const sounds: SoundConfig[] = [
   { id: 'bus', name: '버스 내부', category: 'urban-transport', type: 'continuous', isPremium: true, iconEmoji: '🚌', fileName: 'bus-1.mp3' },
 
   // ──────────────────────────────────────────────
-  // 음악 & 톤 (Musical & Tonal) — 8개 (무료 5 / 유료 3)
+  // 음악 & 톤 (Musical & Tonal) — 6개 (무료 3 / 유료 3)
   // ──────────────────────────────────────────────
   { id: 'white-noise', name: '화이트 노이즈', category: 'musical-tonal', type: 'continuous', isPremium: false, iconEmoji: '📻', fileName: 'white-noise-1.mp3' },
   { id: 'pink-noise', name: '핑크 노이즈', category: 'musical-tonal', type: 'continuous', isPremium: false, iconEmoji: '🩷', fileName: 'pink-noise-1.mp3' },
@@ -89,8 +89,6 @@ export const sounds: SoundConfig[] = [
   { id: 'binaural-beats', name: '바이노럴 비트', category: 'musical-tonal', type: 'continuous', isPremium: true, iconEmoji: '🧠', fileName: 'binaural-beats-1.mp3' },
   { id: 'singing-bowl', name: '싱잉볼', category: 'musical-tonal', type: 'intermittent', isPremium: false, iconEmoji: '🔔', fileName: 'singing-bowl-1.mp3' },
   { id: 'wind-chime', name: '풍경 (윈드차임)', category: 'musical-tonal', type: 'intermittent', isPremium: true, iconEmoji: '🎐', fileName: 'wind-chime-1.mp3' },
-  { id: 'music-box', name: '오르골', category: 'musical-tonal', type: 'continuous', isPremium: true, iconEmoji: '🎶', fileName: 'music-box-1.mp3' },
-  { id: 'lofi-beats', name: '로파이 비트', category: 'musical-tonal', type: 'continuous', isPremium: false, iconEmoji: '🎧', fileName: 'lofi-beats-1.mp3' },
 
   // ──────────────────────────────────────────────
   // 특수 환경 (Special Environments) — 3개 (유료 3)
@@ -100,15 +98,13 @@ export const sounds: SoundConfig[] = [
   { id: 'hot-spring', name: '온천', category: 'special-environments', type: 'continuous', isPremium: true, iconEmoji: '♨️', fileName: 'hot-spring-1.mp3' },
 
   // ──────────────────────────────────────────────
-  // ASMR — 2개 (유료 2)
+  // ASMR — 1개 (유료 1)
   // ──────────────────────────────────────────────
-  { id: 'whispering', name: '속삭임', category: 'seasonal-special', type: 'continuous', isPremium: true, iconEmoji: '🤫', fileName: 'whispering-1.mp3' },
   { id: 'hair-brushing', name: '헤어 브러싱', category: 'seasonal-special', type: 'continuous', isPremium: true, iconEmoji: '💇', fileName: 'hair-brushing-1.mp3' },
 
   // ──────────────────────────────────────────────
-  // 계절 & 특별 (Seasonal & Special) — 2개 (유료 2)
+  // 계절 & 특별 (Seasonal & Special) — 1개 (유료 1)
   // ──────────────────────────────────────────────
-  { id: 'cherry-blossom', name: '벚꽃 비', category: 'seasonal-special', type: 'continuous', isPremium: true, iconEmoji: '🌸', fileName: 'cherry-blossom-1.mp3' },
   { id: 'snow-walking', name: '눈 밟는 소리', category: 'seasonal-special', type: 'intermittent', isPremium: true, iconEmoji: '❄️', fileName: 'snow-walking-1.mp3' },
 ];
 
