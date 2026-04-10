@@ -93,7 +93,9 @@ export default function HomeScreen() {
   const displayDuration = timer.isActive ? timer.durationMinutes : timer.lastDurationMinutes;
 
   const timerPrecise = formatTimerPrecise(displayMs);
-  const isUnlimited = timer.isActive && timer.durationMinutes >= 99999;
+  const isUnlimited = timer.isActive
+    ? timer.durationMinutes >= 99999
+    : timer.lastDurationMinutes >= 99999;
   const isAlarmSync = timer.isActive && timer.isAlarmSync;
   const timerUnitLabel = displayMs > 0 && !isUnlimited && !isAlarmSync
     ? (displayMs >= 3600000 ? t('home.hourMinLabel') : t('home.minSecLabel'))
