@@ -111,7 +111,19 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
   };
 
   const handleCustomPickerSave = () => {
-    if (tempHours === 0 && tempMinutes === 0) {
+    // Flush pending text input edits
+    let finalHours = tempHours;
+    let finalMinutes = tempMinutes;
+    if (editingHours) {
+      const val = parseInt(hoursText, 10);
+      if (!isNaN(val) && val >= 0 && val <= 23) finalHours = val;
+    }
+    if (editingMinutes) {
+      const val = parseInt(minutesText, 10);
+      if (!isNaN(val) && val >= 0 && val <= 59) finalMinutes = val;
+    }
+
+    if (finalHours === 0 && finalMinutes === 0) {
       // Revert to previous state
       if (prevState) {
         setSelectedQuick(prevState.quick);
@@ -120,12 +132,16 @@ export function TimerModal({ visible, onClose, onStart }: TimerModalProps) {
         setUseCustom(false);
       }
     } else {
-      setCustomHours(tempHours);
-      setCustomMinutes(tempMinutes);
+      setCustomHours(finalHours);
+      setCustomMinutes(finalMinutes);
+      setTempHours(finalHours);
+      setTempMinutes(finalMinutes);
       setUseCustom(true);
       setUseAlarmSync(false);
       setUseUnlimited(false);
     }
+    setEditingHours(false);
+    setEditingMinutes(false);
     setCustomPickerVisible(false);
     setPrevState(null);
   };

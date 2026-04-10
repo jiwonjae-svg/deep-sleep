@@ -17,8 +17,8 @@ import { useAudioStore } from '@/stores/useAudioStore';
 const PREVIEW_VOLUME = 0.7;
 const FADE_MS = 750;
 const FADE_STEP_MS = 50;
-const CROSSFADE_MS = 500;
-const CROSSFADE_TRIGGER_MS = 2000; // createAsync 지연 포함 트리거 시점
+const CROSSFADE_MS = 1500;
+const CROSSFADE_TRIGGER_MS = 3000; // createAsync 지연 + 크로스페이드 듀레이션 포함 트리거 시점
 const CROSSFADE_STEP_MS = 50;
 
 let currentSound: Audio.Sound | null = null;
@@ -171,9 +171,9 @@ export async function startPreview(soundId: string): Promise<void> {
   // 연타 방지: 새 토큰 발급 → 이전 작업 자동 무효화
   const myToken = ++operationToken;
 
-  // 같은 소리: 즉시 정지 (토글) — 페이드아웃 없이 즉시 정지하여 레이스 컨디션 방지
+  // 같은 소리: 페이드아웃으로 정지 (토글)
   if (currentSoundId === soundId) {
-    await stopImmediate();
+    await stopPreview();
     return;
   }
 

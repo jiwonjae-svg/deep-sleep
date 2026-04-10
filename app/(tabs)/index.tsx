@@ -209,7 +209,8 @@ export default function HomeScreen() {
   );
 
   const handleTimerStart = (minutes: number, alarmSync?: boolean) => {
-    startTimer(minutes, alarmSync);
+    // 타이머 설정만 저장 (시작하지 않음) — 재생 시 자동 시작
+    useTimerStore.getState().setTimerConfig(minutes);
   };
 
   return (

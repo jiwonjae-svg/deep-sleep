@@ -38,6 +38,8 @@ interface TimerStoreActions {
   advancePhase: () => void;
   /** 현재 잔여 시간을 스냅샷으로 저장 (정지/종료 시 호출) */
   saveSnapshot: (remainingMs: number) => void;
+  /** 타이머 설정만 저장 (시작하지 않음 — UI 표시용 스냅샷 갱신) */
+  setTimerConfig: (minutes: number) => void;
   /** 앱 기동 시 AsyncStorage에서 마지막 상태 복원 */
   restoreSnapshot: () => Promise<void>;
 }
@@ -105,6 +107,12 @@ export const useTimerStore = create<TimerStoreState & TimerStoreActions>((set, g
     const display = remainingMs <= 0 ? dur * 60 * 1000 : remainingMs;
     set({ lastRemainingMs: display, lastDurationMinutes: dur });
     persistSnapshot({ remainingMs: display, durationMinutes: dur }).catch(() => {});
+  },
+
+  setTimerConfig: (minutes: number) => {
+    const ms = minutes * 60 * 1000;
+    set({ lastRemainingMs: ms, lastDurationMinutes: minutes });
+    persistSnapshot({ remainingMs: ms, durationMinutes: minutes }).catch(() => {});
   },
 
   restoreSnapshot: async () => {

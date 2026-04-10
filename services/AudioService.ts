@@ -37,8 +37,8 @@ let fadeFactor = 1.0;
 const FADE_IN_MS = 750;
 const FADE_OUT_MS = 750;
 const MASTER_LOOP_MS = 50; // 20fps — 페이드 + 볼륨 동시 처리
-const CROSSFADE_MS = 750;
-const CROSSFADE_TRIGGER_MS = 2500; // 크로스페이드 프로세스 시작 시점 (createAsync 지연 포함)
+const CROSSFADE_MS = 2000;
+const CROSSFADE_TRIGGER_MS = 3500; // 크로스페이드 프로세스 시작 시점 (createAsync 지연 + 크로스페이드 듀레이션 포함)
 const CROSSFADE_STEP_MS = 50; // 배리언트 크로스페이드 스텝
 
 // 페이드 상태
@@ -533,7 +533,7 @@ export async function startMix(): Promise<void> {
   }
 }
 
-/** 즉시 정지: UI 즉시 반영, 모든 소리 즉시 음소거 후 비동기 정리 */
+/** 즉시 정지: UI 즉시 반영, 페이드아웃 후 비동기 정리 */
 export function stopAll(): void {
   isSystemStopping = true;
   stopCleanupCancelled = false;
@@ -551,30 +551,33 @@ export function stopAll(): void {
   store.setPlaying(false);
   timerExpiryHandled = true; // 마스터 루프의 타이머 체크 비활성화
 
-  // 즉시 모든 소리 볼륨 0 + 마스터 루프 정지 (연타 시 잔류 음원 방지)
-  fadeFactor = 0;
-  fadeState = 'none';
-  if (fadeResolve) { fadeResolve(); fadeResolve = null; }
-  for (const [, sound] of soundPool) {
-    sound.setVolumeAsync(0).catch(() => {});
-  }
-  for (const old of crossfadeOutSounds) {
-    old.setVolumeAsync(0).catch(() => {});
-  }
-  stopMasterLoop();
+  // 리니어 페이드아웃 후 정리 (마스터 루프 유지)
+  fadeOut(FADE_OUT_MS).then(() => {
+    if (stopCleanupCancelled) return;
 
-  // 비동기 정리
-  cleanupSoundPool()
-    .then(() => {
-      if (stopCleanupCancelled) return;
-      useAudioStore.getState().clearPresetSounds();
-      isSystemStopping = false;
-    })
-    .catch(() => {
-      if (stopCleanupCancelled) return;
-      useAudioStore.getState().clearPresetSounds();
-      isSystemStopping = false;
-    });
+    // 페이드아웃 완료: 즉시 음소거 + 마스터 루프 정지
+    fadeFactor = 0;
+    for (const [, sound] of soundPool) {
+      sound.setVolumeAsync(0).catch(() => {});
+    }
+    for (const old of crossfadeOutSounds) {
+      old.setVolumeAsync(0).catch(() => {});
+    }
+    stopMasterLoop();
+
+    // 비동기 정리
+    cleanupSoundPool()
+      .then(() => {
+        if (stopCleanupCancelled) return;
+        useAudioStore.getState().clearPresetSounds();
+        isSystemStopping = false;
+      })
+      .catch(() => {
+        if (stopCleanupCancelled) return;
+        useAudioStore.getState().clearPresetSounds();
+        isSystemStopping = false;
+      });
+  });
 }
 
 /** 프리셋 적용 — 재생 중이면 크로스페이드 전환 */
