@@ -3,6 +3,7 @@ import { View, Text, Pressable, StyleSheet, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, {
   useSharedValue,
+  useAnimatedStyle,
   withTiming,
   Easing,
 } from 'react-native-reanimated';
@@ -46,6 +47,10 @@ export default function PlayingScreen() {
   // Opacity: 탭하면 0.6, 3초 후 0.1로
   const opacity = useSharedValue(0.1);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const opacityStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
 
   useEffect(() => {
     const id = setInterval(() => setClock(getCurrentTimeString()), 1000);
@@ -115,7 +120,7 @@ export default function PlayingScreen() {
     <Pressable style={styles.container} onPress={handleTap}>
       <StatusBar hidden />
 
-      <Animated.View style={[styles.content, { opacity }]}>
+      <Animated.View style={[styles.content, opacityStyle]}>
         {/* Clock */}
         <Text style={styles.clock}>{clock}</Text>
 
@@ -126,7 +131,7 @@ export default function PlayingScreen() {
       </Animated.View>
 
       {/* Stop button (always at bottom) */}
-      <Animated.View style={[styles.stopArea, { opacity }]}>
+      <Animated.View style={[styles.stopArea, opacityStyle]}>
         <Pressable
           style={styles.stopBtn}
           onLongPress={handleLongPress}

@@ -4,6 +4,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useDerivedValue,
+  useAnimatedStyle,
   runOnJS,
 } from 'react-native-reanimated';
 import { useThemeColors, typography } from '@/theme';
@@ -129,6 +130,17 @@ export function RangeSlider({
   const minHandlePos = useDerivedValue(() => minX.value - 12);
   const maxHandlePos = useDerivedValue(() => maxX.value - 12);
 
+  const activeTrackAnimStyle = useAnimatedStyle(() => ({
+    left: minX.value,
+    width: activeWidth.value,
+  }));
+  const minHandleAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: minHandlePos.value }],
+  }));
+  const maxHandleAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: maxHandlePos.value }],
+  }));
+
   return (
     <View>
       <View style={styles.container} onLayout={onLayout}>
@@ -136,16 +148,16 @@ export function RangeSlider({
         <View style={[styles.track, { backgroundColor: resolvedTrackColor }]} />
 
         {/* Active range */}
-        <Animated.View style={[styles.activeTrack, { backgroundColor: resolvedActiveColor, left: minX, width: activeWidth }]} />
+        <Animated.View style={[styles.activeTrack, { backgroundColor: resolvedActiveColor }, activeTrackAnimStyle]} />
 
         {/* Min handle */}
         <GestureDetector gesture={minPan}>
-          <Animated.View style={[styles.handle, { backgroundColor: resolvedActiveColor, transform: [{ translateX: minHandlePos }] }]} />
+          <Animated.View style={[styles.handle, { backgroundColor: resolvedActiveColor }, minHandleAnimStyle]} />
         </GestureDetector>
 
         {/* Max handle */}
         <GestureDetector gesture={maxPan}>
-          <Animated.View style={[styles.handle, { backgroundColor: resolvedActiveColor, transform: [{ translateX: maxHandlePos }] }]} />
+          <Animated.View style={[styles.handle, { backgroundColor: resolvedActiveColor }, maxHandleAnimStyle]} />
         </GestureDetector>
       </View>
 

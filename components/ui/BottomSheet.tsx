@@ -3,6 +3,7 @@ import { View, Pressable, StyleSheet, BackHandler, useWindowDimensions } from 'r
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
+  useAnimatedStyle,
   withTiming,
   runOnJS,
 } from 'react-native-reanimated';
@@ -27,6 +28,12 @@ export function BottomSheet({
   const overlayOpacity = useSharedValue(0);
   const themeColors = useThemeColors();
   const [mounted, setMounted] = useState(false);
+  const overlayAnimStyle = useAnimatedStyle(() => ({
+    opacity: overlayOpacity.value,
+  }));
+  const sheetAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
   const styles = useMemo(
     () =>
       StyleSheet.create({
@@ -106,12 +113,12 @@ export function BottomSheet({
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {/* Overlay */}
-      <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
+      <Animated.View style={[styles.overlay, overlayAnimStyle]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
       </Animated.View>
 
       {/* Sheet */}
-      <Animated.View style={[styles.sheet, { maxHeight, transform: [{ translateY }] }]}>
+      <Animated.View style={[styles.sheet, { maxHeight }, sheetAnimStyle]}>
         <GestureDetector gesture={pan}>
           <View style={styles.handleBar} />
         </GestureDetector>

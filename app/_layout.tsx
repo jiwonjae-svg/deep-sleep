@@ -14,7 +14,7 @@ import { useAlarmStore } from '@/stores/useAlarmStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAIStore } from '@/stores/useAIStore';
 import { initAudioMode, cleanupAudio } from '@/services/AudioService';
-import { configureNotifications, setupAlarmListeners, requestAlarmPermissions } from '@/services/AlarmService';
+import { configureNotifications, setupAlarmListeners, requestAlarmPermissions, getInitialAlarmNotification } from '@/services/AlarmService';
 import { ThemeProvider, useThemeColors, useIsDarkTheme } from '@/theme';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { STORAGE_KEYS } from '@/utils/constants';
@@ -66,6 +66,19 @@ function ThemedApp() {
     });
     return () => { listenerCleanupRef.current?.(); };
   }, [router]);
+
+  // 콜드 스타트: 앱 종료 상태에서 알림 탭으로 열린 경우 alarm-dismiss로 이동
+  useEffect(() => {
+    getInitialAlarmNotification().then((alarmId) => {
+      if (alarmId) {
+        // 라우터 초기화 완료 후 이동 (약간의 딜레이)
+        setTimeout(() => {
+          router.push({ pathname: '/alarm-dismiss', params: { alarmId } });
+        }, 400);
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Android: 정확한 알람 + 알림 권한 요청
   useEffect(() => {

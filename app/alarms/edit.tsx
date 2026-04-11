@@ -93,7 +93,9 @@ function SimpleCalendar({ selectedDate, onSelectDate }: { selectedDate: string; 
               onPress={() => !isPast && onSelectDate(dateStr)}
               disabled={isPast}
             >
-              <View style={[calStyles.cellCircle, isSelected && [calStyles.cellCircleSelected, { backgroundColor: themeColors.accent1 }], isToday && !isSelected && calStyles.cellCircleToday]}>
+              <View style={calStyles.cellCircle}>
+                {isSelected && <View style={[calStyles.cellCircleBg, { backgroundColor: themeColors.accent1 }]} />}
+                {isToday && !isSelected && <View style={calStyles.cellCircleTodayRing} />}
                 <Text style={[calStyles.cellText, isSelected && calStyles.cellTextSelected, isPast && calStyles.cellTextPast]}>
                   {day}
                 </Text>
@@ -115,9 +117,9 @@ const calStyles = StyleSheet.create({
   weekDay: { flex: 1, textAlign: 'center', fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.4)', letterSpacing: 1, textTransform: 'uppercase' },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
   cell: { width: '14.285%', aspectRatio: 1, alignItems: 'center', justifyContent: 'center' },
-  cellCircle: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  cellCircleSelected: { backgroundColor: '#456eea' },
-  cellCircleToday: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
+  cellCircle: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
+  cellCircleBg: { position: 'absolute', width: 34, height: 34, borderRadius: 17, overflow: 'hidden' },
+  cellCircleTodayRing: { position: 'absolute', width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
   cellText: { fontSize: 13, fontWeight: '600', color: '#ffffff' },
   cellTextSelected: { color: '#ffffff', fontWeight: '800' },
   cellTextPast: { color: 'rgba(255,255,255,0.2)' },
@@ -228,7 +230,7 @@ export default function AlarmEditScreen() {
       style={styles.overlay}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Pressable style={StyleSheet.absoluteFill} onPress={() => animateClose(() => router.back())} />
+      <View style={StyleSheet.absoluteFill} onStartShouldSetResponder={() => true} onResponderRelease={() => animateClose(() => router.back())} />
       <Animated.View style={[styles.dialog, { transform: [{ scale: scaleAnim }] }]}>
         <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>{isNew ? t('alarms.addTitle') : t('alarms.editTitle')}</Text>
@@ -398,10 +400,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
     padding: 12,
+    marginRight: 4,
     fontSize: 14,
     color: '#ffffff',
   },
-  toggleRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8, paddingRight: 4 },
   buttonGroup: { gap: 12, marginTop: 20 },
   soundRow: {
     flexDirection: 'row',

@@ -3,6 +3,7 @@ import { View, StyleSheet, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useSharedValue,
+  useAnimatedStyle,
   withTiming,
   Easing,
 } from 'react-native-reanimated';
@@ -45,6 +46,9 @@ export function GradientBackground({
   const indexARef = useRef(0);
   const indexBRef = useRef(1 % gradients.length);
   const opacityB = useSharedValue(0);
+  const opacityBStyle = useAnimatedStyle(() => ({
+    opacity: opacityB.value,
+  }));
 
   const [gradA, setGradA] = useState(gradients[0]);
   const [gradB, setGradB] = useState(gradients[1 % gradients.length]);
@@ -82,7 +86,7 @@ export function GradientBackground({
         end={gradA.end ?? { x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: opacityB }]}>
+      <Animated.View style={[StyleSheet.absoluteFill, opacityBStyle]}>
         <LinearGradient
           colors={gradB.colors}
           start={gradB.start ?? { x: 0, y: 0 }}

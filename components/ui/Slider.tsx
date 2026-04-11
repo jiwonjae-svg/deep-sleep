@@ -4,6 +4,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useDerivedValue,
+  useAnimatedStyle,
   runOnJS,
 } from 'react-native-reanimated';
 import { useThemeColors, typography } from '@/theme';
@@ -98,13 +99,20 @@ export function Slider({
 
   const handlePos = useDerivedValue(() => handleX.value - 12);
 
+  const activeTrackAnimStyle = useAnimatedStyle(() => ({
+    width: handleX.value,
+  }));
+  const handleAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: handlePos.value }],
+  }));
+
   return (
     <View>
       <GestureDetector gesture={gesture}>
         <View style={styles.container} onLayout={onLayout}>
           <View style={[styles.track, { backgroundColor: resolvedTrackColor }]} />
-          <Animated.View style={[styles.activeTrack, { backgroundColor: resolvedActiveColor, width: handleX }]} />
-          <Animated.View style={[styles.handle, { backgroundColor: resolvedActiveColor, transform: [{ translateX: handlePos }] }]} />
+          <Animated.View style={[styles.activeTrack, { backgroundColor: resolvedActiveColor }, activeTrackAnimStyle]} />
+          <Animated.View style={[styles.handle, { backgroundColor: resolvedActiveColor }, handleAnimStyle]} />
         </View>
       </GestureDetector>
       {showLabel && (

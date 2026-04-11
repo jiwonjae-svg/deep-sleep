@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Pressable, View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
+  useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
 import { useThemeColors } from '@/theme';
@@ -20,7 +21,9 @@ export function Toggle({ value, onValueChange, disabled = false }: ToggleProps) 
     offset.value = withTiming(value ? 14 : 0, { duration: 200 });
   }, [value]);
 
-
+  const animatedHandleStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: offset.value }],
+  }));
 
   const styles = useMemo(
     () =>
@@ -57,7 +60,7 @@ export function Toggle({ value, onValueChange, disabled = false }: ToggleProps) 
         style={[
           styles.handle,
           value ? styles.handleActive : styles.handleInactive,
-          { transform: [{ translateX: offset }] },
+          animatedHandleStyle,
         ]}
       />
     </Pressable>

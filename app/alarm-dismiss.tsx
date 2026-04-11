@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet, Vibration, Image } from 'react-native';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
+  useAnimatedStyle,
   withSpring,
   runOnJS,
 } from 'react-native-reanimated';
@@ -47,6 +49,12 @@ export default function AlarmDismissScreen() {
       }),
     [themeColors],
   );
+
+  // 알람 화면 표시 중 화면 꺼짐 방지
+  useEffect(() => {
+    activateKeepAwakeAsync();
+    return () => { deactivateKeepAwake(); };
+  }, []);
 
   // 알람 페이드인 오디오
   const alarmSoundRef = useRef<Audio.Sound | null>(null);
@@ -118,6 +126,10 @@ export default function AlarmDismissScreen() {
   // 수학 문제 없으면 스와이프 모드
   const translateX = useSharedValue(0);
 
+  const swipeAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
   const dismiss = () => {
     Vibration.cancel();
     // 알람 페이드인 오디오 정리
@@ -177,7 +189,7 @@ export default function AlarmDismissScreen() {
         </View>
       ) : (
         <GestureDetector gesture={pan}>
-          <Animated.View style={[styles.swipeArea, { transform: [{ translateX }] }]}>
+          <Animated.View style={[styles.swipeArea, swipeAnimatedStyle]}>
             <Text style={styles.swipeText}>{t('alarms.swipeToDismiss')}</Text>
           </Animated.View>
         </GestureDetector>

@@ -70,8 +70,10 @@ export async function scheduleAlarm(alarm: Alarm): Promise<string | null> {
         content: {
           title: '⏰ Deep Sleep 알람',
           body: alarm.label || '일어날 시간이에요!',
-          sound: 'alarm-default.wav',
+          sound: true, // 시스템 기본 알람 사운드 사용 (alarm-default.wav 미존재)
           priority: Notifications.AndroidNotificationPriority.MAX,
+          sticky: true,      // 사용자가 직접 해제할 때까지 알림 유지
+          autoDismiss: false, // 탭해도 자동 사라지지 않음
           data: { alarmId: alarm.id, type: 'alarm' },
           ...(Platform.OS === 'android' ? { channelId: 'alarm-channel' } : {}),
         },
@@ -89,8 +91,10 @@ export async function scheduleAlarm(alarm: Alarm): Promise<string | null> {
           content: {
             title: '⏰ Deep Sleep 알람',
             body: alarm.label || '일어날 시간이에요!',
-            sound: 'alarm-default.wav',
+            sound: true,
             priority: Notifications.AndroidNotificationPriority.MAX,
+            sticky: true,
+            autoDismiss: false,
             data: { alarmId: alarm.id, type: 'alarm' },
             ...(Platform.OS === 'android' ? { channelId: 'alarm-channel' } : {}),
           },
@@ -110,8 +114,10 @@ export async function scheduleAlarm(alarm: Alarm): Promise<string | null> {
         content: {
           title: '⏰ Deep Sleep 알람',
           body: alarm.label || '일어날 시간이에요!',
-          sound: 'alarm-default.wav',
+          sound: true,
           priority: Notifications.AndroidNotificationPriority.MAX,
+          sticky: true,
+          autoDismiss: false,
           data: { alarmId: alarm.id, type: 'alarm' },
           ...(Platform.OS === 'android' ? { channelId: 'alarm-channel' } : {}),
         },
@@ -148,8 +154,10 @@ export async function snooze(alarm: Alarm, minutes: number): Promise<void> {
     content: {
       title: '⏰ Deep Sleep 스누즈',
       body: alarm.label || '스누즈 알람이에요!',
-      sound: 'alarm-default.wav',
+      sound: true,
       priority: Notifications.AndroidNotificationPriority.MAX,
+      sticky: true,
+      autoDismiss: false,
       data: { alarmId: alarm.id, type: 'snooze' },
       ...(Platform.OS === 'android' ? { channelId: 'alarm-channel' } : {}),
     },
@@ -159,6 +167,7 @@ export async function snooze(alarm: Alarm, minutes: number): Promise<void> {
     },
   });
 }
+
 
 /** 수학 문제 생성 (AlarmService를 통해 노출) */
 export { generateMathProblem };
@@ -222,11 +231,30 @@ export async function requestAlarmPermissions(): Promise<void> {
     await Notifications.setNotificationChannelAsync('alarm-channel', {
       name: '알람',
       importance: Notifications.AndroidImportance.MAX,
-      sound: 'alarm-default.wav',
+      // 커스텀 사운드 미지정 → 시스템 기본 알람 사운드 사용
       vibrationPattern: [0, 500, 500, 500],
       lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
       bypassDnd: true,
       enableVibrate: true,
     });
+  }
+}
+
+/**
+ * 앱 콜드 스타트 시 마지막 알림 응답 확인.
+ * 앱이 종료된 상태에서 알림을 탭하여 앱이 열린 경우 알람 ID를 반환.
+ */
+export async function getInitialAlarmNotification(): Promise<string | null> {
+  try {
+    const Notifications = getNotifications();
+    const response = await Notifications.getLastNotificationResponseAsync();
+    if (!response) return null;
+    const data = response.notification.request.content.data;
+    if (data?.type === 'alarm' || data?.type === 'snooze') {
+      return data.alarmId as string;
+    }
+    return null;
+  } catch {
+    return null;
   }
 }

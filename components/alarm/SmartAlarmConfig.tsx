@@ -91,7 +91,7 @@ export function SmartAlarmConfigView({ config, onChange }: Props) {
 }
 
 const styles = StyleSheet.create({
-  toggleRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8, paddingRight: 4 },
   sectionTitle: {
     fontSize: 14,
     fontWeight: '700',

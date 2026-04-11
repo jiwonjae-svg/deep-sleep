@@ -57,8 +57,8 @@ let isSystemStopping = false;
 // 앱 포그라운드 상태 추적
 let isAppForeground = AppState.currentState === 'active';
 const crossfadeTimerMap = new Map<string, ReturnType<typeof setInterval>>();
-// stopAll() 비동기 정리 취소 토큰
-let stopCleanupCancelled = false;
+// startMix/stopAll 세대 카운터: 이전 비동기 작업 무효화
+let mixGeneration = 0;
 
 // 백그라운드 안전 폴링 카운터 (2초마다 실행)
 let bgSafetyCounter = 0;
@@ -496,10 +496,10 @@ function scheduleIntermittent(soundId: string) {
 // ──────────────────────────────────────────────
 
 export async function startMix(): Promise<void> {
-  // 이전 stopAll()의 비동기 정리 취소
-  stopCleanupCancelled = true;
+  const gen = ++mixGeneration;
   isSystemStopping = false;
   await cleanupSoundPool();
+  if (gen !== mixGeneration) return; // 다른 startMix/stopAll이 호출됨
   isPausedForPreview = false;
 
   // 프리뷰 재생 중이면 즉시 정지 (순환 의존 회피를 위해 lazy require)
@@ -529,19 +529,32 @@ export async function startMix(): Promise<void> {
     }),
   );
 
+  // 로드 중 다른 startMix/stopAll이 호출되었으면 중단
+  if (gen !== mixGeneration) return;
+
   for (const result of loadResults) {
     if (!result) continue;
+    if (gen !== mixGeneration) return;
     const { state, sound, meta } = result;
 
-    await sound.setVolumeAsync(0);
+    try {
+      await sound.setVolumeAsync(0);
+    } catch { continue; }
+    if (gen !== mixGeneration) return;
+
     soundCrossfadeFactor.set(state.soundId, 1);
-    await sound.playAsync();
+    try {
+      await sound.playAsync();
+    } catch { continue; }
+    if (gen !== mixGeneration) return;
 
     // 간헐적 소리는 별도 스케줄링
     if (meta.type === 'intermittent') {
       scheduleIntermittent(state.soundId);
     }
   }
+
+  if (gen !== mixGeneration) return;
 
   // 마스터 루프 시작 (페르린 볼륨 + 페이드 + 타이머 체크를 단일 인터벌로 처리)
   startMasterLoop();
@@ -561,8 +574,8 @@ export async function startMix(): Promise<void> {
  *  cleanupSoundPool()은 내부에서 stopMasterLoop()을 동기적으로 호출하므로
  *  마스터 루프와 사운드 언로드 간 레이스 컨디션 없음. */
 export function stopAll(): void {
+  const gen = ++mixGeneration;
   isSystemStopping = true;
-  stopCleanupCancelled = false;
 
   // 타이머 잔여 시간 스냅샷 저장 후 타이머 취소
   const timerState = useTimerStore.getState();
@@ -579,7 +592,7 @@ export function stopAll(): void {
 
   // 리니어 페이드아웃 (마스터 루프 유지 — 볼륨 자연 감소)
   fadeOut(FADE_OUT_MS).then(() => {
-    if (stopCleanupCancelled) return; // startMix()가 호출되어 취소됨
+    if (gen !== mixGeneration) return; // startMix()가 호출되어 무효화됨
 
     // 페이드아웃 완료: 즉시 음소거 후 정리
     fadeFactor = 0;
@@ -593,12 +606,12 @@ export function stopAll(): void {
     // cleanupSoundPool()이 내부에서 stopMasterLoop() 동기 호출 → 안전
     cleanupSoundPool()
       .then(() => {
-        if (stopCleanupCancelled) return;
+        if (gen !== mixGeneration) return;
         useAudioStore.getState().clearPresetSounds();
         isSystemStopping = false;
       })
       .catch(() => {
-        if (stopCleanupCancelled) return;
+        if (gen !== mixGeneration) return;
         useAudioStore.getState().clearPresetSounds();
         isSystemStopping = false;
       });
@@ -607,6 +620,8 @@ export function stopAll(): void {
 
 /** 프리셋 적용 — 재생 중이면 크로스페이드 전환 */
 export async function applyPreset(sounds: ActiveSoundState[], presetId: string): Promise<void> {
+  const gen = ++mixGeneration;
+  isSystemStopping = false;
   const store = useAudioStore.getState();
   const wasPlaying = store.isPlaying;
 
@@ -616,11 +631,14 @@ export async function applyPreset(sounds: ActiveSoundState[], presetId: string):
     await cleanupSoundPool();
   }
 
+  // 페이드/정리 중 stopAll() 또는 다른 applyPreset()이 호출됐으면 중단
+  if (gen !== mixGeneration) return;
+
   // 프리셋 소리는 presetSounds에 설정 (activeSounds는 건드리지 않음)
   store.setPresetSounds(sounds);
   store.setActivePresetId(presetId);
 
-  // 재생 시작 (페이드인 포함)
+  // 재생 시작 (페이드인 포함) — startMix 내부에서 gen 체크
   await startMix();
 }
 
@@ -673,6 +691,7 @@ function checkTimerExpiry(): void {
   if (remaining <= 0) {
     // 타이머 만료: 즉시 정지 (재진입 방지)
     timerExpiryHandled = true;
+    ++mixGeneration; // 진행 중인 startMix/stopAll 무효화
     timer.saveSnapshot(0);
     timer.cancelTimer();
     fadeFactor = 0;
@@ -765,6 +784,7 @@ AppState.addEventListener('change', (nextState) => {
   isAppForeground = nextState === 'active';
 
   if (nextState !== 'active' && isSystemStopping) {
+    ++mixGeneration; // 진행 중인 비동기 작업 무효화
     stopMasterLoop();
     fadeFactor = 0;
     for (const [, sound] of soundPool) {

@@ -166,45 +166,47 @@ export default function HomeScreen() {
   const colonAnimatedStyle = useAnimatedStyle(() => ({ opacity: colonOpacity.value }));
   const scaleAnimatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
-  // 재생/정지 연타 방지 (debounce lock)
+  // 재생/정지 연타 방지 (작업 완료 전 재입력 차단)
   const playLockRef = useRef(false);
 
-  const handlePlayToggle = () => {
+  const handlePlayToggle = async () => {
     if (playLockRef.current) return;
     playLockRef.current = true;
-    setTimeout(() => { playLockRef.current = false; }, 300);
-
-    if (isPlaying) {
-      stop();
-    } else if (currentPreset) {
-      applyPreset(currentPreset);
-      // 타이머 미설정 시 스냅샷 잔여 시간(ms 정밀도) 또는 기본 15분 타이머 시작
-      if (!timer.isActive) {
-        if (timer.lastRemainingMs > 0) {
-          useTimerStore.getState().startTimerFromMs(timer.lastRemainingMs, timer.lastDurationMinutes);
-        } else {
-          startTimer(15);
+    try {
+      if (isPlaying) {
+        stop();
+      } else if (currentPreset) {
+        // 타이머 먼저 설정(동기), 그 다음 프리셋 재생(비동기)
+        if (!timer.isActive) {
+          if (timer.lastRemainingMs > 0) {
+            useTimerStore.getState().startTimerFromMs(timer.lastRemainingMs, timer.lastDurationMinutes);
+          } else {
+            startTimer(15);
+          }
         }
-      }
-    } else {
-      play();
-      if (!timer.isActive) {
-        if (timer.lastRemainingMs > 0) {
-          useTimerStore.getState().startTimerFromMs(timer.lastRemainingMs, timer.lastDurationMinutes);
-        } else {
-          startTimer(15);
+        await applyPreset(currentPreset);
+      } else {
+        if (!timer.isActive) {
+          if (timer.lastRemainingMs > 0) {
+            useTimerStore.getState().startTimerFromMs(timer.lastRemainingMs, timer.lastDurationMinutes);
+          } else {
+            startTimer(15);
+          }
         }
+        await play();
       }
+    } finally {
+      playLockRef.current = false;
     }
   };
 
   const handlePresetSelect = useCallback(
-    (preset: Preset, index: number) => {
+    async (preset: Preset, index: number) => {
       setSelectedPresetIndex(index);
       setPresetPickerVisible(false);
       // 재생 중이면 새 프리셋으로 크로스페이드 전환
       if (isPlaying) {
-        applyPreset(preset);
+        await applyPreset(preset);
       }
     },
     [isPlaying, applyPreset],
