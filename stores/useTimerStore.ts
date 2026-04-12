@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { TimerSchedule } from '@/types';
 import { STORAGE_KEYS } from '@/utils/constants';
 
 interface LastTimerSnapshot {
@@ -17,10 +16,6 @@ interface TimerStoreState {
   isActive: boolean;
   /** 알람 연동 모드 여부 */
   isAlarmSync: boolean;
-  /** 고급 모드: 사운드 전환 스케줄 */
-  schedule: TimerSchedule | null;
-  /** 고급 모드: 현재 실행 중인 phase 인덱스 */
-  currentPhaseIndex: number;
   /** 마지막 표시용 잔여 시간 (ms) — 앱 재시작 시 복원 */
   lastRemainingMs: number;
   /** 마지막 표시용 설정 시간 (분) */
@@ -34,8 +29,6 @@ interface TimerStoreActions {
   /** 밀리초 단위로 타이머 시작 (스냅샷 복원용, 초 단위 정밀도 유지) */
   startTimerFromMs: (ms: number, originalDurationMinutes?: number) => void;
   cancelTimer: () => void;
-  setSchedule: (schedule: TimerSchedule | null) => void;
-  advancePhase: () => void;
   /** 현재 잔여 시간을 스냅샷으로 저장 (정지/종료 시 호출) */
   saveSnapshot: (remainingMs: number) => void;
   /** 타이머 설정만 저장 (시작하지 않음 — UI 표시용 스냅샷 갱신) */
@@ -53,8 +46,6 @@ export const useTimerStore = create<TimerStoreState & TimerStoreActions>((set, g
   durationMinutes: 0,
   isActive: false,
   isAlarmSync: false,
-  schedule: null,
-  currentPhaseIndex: 0,
   lastRemainingMs: 15 * 60 * 1000, // 초기값: 15분
   lastDurationMinutes: 15,
   restored: false,
@@ -65,7 +56,6 @@ export const useTimerStore = create<TimerStoreState & TimerStoreActions>((set, g
       durationMinutes: minutes,
       isActive: true,
       isAlarmSync: alarmSync,
-      currentPhaseIndex: 0,
     }),
 
   startTimerFromMs: (ms, originalDurationMinutes) =>
@@ -74,7 +64,6 @@ export const useTimerStore = create<TimerStoreState & TimerStoreActions>((set, g
       durationMinutes: originalDurationMinutes ?? Math.ceil(ms / 60_000),
       isActive: true,
       isAlarmSync: false,
-      currentPhaseIndex: 0,
     }),
 
   cancelTimer: () =>
@@ -83,22 +72,7 @@ export const useTimerStore = create<TimerStoreState & TimerStoreActions>((set, g
       durationMinutes: 0,
       isActive: false,
       isAlarmSync: false,
-      schedule: null,
-      currentPhaseIndex: 0,
     }),
-
-  setSchedule: (schedule) => set({ schedule }),
-
-  advancePhase: () => {
-    const { schedule, currentPhaseIndex } = get();
-    if (!schedule) return;
-    const nextIndex = currentPhaseIndex + 1;
-    if (nextIndex < schedule.phases.length) {
-      set({ currentPhaseIndex: nextIndex });
-    } else if (schedule.loopLastPhase) {
-      set({ currentPhaseIndex: schedule.phases.length - 1 });
-    }
-  },
 
   saveSnapshot: (remainingMs: number) => {
     const { durationMinutes } = get();

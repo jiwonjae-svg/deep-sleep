@@ -501,30 +501,4 @@
     "trend_stable": "유지",
     "trend_decreasing": "감소 중"
   },
-  "focus": {
-    "title": "집중 모드",
-    "focusing": "집중 중",
-    "shortBreak": "짧은 휴식",
-    "longBreak": "긴 휴식",
-    "ready": "준비",
-    "sessionsCompleted": "{{count}}세션 완료",
-    "timerPreset": "타이머",
-    "soundPreset": "집중 사운드",
-    "noSound": "없음",
-    "stats": "집중 통계",
-    "today": "오늘",
-    "thisWeek": "이번 주"
-  },
-  "focusPresets": {
-    "cafe": "카페 집중",
-    "cafe-desc": "카페의 아늑한 분위기",
-    "rain": "비 오는 날 작업",
-    "rain-desc": "빗소리와 함께 집중",
-    "brown": "브라운 노이즈",
-    "brown-desc": "깊은 집중을 위한 노이즈",
-    "nature": "자연 속 작업",
-    "nature-desc": "새소리와 시냇물",
-    "library": "도서관",
-    "library-desc": "조용한 도서관 분위기"
-  }
 }

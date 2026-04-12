@@ -151,24 +151,6 @@ export interface CategoryInfo {
 }
 
 // ──────────────────────────────────────────────
-// Timer Advanced Mode (3.4)
-// ──────────────────────────────────────────────
-
-export type TimerTransitionType = 'crossfade' | 'cut';
-
-export interface TimerPhase {
-  presetId: string;
-  durationMinutes: number;
-  transitionType: TimerTransitionType;
-  crossfadeSec: number;
-}
-
-export interface TimerSchedule {
-  phases: TimerPhase[];
-  loopLastPhase: boolean;
-}
-
-// ──────────────────────────────────────────────
 // Smart Alarm (3.7)
 // ──────────────────────────────────────────────
 
@@ -214,21 +196,4 @@ export interface DailyDebtRecord {
 
 export type DebtTrend = 'increasing' | 'stable' | 'decreasing';
 
-// ──────────────────────────────────────────────
-// Focus Mode (3.10)
-// ──────────────────────────────────────────────
 
-export type FocusPhase = 'focus' | 'short-break' | 'long-break' | 'idle';
-
-export interface FocusConfig {
-  focusMinutes: number;
-  shortBreakMinutes: number;
-  longBreakMinutes: number;
-  sessionsBeforeLongBreak: number;
-}
-
-export interface FocusSessionRecord {
-  date: string; // YYYY-MM-DD
-  totalFocusMinutes: number;
-  sessionsCompleted: number;
-}

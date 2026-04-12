@@ -500,30 +500,4 @@
     "trend_stable": "Stable",
     "trend_decreasing": "Decreasing"
   },
-  "focus": {
-    "title": "Focus Mode",
-    "focusing": "Focusing",
-    "shortBreak": "Short Break",
-    "longBreak": "Long Break",
-    "ready": "Ready",
-    "sessionsCompleted": "{{count}} sessions done",
-    "timerPreset": "Timer",
-    "soundPreset": "Focus Sounds",
-    "noSound": "None",
-    "stats": "Focus Stats",
-    "today": "Today",
-    "thisWeek": "This Week"
-  },
-  "focusPresets": {
-    "cafe": "Cafe Focus",
-    "cafe-desc": "Cozy cafe ambience",
-    "rain": "Rainy Day Work",
-    "rain-desc": "Focus with rain sounds",
-    "brown": "Brown Noise",
-    "brown-desc": "Noise for deep focus",
-    "nature": "Nature Work",
-    "nature-desc": "Birds and streams",
-    "library": "Library",
-    "library-desc": "Quiet library ambience"
-  }
 }
