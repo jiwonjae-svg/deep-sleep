@@ -69,6 +69,12 @@ let timerCheckCounter = 0;
 const TIMER_CHECK_INTERVAL = 20; // 20 × 50ms = 1초
 let timerExpiryHandled = false;
 
+// ──────────────────────────────────────────────
+// 오디오 상태 머신
+// ──────────────────────────────────────────────
+type AudioState = 'idle' | 'loading' | 'fadingIn' | 'playing' | 'fadingOut' | 'stopping';
+let audioState: AudioState = 'idle';
+
 /** 마스터 볼륨 루프 시작 — 페이드 + 페르린 볼륨을 단일 인터벌로 처리 */
 function startMasterLoop(): void {
   stopMasterLoop();
@@ -83,6 +89,7 @@ function startMasterLoop(): void {
       if (fadeFactor >= 1) {
         fadeFactor = 1;
         fadeState = 'none';
+        if (audioState === 'fadingIn') audioState = 'playing';
       }
     } else if (fadeState === 'out') {
       const elapsed = Date.now() - fadeStartTime;
@@ -498,6 +505,7 @@ function scheduleIntermittent(soundId: string) {
 export async function startMix(): Promise<void> {
   const gen = ++mixGeneration;
   isSystemStopping = false;
+  audioState = 'loading';
   await cleanupSoundPool();
   if (gen !== mixGeneration) return; // 다른 startMix/stopAll이 호출됨
   isPausedForPreview = false;
@@ -559,6 +567,7 @@ export async function startMix(): Promise<void> {
   // 마스터 루프 시작 (페르린 볼륨 + 페이드 + 타이머 체크를 단일 인터벌로 처리)
   startMasterLoop();
   fadeIn(FADE_IN_MS);
+  audioState = 'fadingIn';
   store.setPlaying(true);
 
   const timer = useTimerStore.getState();
@@ -574,8 +583,10 @@ export async function startMix(): Promise<void> {
  *  cleanupSoundPool()은 내부에서 stopMasterLoop()을 동기적으로 호출하므로
  *  마스터 루프와 사운드 언로드 간 레이스 컨디션 없음. */
 export function stopAll(): void {
+  if (audioState === 'idle') return;
   const gen = ++mixGeneration;
   isSystemStopping = true;
+  audioState = 'fadingOut';
 
   // 타이머 잔여 시간 스냅샷 저장 후 타이머 취소
   const timerState = useTimerStore.getState();
@@ -604,16 +615,19 @@ export function stopAll(): void {
     }
 
     // cleanupSoundPool()이 내부에서 stopMasterLoop() 동기 호출 → 안전
+    audioState = 'stopping';
     cleanupSoundPool()
       .then(() => {
         if (gen !== mixGeneration) return;
         useAudioStore.getState().clearPresetSounds();
         isSystemStopping = false;
+        audioState = 'idle';
       })
       .catch(() => {
         if (gen !== mixGeneration) return;
         useAudioStore.getState().clearPresetSounds();
         isSystemStopping = false;
+        audioState = 'idle';
       });
   });
 }
@@ -622,6 +636,7 @@ export function stopAll(): void {
 export async function applyPreset(sounds: ActiveSoundState[], presetId: string): Promise<void> {
   const gen = ++mixGeneration;
   isSystemStopping = false;
+  audioState = 'loading';
   const store = useAudioStore.getState();
   const wasPlaying = store.isPlaying;
 
@@ -697,6 +712,7 @@ function checkTimerExpiry(): void {
     fadeFactor = 0;
     fadeState = 'none';
     isSystemStopping = true;
+    audioState = 'stopping';
 
     // 모든 소리 즉시 음소거
     for (const [, sound] of soundPool) {
@@ -714,11 +730,12 @@ function checkTimerExpiry(): void {
       .then(async () => {
         useAudioStore.getState().clearPresetSounds();
         isSystemStopping = false;
+        audioState = 'idle';
         if (isTrackingActive()) {
           await stopSleepTracking();
         }
       })
-      .catch(() => { isSystemStopping = false; });
+      .catch(() => { isSystemStopping = false; audioState = 'idle'; });
   } else {
     // 설정에서 페이드아웃 시간 가져오기
     const settings = useSettingsStore.getState().settings;
@@ -737,6 +754,7 @@ export async function cleanupAudio(): Promise<void> {
   stopMasterLoop();
   await cleanupSoundPool();
   isSystemStopping = false;
+  audioState = 'idle';
   timerExpiryHandled = true;
   useAudioStore.getState().setPlaying(false);
   useAudioStore.getState().clearPresetSounds();
@@ -794,8 +812,9 @@ AppState.addEventListener('change', (nextState) => {
       .then(() => {
         useAudioStore.getState().clearPresetSounds();
         isSystemStopping = false;
+        audioState = 'idle';
       })
-      .catch(() => { isSystemStopping = false; });
+      .catch(() => { isSystemStopping = false; audioState = 'idle'; });
     return;
   }
 
@@ -808,3 +827,17 @@ AppState.addEventListener('change', (nextState) => {
     }
   }
 });
+
+// ──────────────────────────────────────────────
+// 오디오 상태 머신 공개 API
+// ──────────────────────────────────────────────
+
+/** 현재 오디오 상태 반환
+ * - 'idle'     : 재생 없음, 풀 비어 있음
+ * - 'loading'  : createAsync 진행 중
+ * - 'fadingIn' : masterLoop 실행 중, fadeFactor 0→1
+ * - 'playing'  : fadeFactor=1, 정상 재생
+ * - 'fadingOut': masterLoop 실행 중, fadeFactor 1→0
+ * - 'stopping' : unload 진행 중
+ */
+export function getAudioState(): AudioState { return audioState; }
