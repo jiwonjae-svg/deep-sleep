@@ -42,7 +42,7 @@ const SYSTEM_PROMPT = `당신은 수면/휴식 사운드 전문가입니다. 사
 // ──────────────────────────────────────────────
 
 function getApiKey(): string {
-  return (Constants.expoConfig?.extra?.GEMINI_API_KEY as string) ?? '';
+  return (Constants.expoConfig?.extra?.geminiApiKey as string) ?? '';
 }
 
 // ──────────────────────────────────────────────
