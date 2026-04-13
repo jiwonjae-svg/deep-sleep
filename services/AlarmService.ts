@@ -1,7 +1,7 @@
 import { Alarm, MathProblem } from '@/types';
 import { useAlarmStore } from '@/stores/useAlarmStore';
 import { generateMathProblem } from '@/utils/mathProblem';
-import { Platform } from 'react-native';
+import { Platform, Linking, Alert } from 'react-native';
 
 // expo-notifications: Expo Go SDK 53+에서 import 시
 // DevicePushTokenAutoRegistration 사이드이펙트로 ERROR 발생.
@@ -257,4 +257,120 @@ export async function getInitialAlarmNotification(): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+// ──────────────────────────────────────────────
+// Battery optimization & Doze Mode handling (10.4)
+// ──────────────────────────────────────────────
+
+/**
+ * Android 제조사를 감지하여 해당 제조사의 배터리 최적화 설정 페이지 안내를 반환.
+ * Samsung OneUI, Xiaomi MIUI, Huawei EMUI 등 제조사별 특수 설정이 필요.
+ */
+function getManufacturer(): string {
+  if (Platform.OS !== 'android') return '';
+  try {
+    const { Brand } = require('react-native').Platform.constants ?? {};
+    return (Brand ?? '').toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
+interface BatteryOptGuide {
+  manufacturer: string;
+  steps: string[];
+  intentAction?: string;
+}
+
+/**
+ * 제조사별 배터리 최적화 해제 안내 정보를 반환.
+ */
+export function getBatteryOptimizationGuide(): BatteryOptGuide {
+  const brand = getManufacturer();
+
+  if (brand.includes('samsung')) {
+    return {
+      manufacturer: 'Samsung',
+      steps: [
+        '설정 → 배터리 및 디바이스 관리 → 배터리',
+        '백그라운드 사용 제한 → Deep Sleep 앱 제외',
+        '절전 모드에서 허용할 앱 → Deep Sleep 추가',
+      ],
+      intentAction: 'android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS',
+    };
+  }
+  if (brand.includes('xiaomi') || brand.includes('redmi') || brand.includes('poco')) {
+    return {
+      manufacturer: 'Xiaomi/Redmi',
+      steps: [
+        '설정 → 앱 → 앱 관리 → Deep Sleep',
+        '자동 시작 → 허용으로 변경',
+        '배터리 세이버 → 제한 없음으로 설정',
+        '설정 → 앱 → 잠금 화면에 알림 표시 → 허용',
+      ],
+      intentAction: 'android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS',
+    };
+  }
+  if (brand.includes('huawei') || brand.includes('honor')) {
+    return {
+      manufacturer: 'Huawei/Honor',
+      steps: [
+        '설정 → 배터리 → 앱 실행 관리',
+        'Deep Sleep → 수동 관리로 변경',
+        '자동 실행, 보조 실행, 백그라운드 실행 모두 허용',
+      ],
+      intentAction: 'android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS',
+    };
+  }
+  if (brand.includes('oppo') || brand.includes('realme') || brand.includes('oneplus')) {
+    return {
+      manufacturer: 'OPPO/OnePlus/Realme',
+      steps: [
+        '설정 → 배터리 → 배터리 최적화',
+        'Deep Sleep → 최적화하지 않음 선택',
+        '설정 → 앱 관리 → Deep Sleep → 자동 시작 허용',
+      ],
+      intentAction: 'android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS',
+    };
+  }
+
+  // 일반 Android
+  return {
+    manufacturer: 'Android',
+    steps: [
+      '설정 → 앱 → Deep Sleep → 배터리',
+      '배터리 최적화 → 최적화하지 않음 선택',
+    ],
+    intentAction: 'android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS',
+  };
+}
+
+/**
+ * 배터리 최적화 설정 화면을 열도록 안내하는 Alert를 표시.
+ * 실기기에서 Doze Mode로 알람이 지연되는 문제를 방지.
+ */
+export function showBatteryOptimizationAlert(
+  t: (key: string) => string,
+): void {
+  if (Platform.OS !== 'android') return;
+
+  const guide = getBatteryOptimizationGuide();
+  const stepsText = guide.steps.map((s, i) => `${i + 1}. ${s}`).join('\n');
+
+  Alert.alert(
+    t('alarms.batteryOptTitle'),
+    `${t('alarms.batteryOptMessage')}\n\n[${guide.manufacturer}]\n${stepsText}`,
+    [
+      { text: t('common.later'), style: 'cancel' },
+      {
+        text: t('alarms.openSettings'),
+        onPress: () => {
+          if (guide.intentAction) {
+            Linking.openSettings().catch(() => {});
+          }
+        },
+      },
+    ],
+  );
 }

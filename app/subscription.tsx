@@ -143,9 +143,14 @@ export default function SubscriptionScreen() {
 
             {/* Yearly savings text */}
             {selectedPlan === 'yearly' && (
-              <Text style={{ fontSize: 13, fontWeight: '600', color: themeColors.accent1, textAlign: 'center' }}>
-                {t('subscription.yearlySavings')}
-              </Text>
+              <View style={{ alignItems: 'center', gap: 4 }}>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: themeColors.accent1, textAlign: 'center' }}>
+                  {t('subscription.yearlySavings')}
+                </Text>
+                <Text style={{ fontSize: 12, fontWeight: '600', color: themeColors.textSecondary, textAlign: 'center' }}>
+                  {t('subscription.freeTrialHint')}
+                </Text>
+              </View>
             )}
 
             {/* Purchase */}

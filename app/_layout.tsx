@@ -9,12 +9,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import '@/i18n'; // i18n 초기화
+import { useTranslation } from 'react-i18next';
 import { usePresetStore } from '@/stores/usePresetStore';
 import { useAlarmStore } from '@/stores/useAlarmStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useAIStore } from '@/stores/useAIStore';
 import { initAudioMode, cleanupAudio } from '@/services/AudioService';
-import { configureNotifications, setupAlarmListeners, requestAlarmPermissions, getInitialAlarmNotification } from '@/services/AlarmService';
+import { configureNotifications, setupAlarmListeners, requestAlarmPermissions, getInitialAlarmNotification, showBatteryOptimizationAlert } from '@/services/AlarmService';
 import { ThemeProvider, useThemeColors, useIsDarkTheme } from '@/theme';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { STORAGE_KEYS } from '@/utils/constants';
@@ -58,6 +59,7 @@ function ThemedApp() {
   const isDark = useIsDarkTheme();
   const router = useRouter();
   const listenerCleanupRef = useRef<(() => void) | null>(null);
+  const { t } = useTranslation();
 
   // 알람 알림 리스너: 알림 탭/스와이프 시 alarm-dismiss 페이지로 이동
   useEffect(() => {
@@ -80,9 +82,18 @@ function ThemedApp() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Android: 정확한 알람 + 알림 권한 요청
+  // Android: 정확한 알람 + 알림 권한 요청 + 배터리 최적화 안내
   useEffect(() => {
     requestAlarmPermissions().catch(() => {});
+    // 첫 실행 시 배터리 최적화 해제 안내 (Doze Mode 대응)
+    AsyncStorage.getItem('@battery_opt_shown').then((shown) => {
+      if (!shown) {
+        setTimeout(() => {
+          showBatteryOptimizationAlert(t);
+          AsyncStorage.setItem('@battery_opt_shown', 'true').catch(() => {});
+        }, 2000);
+      }
+    });
   }, []);
 
   return (

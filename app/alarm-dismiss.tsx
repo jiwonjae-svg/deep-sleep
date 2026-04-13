@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, Vibration, Image } from 'react-native';
+import { View, Text, StyleSheet, Vibration, Image, Pressable, ScrollView } from 'react-native';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
@@ -14,6 +14,7 @@ import { getSoundAsset } from '@/data/soundAssets';
 import { useAlarm } from '@/hooks/useAlarm';
 import { useAlarmStore } from '@/stores/useAlarmStore';
 import { useTimerStore } from '@/stores/useTimerStore';
+import { useSleepStore, MorningSurvey } from '@/stores/useSleepStore';
 import { MathProblemView } from '@/components/alarm/MathProblem';
 import { Button } from '@/components/ui/Button';
 import { generateMathProblem } from '@/utils/mathProblem';
@@ -30,6 +31,17 @@ export default function AlarmDismissScreen() {
   const { t } = useTranslation();
 
   const alarm = alarms.find((a) => a.id === params.alarmId) ?? alarms[0];
+
+  // Morning survey state (10.6)
+  const [showSurvey, setShowSurvey] = useState(false);
+  const [surveyStep, setSurveyStep] = useState(0);
+  const [satisfaction, setSatisfaction] = useState(3);
+  const [solPerception, setSolPerception] = useState<'instant' | 'under15' | 'under30' | 'over60'>('under15');
+  const [awakeningsPerception, setAwakeningsPerception] = useState<'0' | '1-2' | '3-4' | '5+'>('0');
+  const [freshness, setFreshness] = useState(3);
+
+  const sleepRecords = useSleepStore((s) => s.records);
+  const addSurvey = useSleepStore((s) => s.addSurvey);
 
   const [mathMode, setMathMode] = useState(alarm?.mathDismiss ?? false);
   const [problem, setProblem] = useState(
@@ -144,6 +156,27 @@ export default function AlarmDismissScreen() {
     if (timerState.isActive && timerState.isAlarmSync) {
       timerState.cancelTimer();
     }
+    // 수면 기록이 있으면 아침 설문 표시 (10.6)
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayRecord = sleepRecords.find((r) => r.date === todayStr && !r.survey);
+    if (todayRecord) {
+      setShowSurvey(true);
+    } else {
+      router.back();
+    }
+  };
+
+  const submitSurvey = () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayRecord = sleepRecords.find((r) => r.date === todayStr && !r.survey);
+    if (todayRecord) {
+      const survey: MorningSurvey = { satisfaction, solPerception, awakeningsPerception, freshness };
+      addSurvey(todayRecord.id, survey);
+    }
+    router.back();
+  };
+
+  const skipSurvey = () => {
     router.back();
   };
 
@@ -215,6 +248,82 @@ export default function AlarmDismissScreen() {
           }}
         />
       </View>
+
+      {/* Morning Survey Overlay (10.6) */}
+      {showSurvey && (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: themeColors.bgPrimary, padding: layout.screenPaddingH, justifyContent: 'center', alignItems: 'center', gap: spacing.lg }]}>
+          <Text style={{ ...typography.h2, color: themeColors.textPrimary, textAlign: 'center' }}>
+            {t('my.surveyTitle')}
+          </Text>
+          <Text style={{ ...typography.body, color: themeColors.textSecondary, textAlign: 'center' }}>
+            {t('my.surveySubtitle')}
+          </Text>
+
+          {surveyStep === 0 && (
+            <View style={{ alignItems: 'center', gap: spacing.md, width: '100%' }}>
+              <Text style={{ ...typography.bodyMedium, color: themeColors.textPrimary }}>{t('my.surveyQ1')}</Text>
+              <View style={{ flexDirection: 'row', gap: spacing.md }}>
+                {[1, 2, 3, 4, 5].map((v) => (
+                  <Pressable key={v} onPress={() => setSatisfaction(v)}>
+                    <Text style={{ fontSize: 32 }}>{v <= satisfaction ? '⭐' : '☆'}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              <Button title={t('common.next')} variant="primary" onPress={() => setSurveyStep(1)} />
+            </View>
+          )}
+
+          {surveyStep === 1 && (
+            <View style={{ alignItems: 'center', gap: spacing.md, width: '100%' }}>
+              <Text style={{ ...typography.bodyMedium, color: themeColors.textPrimary }}>{t('my.surveyQ2')}</Text>
+              {(['instant', 'under15', 'under30', 'over60'] as const).map((opt) => (
+                <Pressable
+                  key={opt}
+                  style={{ backgroundColor: solPerception === opt ? themeColors.accent1 : 'rgba(255,255,255,0.08)', borderRadius: 12, padding: spacing.md, width: '100%', alignItems: 'center' }}
+                  onPress={() => setSolPerception(opt)}
+                >
+                  <Text style={{ color: '#ffffff', fontWeight: '600' }}>{t(`my.sol_${opt}`)}</Text>
+                </Pressable>
+              ))}
+              <Button title={t('common.next')} variant="primary" onPress={() => setSurveyStep(2)} />
+            </View>
+          )}
+
+          {surveyStep === 2 && (
+            <View style={{ alignItems: 'center', gap: spacing.md, width: '100%' }}>
+              <Text style={{ ...typography.bodyMedium, color: themeColors.textPrimary }}>{t('my.surveyQ3')}</Text>
+              {(['0', '1-2', '3-4', '5+'] as const).map((opt) => (
+                <Pressable
+                  key={opt}
+                  style={{ backgroundColor: awakeningsPerception === opt ? themeColors.accent1 : 'rgba(255,255,255,0.08)', borderRadius: 12, padding: spacing.md, width: '100%', alignItems: 'center' }}
+                  onPress={() => setAwakeningsPerception(opt)}
+                >
+                  <Text style={{ color: '#ffffff', fontWeight: '600' }}>{t(`my.awk_${opt}`)}</Text>
+                </Pressable>
+              ))}
+              <Button title={t('common.next')} variant="primary" onPress={() => setSurveyStep(3)} />
+            </View>
+          )}
+
+          {surveyStep === 3 && (
+            <View style={{ alignItems: 'center', gap: spacing.md, width: '100%' }}>
+              <Text style={{ ...typography.bodyMedium, color: themeColors.textPrimary }}>{t('my.surveyQ4')}</Text>
+              <View style={{ flexDirection: 'row', gap: spacing.md }}>
+                {[1, 2, 3, 4, 5].map((v) => (
+                  <Pressable key={v} onPress={() => setFreshness(v)}>
+                    <Text style={{ fontSize: 32 }}>{v <= freshness ? '⭐' : '☆'}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              <Button title={t('my.surveySubmit')} variant="primary" onPress={submitSurvey} />
+            </View>
+          )}
+
+          <Pressable onPress={skipSurvey}>
+            <Text style={{ ...typography.bodyMedium, color: themeColors.textMuted }}>{t('common.skip')}</Text>
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 }

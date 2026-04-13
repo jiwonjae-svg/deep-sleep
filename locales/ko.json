@@ -13,6 +13,7 @@
     "loading": "로딩 중...",
     "error": "오류가 발생했습니다",
     "retry": "다시 시도",
+    "later": "나중에",
     "premium": "Plus",
     "free": "무료"
   },
@@ -57,7 +58,10 @@
     "dailyLimitMessage": "AI 추천은 하루에 5번까지 사용할 수 있습니다.",
     "aiError": "AI 추천에 실패했습니다. 다시 시도해주세요.",
     "savedComplete": "저장 완료",
-    "savedMessage": "\"{{name}}\" 프리셋이 저장되었습니다."
+    "savedMessage": "\"{{name}}\" 프리셋이 저장되었습니다.",
+    "premiumPreviewTitle": "Plus 전용 소리입니다",
+    "premiumPreviewDesc": "\"{{name}}\" 소리를 다른 소리와 함께 자유롭게 믹스하려면 Plus로 업그레이드하세요.",
+    "unlockPlus": "7일 무료 체험 시작"
   },
   "presets": {
     "title": "프리셋",
@@ -115,6 +119,9 @@
     "addCustomSound": "사용자 소리 추가",
     "deleteSound": "소리 삭제",
     "deleteSoundConfirm": "이 소리를 삭제하시겠습니까?",
+    "batteryOptTitle": "알람 안정성 설정",
+    "batteryOptMessage": "알람이 정시에 울리려면 배터리 최적화에서 Deep Sleep을 제외해야 합니다. 아래 단계를 따라 설정해주세요.",
+    "openSettings": "설정 열기",
     "defaultSounds": {
       "alarm-classic": "클래식 알람",
       "alarm-gentle": "부드러운 기상",
@@ -144,6 +151,7 @@
     "lifetimePrice": "₩79,900",
     "lifetimePeriod": "1회 결제",
     "yearlySavings": "연간 결제 시 월간 대비 36% 절약",
+    "freeTrialHint": "🎁 7일 무료 체험 후 자동 구독 전환",
     "benefits": {
       "noAds": "모든 광고 제거",
       "premiumSounds": "Plus 전용 소리",
@@ -399,6 +407,9 @@
     "sensorUnavailable": "센서 사용 불가",
     "sensorUnavailableDesc": "이 기기에서 가속도계를 사용할 수 없습니다.",
     "morningSurvey": "아침 설문",
+    "surveyTitle": "좋은 아침이에요! ☁️",
+    "surveySubtitle": "간단한 설문으로 수면 품질을 분석해드릴게요",
+    "surveySubmit": "완료",
     "surveyQ1": "어젯밤 수면 만족도는?",
     "surveyQ2": "잠들기까지 얼마나 걸렸나요?",
     "surveyQ3": "밤에 몇 번 깨셨나요?",

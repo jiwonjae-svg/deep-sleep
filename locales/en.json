@@ -13,6 +13,7 @@
     "loading": "Loading...",
     "error": "An error occurred",
     "retry": "Retry",
+    "later": "Later",
     "premium": "Plus",
     "free": "Free"
   },
@@ -57,7 +58,10 @@
     "dailyLimitMessage": "AI recommendations are limited to 5 per day.",
     "aiError": "AI recommendation failed. Please try again.",
     "savedComplete": "Saved",
-    "savedMessage": "\"{{name}}\" preset has been saved."
+    "savedMessage": "\"{{name}}\" preset has been saved.",
+    "premiumPreviewTitle": "Plus Exclusive Sound",
+    "premiumPreviewDesc": "Upgrade to Plus to freely mix \"{{name}}\" with other sounds.",
+    "unlockPlus": "Start 7-Day Free Trial"
   },
   "presets": {
     "title": "Presets",
@@ -115,6 +119,9 @@
     "addCustomSound": "Add Custom Sound",
     "deleteSound": "Delete Sound",
     "deleteSoundConfirm": "Delete this sound?",
+    "batteryOptTitle": "Alarm Reliability Settings",
+    "batteryOptMessage": "To ensure alarms ring on time, please exclude Deep Sleep from battery optimization. Follow the steps below.",
+    "openSettings": "Open Settings",
     "defaultSounds": {
       "alarm-classic": "Classic Alarm",
       "alarm-gentle": "Gentle Wake",
@@ -144,6 +151,7 @@
     "lifetimePrice": "$49.99",
     "lifetimePeriod": "one-time",
     "yearlySavings": "Save 44% compared to monthly",
+    "freeTrialHint": "🎁 7-day free trial, then auto-subscription",
     "benefits": {
       "noAds": "Remove all ads",
       "premiumSounds": "All Plus sounds",
@@ -398,6 +406,9 @@
     "sensorUnavailable": "Sensor Unavailable",
     "sensorUnavailableDesc": "Accelerometer is not available on this device.",
     "morningSurvey": "Morning Survey",
+    "surveyTitle": "Good Morning! ☁️",
+    "surveySubtitle": "A quick survey to analyze your sleep quality",
+    "surveySubmit": "Done",
     "surveyQ1": "How satisfied are you with last night's sleep?",
     "surveyQ2": "How long did it take to fall asleep?",
     "surveyQ3": "How many times did you wake up?",

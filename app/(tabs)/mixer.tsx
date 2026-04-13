@@ -120,6 +120,10 @@ export default function MixerScreen() {
   // Sound preview
   const { previewingSoundId, togglePreview, stopPreview: stopSoundPreview } = useSoundPreview();
 
+  // Premium upsell state
+  const [premiumUpsellVisible, setPremiumUpsellVisible] = useState(false);
+  const [upsellSoundName, setUpsellSoundName] = useState('');
+
   // AI state
   const [aiSheetVisible, setAiSheetVisible] = useState(false);
   const [aiResultVisible, setAiResultVisible] = useState(false);
@@ -190,6 +194,20 @@ export default function MixerScreen() {
       if (result === 'premium_required') router.push('/subscription');
     },
     [toggleSound, router],
+  );
+
+  // 잠긴 프리미엄 소리 탭: 3초 미리듣기 후 구독 유도
+  const handleLockedSoundPress = useCallback(
+    (sound: SoundConfig) => {
+      setUpsellSoundName(t(`sounds.${sound.id}`, { defaultValue: sound.name }));
+      togglePreview(sound.id);
+      // 3초 후 미리듣기 중지 + 구독 유도 바텀시트
+      setTimeout(() => {
+        stopSoundPreview();
+        setPremiumUpsellVisible(true);
+      }, 3000);
+    },
+    [togglePreview, stopSoundPreview, t],
   );
 
   const handleSoundSettings = useCallback((sound: SoundConfig) => {
@@ -341,7 +359,12 @@ export default function MixerScreen() {
                   </View>
                   <View style={styles.trackActions}>
                     {isLocked ? (
-                      <MaterialIcons name="lock" size={20} color="rgba(255,255,255,0.3)" />
+                      <Pressable
+                        style={styles.trackActionBtn}
+                        onPress={() => handleLockedSoundPress(sound)}
+                      >
+                        <MaterialIcons name="play-arrow" size={20} color="rgba(255,255,255,0.5)" />
+                      </Pressable>
                     ) : isActive ? (
                       <>
                         <Pressable
@@ -419,6 +442,41 @@ export default function MixerScreen() {
             onCancel={() => { setAiResultVisible(false); setAiResult(null); }}
           />
         )}
+      </BottomSheet>
+
+      {/* Premium upsell sheet */}
+      <BottomSheet
+        visible={premiumUpsellVisible}
+        onClose={() => setPremiumUpsellVisible(false)}
+        maxHeightPct={0.35}
+      >
+        <View style={{ alignItems: 'center', gap: 16, paddingVertical: 24, paddingHorizontal: 24 }}>
+          <MaterialIcons name="music-note" size={36} color={themeColors.accent1} />
+          <Text style={{ fontSize: 18, fontWeight: '700', color: '#ffffff', textAlign: 'center' }}>
+            {t('mixer.premiumPreviewTitle')}
+          </Text>
+          <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', textAlign: 'center', lineHeight: 22 }}>
+            {t('mixer.premiumPreviewDesc', { name: upsellSoundName })}
+          </Text>
+          <Pressable
+            style={{
+              backgroundColor: themeColors.accent1,
+              borderRadius: 40,
+              paddingVertical: 14,
+              paddingHorizontal: 40,
+              width: '100%',
+              alignItems: 'center',
+            }}
+            onPress={() => {
+              setPremiumUpsellVisible(false);
+              router.push('/subscription');
+            }}
+          >
+            <Text style={{ fontSize: 14, fontWeight: '700', color: '#ffffff', letterSpacing: 1 }}>
+              {t('mixer.unlockPlus')}
+            </Text>
+          </Pressable>
+        </View>
       </BottomSheet>
     </>
   );
