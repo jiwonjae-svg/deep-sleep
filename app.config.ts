@@ -6,7 +6,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   version: '1.0.0',
   orientation: 'portrait',
   userInterfaceStyle: 'dark',
-  icon: './assets/icon.png',
+  icon: './assets/icon-512.png',
   scheme: 'deepsleep',
   splash: {
     image: './assets/splash.png',

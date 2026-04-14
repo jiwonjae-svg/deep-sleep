@@ -22,11 +22,15 @@ import { STORAGE_KEYS } from '@/utils/constants';
 import i18n from '@/i18n';
 // import { initBilling } from '@/services/BillingService';
 
+// 스플래시 애니메이션 최소 표시 시간 = FADE_IN(400) + ZOOM_FADE(2800) + GAP(400)
+const SPLASH_MIN_MS = 3600;
+
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     async function bootstrap() {
+      const t0 = Date.now();
       await initAudioMode();
       // 이전 세션(또는 Fast Refresh)에서 남은 오디오 인스턴스 완전 정리
       // cleanupAudio()는 fadeOut 없이 즉시 정리하므로 레이스 컨디션 없음
@@ -42,6 +46,10 @@ export default function RootLayout() {
       if (lang && lang !== i18n.language) {
         await i18n.changeLanguage(lang);
       }
+      // 애니메이션 최소 1사이클 보장 — bootstrap이 너무 빠르면 opacity=0인 채로
+      // 컴포넌트가 언마운트되어 애니메이션이 보이지 않는 버그 방지
+      const remaining = SPLASH_MIN_MS - (Date.now() - t0);
+      if (remaining > 0) await new Promise<void>((r) => setTimeout(r, remaining));
       setReady(true);
     }
     bootstrap();
