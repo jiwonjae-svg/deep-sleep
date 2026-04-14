@@ -63,7 +63,7 @@ async function triggerSmartAlarm(alarm: Alarm, stage: SleepStage): Promise<void>
     content: {
       title: '⏰ Deep Sleep 스마트 알람',
       body: alarm.label || '가벼운 수면에서 깨워드려요!',
-      sound: 'alarm-default.wav',
+      sound: 'alarm-default.mp3',
       priority: Notifications.AndroidNotificationPriority.MAX,
       data: {
         alarmId: alarm.id,

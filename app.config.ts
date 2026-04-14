@@ -36,7 +36,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-notifications',
       {
-        sounds: ['./assets/sounds/alarm-default.wav'],
+        sounds: ['./assets/sounds/alarm-default.mp3'],
       },
     ],
     [
