@@ -15,13 +15,13 @@ import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { useTranslation } from 'react-i18next';
 import { useAlarmStore } from '@/stores/useAlarmStore';
 import { CustomAlarmSound } from '@/types';
+import alarmAssets from '@/data/alarmAssets';
 
-// 기본 알람 소리 5개 (아직 에셋 미추가 — ID 기반 매핑)
 const DEFAULT_ALARM_SOUNDS = [
+  { id: 'alarm-default', nameKey: 'alarm-default' },
   { id: 'alarm-classic', nameKey: 'alarm-classic' },
   { id: 'alarm-gentle', nameKey: 'alarm-gentle' },
   { id: 'alarm-birds', nameKey: 'alarm-birds' },
-  { id: 'alarm-chime', nameKey: 'alarm-chime' },
   { id: 'alarm-melody', nameKey: 'alarm-melody' },
 ];
 
@@ -149,11 +149,11 @@ export function AlarmSoundModal({
     await stopPreviewImmediate();
 
     // 새 소리 재생 시도
-    // TODO: 기본 알람 소리 에셋이 추가되면 여기서 로드
-    // 현재는 사용자 커스텀 소리만 실제 재생 가능
+    const defaultSource = alarmAssets[soundId];
     const customSound = customSounds.find((s) => s.id === soundId);
-    if (!customSound) {
-      // 기본 소리 — 에셋 미추가 상태이므로 소리 없음 (향후 추가)
+    const source = defaultSource ?? (customSound ? { uri: customSound.uri } : null);
+
+    if (!source) {
       setPlayingSoundId(soundId);
       setTimeout(() => setPlayingSoundId(null), 2000);
       return;
@@ -161,7 +161,7 @@ export function AlarmSoundModal({
 
     try {
       const { sound } = await Audio.Sound.createAsync(
-        { uri: customSound.uri },
+        source,
         { shouldPlay: true, isLooping: true, volume: 0 },
       );
       soundRef.current = sound;

@@ -123,10 +123,10 @@
     "batteryOptMessage": "To ensure alarms ring on time, please exclude Deep Sleep from battery optimization. Follow the steps below.",
     "openSettings": "Open Settings",
     "defaultSounds": {
+      "alarm-default": "Default Alarm",
       "alarm-classic": "Classic Alarm",
       "alarm-gentle": "Gentle Wake",
       "alarm-birds": "Morning Birds",
-      "alarm-chime": "Soft Chime",
       "alarm-melody": "Sunrise Melody"
     }
   },

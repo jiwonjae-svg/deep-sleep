@@ -123,10 +123,10 @@
     "batteryOptMessage": "알람이 정시에 울리려면 배터리 최적화에서 Deep Sleep을 제외해야 합니다. 아래 단계를 따라 설정해주세요.",
     "openSettings": "설정 열기",
     "defaultSounds": {
+      "alarm-default": "기본 알람",
       "alarm-classic": "클래식 알람",
       "alarm-gentle": "부드러운 기상",
       "alarm-birds": "새벽 새소리",
-      "alarm-chime": "부드러운 종소리",
       "alarm-melody": "일출 멜로디"
     }
   },
