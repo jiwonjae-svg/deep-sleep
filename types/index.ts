@@ -91,7 +91,6 @@ export interface MathProblem {
 // Settings
 // ──────────────────────────────────────────────
 
-export type AudioQuality = 'low' | 'medium' | 'high';
 export type VolumeChangeSpeed = 'slow' | 'medium' | 'fast';
 export type AppLanguage = 'ko' | 'en';
 export type ThemeMode = 'dark' | 'light' | 'system';
@@ -103,7 +102,6 @@ export interface AppSettings {
   language: AppLanguage;
   autoSleepScreen: boolean;
   autoDimBrightness: boolean;
-  audioQuality: AudioQuality;
   volumeChangeSpeed: VolumeChangeSpeed;
   defaultSnoozeMinutes: number;
   defaultAlarmSoundId: string;

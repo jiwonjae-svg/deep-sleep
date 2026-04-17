@@ -18,6 +18,7 @@ import { categories, getCategoryById } from '@/data/categories';
 import { useThemeColors } from '@/theme';
 import { useTranslation } from 'react-i18next';
 import { useSoundPreview } from '@/hooks/useSoundPreview';
+import { useInterstitialAd } from '@/hooks/useInterstitialAd';
 
 // Material icon name for each category
 const CATEGORY_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
@@ -119,6 +120,9 @@ export default function MixerScreen() {
 
   // Sound preview
   const { previewingSoundId, togglePreview, stopPreview: stopSoundPreview } = useSoundPreview();
+
+  // Interstitial ad (카테고리 전환 시 확률적 전면 광고)
+  const { showProbabilistic } = useInterstitialAd();
 
   // Premium upsell state
   const [premiumUpsellVisible, setPremiumUpsellVisible] = useState(false);
@@ -275,7 +279,10 @@ export default function MixerScreen() {
                 <Pressable
                   key={cat.id}
                   style={styles.categoryItem}
-                  onPress={() => setSelectedCategory(cat.id as SoundCategory)}
+                  onPress={() => {
+                    setSelectedCategory(cat.id as SoundCategory);
+                    showProbabilistic();
+                  }}
                 >
                   <View
                     style={[

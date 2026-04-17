@@ -11,7 +11,6 @@ const DEFAULT_SETTINGS: AppSettings = {
   language: 'ko',
   autoSleepScreen: true,
   autoDimBrightness: true,
-  audioQuality: 'medium',
   volumeChangeSpeed: 'medium',
   defaultSnoozeMinutes: 5,
   defaultAlarmSoundId: 'alarm-default',

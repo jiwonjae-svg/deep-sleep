@@ -1,6 +1,7 @@
 // ⚠️ 첫 번째 import여야 함: Expo Go 콘솔 억제 설정 (LogBox + console 인터셉터)
 // Babel이 모든 import를 hoist하므로 파일 내 순서가 로드 순서를 결정한다.
 import '@/utils/setupDevSuppressions';
+import '@/widgets/widget-task-handler'; // Android 위젯 핸들러 등록
 import React, { useEffect, useState, useRef } from 'react';
 import { Stack } from 'expo-router';
 import { useRouter } from 'expo-router';
@@ -20,7 +21,8 @@ import { ThemeProvider, useThemeColors, useIsDarkTheme } from '@/theme';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { STORAGE_KEYS } from '@/utils/constants';
 import i18n from '@/i18n';
-// import { initBilling } from '@/services/BillingService';
+import { initBilling } from '@/services/BillingService';
+import Constants from 'expo-constants';
 
 // 스플래시 애니메이션 최소 표시 시간 = FADE_IN(400) + ZOOM_FADE(2800) + GAP(400)
 const SPLASH_MIN_MS = 3600;
@@ -45,6 +47,11 @@ export default function RootLayout() {
       const lang = useSettingsStore.getState().settings.language;
       if (lang && lang !== i18n.language) {
         await i18n.changeLanguage(lang);
+      }
+      // RevenueCat 결제 SDK 초기화 (네이티브 빌드에서만 동작)
+      const rcKey = Constants.expoConfig?.extra?.revenueCatApiKey as string | undefined;
+      if (rcKey) {
+        initBilling(rcKey).catch(() => {});
       }
       // 애니메이션 최소 1사이클 보장 — bootstrap이 너무 빠르면 opacity=0인 채로
       // 컴포넌트가 언마운트되어 애니메이션이 보이지 않는 버그 방지
@@ -78,15 +85,24 @@ function ThemedApp() {
   }, [router]);
 
   // 콜드 스타트: 앱 종료 상태에서 알림 탭으로 열린 경우 alarm-dismiss로 이동
+  // + 온보딩 미완료 시 온보딩 화면으로 자동 리다이렉트
   useEffect(() => {
-    getInitialAlarmNotification().then((alarmId) => {
+    (async () => {
+      const alarmId = await getInitialAlarmNotification();
       if (alarmId) {
-        // 라우터 초기화 완료 후 이동 (약간의 딜레이)
         setTimeout(() => {
           router.push({ pathname: '/alarm-dismiss', params: { alarmId } });
         }, 400);
+        return;
       }
-    });
+      // 온보딩 완료 여부 확인
+      const onboardingDone = await AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED);
+      if (!onboardingDone) {
+        setTimeout(() => {
+          router.replace('/onboarding');
+        }, 400);
+      }
+    })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -116,7 +132,6 @@ function ThemedApp() {
       >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
-        <Stack.Screen name="playing" options={{ animation: 'fade' }} />
         <Stack.Screen name="alarm-dismiss" options={{ animation: 'fade', gestureEnabled: false }} />
         <Stack.Screen
           name="subscription"

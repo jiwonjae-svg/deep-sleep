@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { FlexWidget, TextWidget } from 'react-native-android-widget';
 import { WidgetState } from './WidgetTaskHandler';
 
 interface LargeWidgetProps {
@@ -17,90 +17,87 @@ export function LargeWidget({ state, favoritePresets }: LargeWidgetProps) {
     : '∞';
 
   return (
-    <View style={styles.container}>
+    <FlexWidget
+      style={{
+        flexDirection: 'column',
+        backgroundColor: '#141428',
+        borderRadius: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        justifyContent: 'space-between',
+        height: 'match_parent',
+        width: 'match_parent',
+      }}
+    >
       {/* Top row: status + play button */}
-      <View style={styles.topRow}>
-        <View style={styles.info}>
-          <Text style={styles.presetName} numberOfLines={1}>
-            {state.presetName || 'Deep Sleep'}
-          </Text>
-          <Text style={styles.timer}>{timerText}</Text>
-        </View>
-        <Pressable style={styles.playBtn}>
-          <Text style={styles.playIcon}>{state.isPlaying ? '⏸' : '▶'}</Text>
-        </Pressable>
-      </View>
+      <FlexWidget
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          width: 'match_parent',
+        }}
+      >
+        <FlexWidget style={{ flex: 1, flexDirection: 'column' }}>
+          <TextWidget
+            text={state.presetName || 'Deep Sleep'}
+            style={{ fontSize: 16, color: '#ffffff' }}
+            maxLines={1}
+          />
+          <TextWidget
+            text={timerText}
+            style={{ fontSize: 12, color: '#99ffffff' }}
+          />
+        </FlexWidget>
+        <FlexWidget
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: '#456eea',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          clickAction="PLAY_TOGGLE"
+        >
+          <TextWidget
+            text={state.isPlaying ? '⏸' : '▶'}
+            style={{ fontSize: 20, color: '#ffffff' }}
+          />
+        </FlexWidget>
+      </FlexWidget>
 
       {/* Bottom row: favorite presets */}
-      <View style={styles.presetsRow}>
+      <FlexWidget
+        style={{
+          flexDirection: 'row',
+          width: 'match_parent',
+          marginTop: 12,
+        }}
+      >
         {favoritePresets.slice(0, 3).map((p) => (
-          <Pressable key={p.id} style={styles.presetChip}>
-            <Text style={styles.presetChipText} numberOfLines={1}>{p.name}</Text>
-          </Pressable>
+          <FlexWidget
+            key={p.id}
+            style={{
+              flex: 1,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: '#1fffffff',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginHorizontal: 4,
+            }}
+            clickAction="APPLY_PRESET"
+            clickActionData={{ presetId: p.id }}
+          >
+            <TextWidget
+              text={p.name}
+              style={{ fontSize: 12, color: '#ccffffff' }}
+              maxLines={1}
+            />
+          </FlexWidget>
         ))}
-      </View>
-    </View>
+      </FlexWidget>
+    </FlexWidget>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'rgba(20,20,40,0.9)',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    justifyContent: 'space-between',
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  info: {
-    flex: 1,
-    marginRight: 12,
-  },
-  presetName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
-  timer: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: 'rgba(255,255,255,0.6)',
-    marginTop: 2,
-  },
-  playBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#456eea',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  playIcon: {
-    fontSize: 20,
-    color: '#ffffff',
-  },
-  presetsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 12,
-  },
-  presetChip: {
-    flex: 1,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-  },
-  presetChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.8)',
-  },
-});

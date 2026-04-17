@@ -7,6 +7,7 @@ import { useThemeColors, typography, spacing, layout } from '@/theme';
 import { useTranslation } from 'react-i18next';
 import { useSleepStore, MorningSurvey } from '@/stores/useSleepStore';
 import { startSleepTracking, stopSleepTracking } from '@/services/SleepTrackingService';
+import { startSnoringDetection, stopSnoringDetection, isSnoringDetectionActive } from '@/services/SnoringDetectionService';
 import { WeeklyChart } from '@/components/sleep/WeeklyChart';
 import { SoundInsights } from '@/components/sleep/SoundInsights';
 import { CoachingCard } from '@/components/sleep/CoachingCard';
@@ -37,6 +38,7 @@ export default function MyScreen() {
   const [sleepGoalModalVisible, setSleepGoalModalVisible] = useState(false);
 
   const { settings, updateSettings } = useSettingsStore();
+  const [isSnoringOn, setIsSnoringOn] = useState(isSnoringDetectionActive);
 
   const SLEEP_GOAL_OPTIONS: OptionItem<string>[] = [
     { value: '6', label: `6${t('settings.hoursUnit', { defaultValue: '시간' })}` },
@@ -83,6 +85,23 @@ export default function MyScreen() {
       }
     }
   }, [isTracking, t]);
+
+  const handleSnoringToggle = useCallback(async () => {
+    if (isSnoringOn) {
+      await stopSnoringDetection();
+      setIsSnoringOn(false);
+    } else {
+      const started = await startSnoringDetection();
+      if (started) {
+        setIsSnoringOn(true);
+      } else {
+        Alert.alert(
+          t('my.micUnavailable', { defaultValue: '마이크 사용 불가' }),
+          t('my.micUnavailableDesc', { defaultValue: '마이크 권한을 허용해주세요.' }),
+        );
+      }
+    }
+  }, [isSnoringOn, t]);
 
   const handleSurveyAnswer = useCallback((key: string, value: string | number) => {
     const updated = { ...surveyData, [key]: value };
@@ -258,6 +277,34 @@ export default function MyScreen() {
             ]}
           >
             {isTracking ? t('my.stopTracking') : t('my.startTracking')}
+          </Text>
+        </Pressable>
+
+        {/* Snoring Detection Toggle */}
+        <Pressable
+          style={[
+            styles.trackingBtn,
+            {
+              backgroundColor: isSnoringOn ? 'rgba(255,170,51,0.15)' : `${themeColors.accent2}20`,
+              borderColor: isSnoringOn ? themeColors.warning : themeColors.accent2,
+            },
+          ]}
+          onPress={handleSnoringToggle}
+        >
+          <MaterialIcons
+            name={isSnoringOn ? 'mic-off' : 'mic'}
+            size={24}
+            color={isSnoringOn ? themeColors.warning : themeColors.accent2}
+          />
+          <Text
+            style={[
+              styles.trackingBtnText,
+              { color: isSnoringOn ? themeColors.warning : themeColors.accent2 },
+            ]}
+          >
+            {isSnoringOn
+              ? t('my.stopSnoring', { defaultValue: '코골이 감지 중지' })
+              : t('my.startSnoring', { defaultValue: '코골이 감지 시작' })}
           </Text>
         </Pressable>
 
