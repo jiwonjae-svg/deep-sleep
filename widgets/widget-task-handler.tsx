@@ -9,8 +9,9 @@ import { registerWidgetTaskHandler } from 'react-native-android-widget';
 import { SmallWidget } from './SmallWidget';
 import { MediumWidget } from './MediumWidget';
 import { LargeWidget } from './LargeWidget';
-import { handleWidgetAction, loadWidgetState, WidgetState } from './WidgetTaskHandler';
+import { handleWidgetAction, loadWidgetState, syncAndSaveWidgetState, WidgetState } from './WidgetTaskHandler';
 import { usePresetStore } from '@/stores/usePresetStore';
+import { useAudioStore } from '@/stores/useAudioStore';
 
 const DEFAULT_STATE: WidgetState = {
   isPlaying: false,
@@ -18,6 +19,15 @@ const DEFAULT_STATE: WidgetState = {
   remainingMinutes: 0,
   favoritePresetIds: [],
 };
+
+// 앱 내 재생 상태 변경 시 홈 위젯 자동 갱신
+let _prevIsPlaying = useAudioStore.getState().isPlaying;
+useAudioStore.subscribe((state) => {
+  if (state.isPlaying !== _prevIsPlaying) {
+    _prevIsPlaying = state.isPlaying;
+    syncAndSaveWidgetState().catch(() => {});
+  }
+});
 
 registerWidgetTaskHandler(async ({ widgetInfo, widgetAction, clickAction, clickActionData, renderWidget }) => {
   // 클릭 액션 처리

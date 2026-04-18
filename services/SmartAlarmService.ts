@@ -25,18 +25,59 @@ let currentState: SmartAlarmState | null = null;
 
 /**
  * Get the next alarm time as a timestamp for a given alarm.
+ * Considers days[] (repeat schedule) and specificDate fields.
+ * Returns Infinity if no upcoming occurrence exists.
  */
-function getNextAlarmTimestamp(alarm: Alarm): number {
+export function getNextAlarmTimestamp(alarm: Alarm): number {
   const now = new Date();
-  const target = new Date();
-  target.setHours(alarm.time.hour, alarm.time.minute, 0, 0);
 
-  // If target time has passed today, set for tomorrow
-  if (target.getTime() <= now.getTime()) {
-    target.setDate(target.getDate() + 1);
+  // specificDate: 특정 날짜 지정 알람
+  if (alarm.specificDate) {
+    const [y, m, d] = alarm.specificDate.split('-').map(Number);
+    const target = new Date(y, m - 1, d, alarm.time.hour, alarm.time.minute, 0, 0);
+    return target.getTime() > now.getTime() ? target.getTime() : Infinity;
   }
 
-  return target.getTime();
+  const hasRepeatDays = alarm.days.some(Boolean);
+  if (!hasRepeatDays) {
+    // 반복 없음: 오늘 또는 내일
+    const target = new Date();
+    target.setHours(alarm.time.hour, alarm.time.minute, 0, 0);
+    if (target.getTime() <= now.getTime()) {
+      target.setDate(target.getDate() + 1);
+    }
+    return target.getTime();
+  }
+
+  // 반복 요일 지정: 앞으로 7일 이내 가장 빠른 요일 찾기
+  // days[] index: 0=Mon … 6=Sun, JS getDay(): 0=Sun … 6=Sat
+  const jsDow = now.getDay(); // 0=Sun
+  const todayIdx = jsDow === 0 ? 6 : jsDow - 1; // convert to 0=Mon
+
+  for (let offset = 0; offset < 7; offset++) {
+    const dayIdx = (todayIdx + offset) % 7;
+    if (!alarm.days[dayIdx]) continue;
+
+    const target = new Date(now);
+    target.setDate(target.getDate() + offset);
+    target.setHours(alarm.time.hour, alarm.time.minute, 0, 0);
+
+    if (target.getTime() > now.getTime()) {
+      return target.getTime();
+    }
+  }
+
+  // 오늘 요일이 포함되어 있지만 이미 지난 경우 → 다음 주 같은 요일
+  for (let offset = 1; offset <= 7; offset++) {
+    const dayIdx = (todayIdx + offset) % 7;
+    if (!alarm.days[dayIdx]) continue;
+    const target = new Date(now);
+    target.setDate(target.getDate() + offset);
+    target.setHours(alarm.time.hour, alarm.time.minute, 0, 0);
+    return target.getTime();
+  }
+
+  return Infinity;
 }
 
 /**

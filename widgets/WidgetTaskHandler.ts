@@ -10,6 +10,14 @@ import { useAudioStore } from '@/stores/useAudioStore';
 import { usePresetStore } from '@/stores/usePresetStore';
 import * as AudioService from '@/services/AudioService';
 
+let requestWidgetUpdate: ((widgetName: string) => Promise<void>) | null = null;
+try {
+  const w = require('react-native-android-widget');
+  requestWidgetUpdate = w.requestWidgetUpdate;
+} catch {
+  // Expo Go: native module not available
+}
+
 export type WidgetAction =
   | 'PLAY_TOGGLE'
   | 'APPLY_PRESET'
@@ -25,6 +33,7 @@ export interface WidgetState {
 }
 
 const WIDGET_STATE_KEY = '@widget/state';
+const WIDGET_NAMES = ['DeepSleepSmall', 'DeepSleepMedium', 'DeepSleepLarge'];
 
 /** 위젯 상태를 SharedPreferences(AsyncStorage)에 저장 */
 export async function saveWidgetState(state: WidgetState): Promise<void> {
@@ -38,7 +47,15 @@ export async function loadWidgetState(): Promise<WidgetState | null> {
   return JSON.parse(json) as WidgetState;
 }
 
-/** 현재 오디오 상태를 기반으로 위젯 상태 동기화 후 저장 */
+/** 모든 홈 화면 위젯에 갱신 요청 */
+async function refreshAllWidgets(): Promise<void> {
+  if (!requestWidgetUpdate) return;
+  for (const name of WIDGET_NAMES) {
+    try { await requestWidgetUpdate(name); } catch { /* widget not placed */ }
+  }
+}
+
+/** 현재 오디오 상태를 기반으로 위젯 상태 동기화 후 저장 + 위젯 갱신 */
 export async function syncAndSaveWidgetState(): Promise<void> {
   const audioState = useAudioStore.getState();
   const presetId = audioState.activePresetId;
@@ -57,6 +74,7 @@ export async function syncAndSaveWidgetState(): Promise<void> {
     favoritePresetIds: [],
   };
   await saveWidgetState(state);
+  await refreshAllWidgets();
 }
 
 /**
@@ -70,10 +88,10 @@ export async function handleWidgetAction(
 ): Promise<void> {
   switch (action) {
     case 'PLAY_TOGGLE': {
-      const { isPlaying, activeSounds } = useAudioStore.getState();
+      const { isPlaying, activeSounds, presetSounds } = useAudioStore.getState();
       if (isPlaying) {
         AudioService.stopAll();
-      } else if (activeSounds.size > 0) {
+      } else if (activeSounds.size > 0 || presetSounds.size > 0) {
         await AudioService.startMix();
       }
       await syncAndSaveWidgetState();
@@ -87,16 +105,7 @@ export async function handleWidgetAction(
       ];
       const preset = presets.find((p) => p.id === payload.presetId);
       if (preset) {
-        AudioService.stopAll();
-        for (const sound of preset.sounds) {
-          useAudioStore.getState().toggleSound(sound.soundId, {
-            volumeMin: sound.volumeMin,
-            volumeMax: sound.volumeMax,
-            frequency: sound.frequency,
-            pan: sound.pan,
-          });
-        }
-        await AudioService.startMix();
+        await AudioService.applyPreset(preset.sounds, preset.id);
       }
       await syncAndSaveWidgetState();
       break;

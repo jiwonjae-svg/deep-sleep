@@ -15,10 +15,9 @@ try {
   // Expo Go: native module not available
 }
 
-const AD_UNIT_ID =
-  TestIds?.INTERSTITIAL ??
-  Constants.expoConfig?.extra?.admobInterstitialId ??
-  'ca-app-pub-xxxxxxxx/xxxxxxxx';
+const AD_UNIT_ID = __DEV__
+  ? (TestIds?.INTERSTITIAL ?? 'ca-app-pub-xxxxxxxx/xxxxxxxx')
+  : (Constants.expoConfig?.extra?.admobInterstitialId ?? 'ca-app-pub-xxxxxxxx/xxxxxxxx');
 
 /**
  * 전면 광고 로드·표시 훅.

@@ -164,7 +164,8 @@ function ThemedApp() {
             presentation: 'transparentModal',
             contentStyle: { backgroundColor: 'transparent' },
           }}
-        />\n      </Stack>
+        />
+      </Stack>
     </GestureHandlerRootView>
   );
 }

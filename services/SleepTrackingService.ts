@@ -4,7 +4,7 @@ import { Audio } from 'expo-av';
 import { useSleepStore } from '@/stores/useSleepStore';
 import { useAudioStore } from '@/stores/useAudioStore';
 import { useAlarmStore } from '@/stores/useAlarmStore';
-import { startSmartAlarmMonitoring, stopMonitoring as stopSmartAlarm } from '@/services/SmartAlarmService';
+import { startSmartAlarmMonitoring, stopMonitoring as stopSmartAlarm, getNextAlarmTimestamp } from '@/services/SmartAlarmService';
 
 // ──────────────────────────────────────────────
 // Accelerometer-based sleep tracking service
@@ -145,9 +145,13 @@ export async function startSleepTracking(soundIds?: string[]): Promise<boolean> 
   // Start noise monitoring (microphone metering)
   await startNoiseMonitor();
 
-  // 스마트 알람: 다음 예정된 스마트 알람이 있으면 모니터링 시작
+  // 스마트 알람: 다음 예정된 스마트 알람 중 가장 빠른 것 선택
   const alarms = useAlarmStore.getState().alarms;
-  const smartAlarm = alarms.find((a) => a.enabled && a.smartAlarm?.enabled);
+  const smartAlarm = alarms
+    .filter((a) => a.enabled && a.smartAlarm?.enabled)
+    .map((a) => ({ alarm: a, nextTime: getNextAlarmTimestamp(a) }))
+    .filter((x) => x.nextTime < Infinity)
+    .sort((a, b) => a.nextTime - b.nextTime)[0]?.alarm ?? null;
   if (smartAlarm) {
     startSmartAlarmMonitoring(smartAlarm);
   }
